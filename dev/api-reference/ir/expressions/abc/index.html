@@ -5653,7 +5653,7 @@
 <span class="normal"><a href="#__codelineno-0-218">218</a></span>
 <span class="normal"><a href="#__codelineno-0-219">219</a></span>
 <span class="normal"><a href="#__codelineno-0-220">220</a></span>
-<span class="normal"><a href="#__codelineno-0-221">221</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="k">class</span> <span class="nc">ExpressionAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="k">class</span><span class="w"> </span><span class="nc">ExpressionAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    Abstract base class for all IR expression nodes.</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    &gt; Something that has a value.</span>
@@ -5662,35 +5662,35 @@
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="n">_type_descriptions</span><span class="p">:</span> <span class="n">TypeDescriptionsModel</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="n">_statement_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">weakref</span><span class="o">.</span><span class="n">ReferenceType</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]]</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">SolcExpressionUnion</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="p">):</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">type_descriptions</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="nd">@classmethod</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span> <span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_strip_weakrefs</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_statement_cache&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="nd">@staticmethod</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="k">def</span> <span class="nf">from_ast</span><span class="p">(</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_ast</span><span class="p">(</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">SolcExpressionUnion</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="kn">from</span> <span class="nn">.assignment</span> <span class="kn">import</span> <span class="n">Assignment</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="kn">from</span> <span class="nn">.binary_operation</span> <span class="kn">import</span> <span class="n">BinaryOperation</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="kn">from</span> <span class="nn">.conditional</span> <span class="kn">import</span> <span class="n">Conditional</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="kn">from</span> <span class="nn">.elementary_type_name_expression</span> <span class="kn">import</span> <span class="n">ElementaryTypeNameExpression</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="kn">from</span> <span class="nn">.function_call</span> <span class="kn">import</span> <span class="n">FunctionCall</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="kn">from</span> <span class="nn">.function_call_options</span> <span class="kn">import</span> <span class="n">FunctionCallOptions</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="kn">from</span> <span class="nn">.identifier</span> <span class="kn">import</span> <span class="n">Identifier</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="kn">from</span> <span class="nn">.index_access</span> <span class="kn">import</span> <span class="n">IndexAccess</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="kn">from</span> <span class="nn">.index_range_access</span> <span class="kn">import</span> <span class="n">IndexRangeAccess</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="kn">from</span> <span class="nn">.literal</span> <span class="kn">import</span> <span class="n">Literal</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="kn">from</span> <span class="nn">.member_access</span> <span class="kn">import</span> <span class="n">MemberAccess</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="kn">from</span> <span class="nn">.new_expression</span> <span class="kn">import</span> <span class="n">NewExpression</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="kn">from</span> <span class="nn">.tuple_expression</span> <span class="kn">import</span> <span class="n">TupleExpression</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="kn">from</span> <span class="nn">.unary_operation</span> <span class="kn">import</span> <span class="n">UnaryOperation</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.assignment</span><span class="w"> </span><span class="kn">import</span> <span class="n">Assignment</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.binary_operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryOperation</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.conditional</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conditional</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.elementary_type_name_expression</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementaryTypeNameExpression</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.function_call</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionCall</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.function_call_options</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionCallOptions</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.identifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identifier</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.index_access</span><span class="w"> </span><span class="kn">import</span> <span class="n">IndexAccess</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.index_range_access</span><span class="w"> </span><span class="kn">import</span> <span class="n">IndexRangeAccess</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.literal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.member_access</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemberAccess</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.new_expression</span><span class="w"> </span><span class="kn">import</span> <span class="n">NewExpression</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.tuple_expression</span><span class="w"> </span><span class="kn">import</span> <span class="n">TupleExpression</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.unary_operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnaryOperation</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">SolcAssignment</span><span class="p">):</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>            <span class="k">return</span> <span class="n">Assignment</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5723,7 +5723,7 @@
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TypeAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">        Can be `None` in case of an [Identifier][wake.ir.expressions.identifier.Identifier] in an [ImportDirective][wake.ir.meta.import_directive.ImportDirective].</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="sd">        !!! example</span>
@@ -5748,11 +5748,11 @@
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="k">return</span> <span class="n">ret</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="k">def</span> <span class="nf">type_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140"></a>    <span class="k">def</span> <span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">            `:::solidity function (uint256,uint256) returns (uint256)` in the case of the `foo` [Identifier][wake.ir.expressions.identifier.Identifier] in the `:::solidity foo(1, 2)` expression for the following function:</span>
@@ -5776,7 +5776,7 @@
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">def</span> <span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">        In many cases it may be useful to know if an [Assignment][wake.ir.expressions.assignment.Assignment] to an expression modifies a state variable or not.</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="sd">        This may not be straightforward to determine, e.g. if the expression is a [MemberAccess][wake.ir.expressions.member_access.MemberAccess] or [IndexAccess][wake.ir.expressions.index_access.IndexAccess] to a state variable.</span>
@@ -5791,7 +5791,7 @@
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5804,7 +5804,7 @@
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="o">...</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a>
 <a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">def</span> <span class="nf">statement</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">statement</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">        May be `None` if the expression is not part of a function or modifier body.</span>
 <a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">        This may happen in:</span>
@@ -5818,7 +5818,7 @@
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">            Statement that contains the expression.</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_statement_cache&quot;</span><span class="p">):</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>            <span class="kn">from</span> <span class="nn">..statements.abc</span> <span class="kn">import</span> <span class="n">StatementAbc</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">..statements.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatementAbc</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a>
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a>            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>            <span class="k">while</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

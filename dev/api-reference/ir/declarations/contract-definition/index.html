@@ -6401,7 +6401,7 @@
 <span class="normal"><a href="#__codelineno-0-622">622</a></span>
 <span class="normal"><a href="#__codelineno-0-623">623</a></span>
 <span class="normal"><a href="#__codelineno-0-624">624</a></span>
-<span class="normal"><a href="#__codelineno-0-625">625</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="k">class</span> <span class="nc">ContractDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-625">625</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="k">class</span><span class="w"> </span><span class="nc">ContractDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    Definition of a contract, library or interface. [byte_location][wake.ir.abc.IrAbc.byte_location] also includes the contract body.</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>
@@ -6457,7 +6457,7 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="n">_child_contracts</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">weakref</span><span class="o">.</span><span class="n">ReferenceType</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]]</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">contract</span><span class="p">:</span> <span class="n">SolcContractDefinition</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SourceUnit</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="p">):</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">contract</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -6532,7 +6532,7 @@
 <a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_post_process_events</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="p">)</span>
 <a id="__codelineno-0-184" name="__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="k">for</span> <span class="n">base_contract</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_contracts</span><span class="p">:</span>
 <a id="__codelineno-0-188" name="__codelineno-0-188"></a>            <span class="k">yield from</span> <span class="n">base_contract</span>
@@ -6557,18 +6557,18 @@
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="k">for</span> <span class="n">declared_variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declared_variables</span><span class="p">:</span>
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a>            <span class="k">yield from</span> <span class="n">declared_variable</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_used_events</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_child_contracts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214"></a>
 <a id="__codelineno-0-215" name="__codelineno-0-215"></a>    <span class="nd">@classmethod</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216"></a>    <span class="k">def</span> <span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <a id="__codelineno-0-217" name="__codelineno-0-217"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_strip_weakrefs</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_used_events&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_child_contracts&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-220" name="__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="k">def</span> <span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="n">base_contracts</span> <span class="o">=</span> <span class="p">[]</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="k">for</span> <span class="n">base_contract</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_contracts</span><span class="p">:</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a>            <span class="n">contract</span> <span class="o">=</span> <span class="n">base_contract</span><span class="o">.</span><span class="n">base_name</span><span class="o">.</span><span class="n">referenced_declaration</span>
@@ -6595,7 +6595,7 @@
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">source_unit</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_destroy</span><span class="p">,</span> <span class="n">base_contracts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_errors</span><span class="p">)</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246"></a>        <span class="p">)</span>
 <a id="__codelineno-0-247" name="__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248"></a>    <span class="k">def</span> <span class="nf">_post_process_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
 <a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">linearized_base_contracts</span><span class="p">:</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250"></a>            <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="n">used_events</span><span class="p">:</span>
 <a id="__codelineno-0-251" name="__codelineno-0-251"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">_used_events</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">event</span><span class="p">))</span>
@@ -6619,7 +6619,7 @@
 <a id="__codelineno-0-269" name="__codelineno-0-269"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">source_unit</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_destroy_events</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_events</span><span class="p">),</span>
 <a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="p">)</span>
 <a id="__codelineno-0-271" name="__codelineno-0-271"></a>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="k">def</span> <span class="nf">_destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_contracts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">],</span> <span class="n">used_errors</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_contracts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">],</span> <span class="n">used_errors</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="k">for</span> <span class="n">base_contract</span> <span class="ow">in</span> <span class="n">base_contracts</span><span class="p">:</span>
 <a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">base_contract</span><span class="o">.</span><span class="n">_child_contracts</span> <span class="k">if</span> <span class="n">c</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-275" name="__codelineno-0-275"></a>            <span class="n">base_contract</span><span class="o">.</span><span class="n">_child_contracts</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
@@ -6627,12 +6627,12 @@
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">error</span><span class="o">.</span><span class="n">_used_in</span> <span class="k">if</span> <span class="n">c</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>            <span class="n">error</span><span class="o">.</span><span class="n">_used_in</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
 <a id="__codelineno-0-279" name="__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="k">def</span> <span class="nf">_destroy_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">used_events</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_destroy_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">used_events</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281"></a>        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">used_events</span><span class="p">:</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">_used_in</span> <span class="k">if</span> <span class="n">c</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-283" name="__codelineno-0-283"></a>            <span class="n">event</span><span class="o">.</span><span class="n">_used_in</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
 <a id="__codelineno-0-284" name="__codelineno-0-284"></a>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="k">def</span> <span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286"></a>        <span class="n">IDENTIFIER</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;[a-zA-Z$_][a-zA-Z0-9$_]*&quot;</span>
 <a id="__codelineno-0-287" name="__codelineno-0-287"></a>        <span class="n">CONTRACT_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
 <a id="__codelineno-0-288" name="__codelineno-0-288"></a>            <span class="sa">r</span><span class="s2">&quot;^\s*(abstract\s)?\s*contract\s+(?P&lt;name&gt;</span><span class="si">{identifier}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -6678,7 +6678,7 @@
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="p">)</span>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a>
 <a id="__codelineno-0-330" name="__codelineno-0-330"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">            Parent IR node.</span>
@@ -6686,7 +6686,7 @@
 <a id="__codelineno-0-336" name="__codelineno-0-336"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-337" name="__codelineno-0-337"></a>
 <a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span>
 <a id="__codelineno-0-340" name="__codelineno-0-340"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-341" name="__codelineno-0-341"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span>
 <a id="__codelineno-0-342" name="__codelineno-0-342"></a>        <span class="n">Union</span><span class="p">[</span>
@@ -6721,12 +6721,12 @@
 <a id="__codelineno-0-371" name="__codelineno-0-371"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declared_variables</span>
 <a id="__codelineno-0-372" name="__codelineno-0-372"></a>
 <a id="__codelineno-0-373" name="__codelineno-0-373"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="k">def</span> <span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-375" name="__codelineno-0-375"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 <a id="__codelineno-0-376" name="__codelineno-0-376"></a>
 <a id="__codelineno-0-377" name="__codelineno-0-377"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="k">def</span> <span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-380" name="__codelineno-0-380"></a>        <span class="n">ret</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;abstract &#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
 <a id="__codelineno-0-381" name="__codelineno-0-381"></a>        <span class="n">ret</span> <span class="o">+=</span> <span class="p">(</span>
 <a id="__codelineno-0-382" name="__codelineno-0-382"></a>            <span class="s2">&quot; is &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_contracts</span><span class="p">)</span>
@@ -6751,7 +6751,7 @@
 <a id="__codelineno-0-401" name="__codelineno-0-401"></a>            <span class="k">return</span> <span class="n">ret</span>
 <a id="__codelineno-0-402" name="__codelineno-0-402"></a>
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="k">def</span> <span class="nf">abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">        Is `False` if the [kind][wake.ir.declarations.contract_definition.ContractDefinition.kind] is [ContractKind.LIBRARY][wake.ir.enums.ContractKind.LIBRARY] or [ContractKind.INTERFACE][wake.ir.enums.ContractKind.INTERFACE].</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407"></a>
@@ -6761,7 +6761,7 @@
 <a id="__codelineno-0-411" name="__codelineno-0-411"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abstract</span>
 <a id="__codelineno-0-412" name="__codelineno-0-412"></a>
 <a id="__codelineno-0-413" name="__codelineno-0-413"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a>    <span class="k">def</span> <span class="nf">base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InheritanceSpecifier</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">InheritanceSpecifier</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-415" name="__codelineno-0-415"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-416" name="__codelineno-0-416"></a><span class="sd">        Returns base contracts as specified in the source code. Does not return all base contracts (recursively).</span>
 <a id="__codelineno-0-417" name="__codelineno-0-417"></a><span class="sd">        !!! example</span>
@@ -6783,7 +6783,7 @@
 <a id="__codelineno-0-433" name="__codelineno-0-433"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_contracts</span><span class="p">)</span>
 <a id="__codelineno-0-434" name="__codelineno-0-434"></a>
 <a id="__codelineno-0-435" name="__codelineno-0-435"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="k">def</span> <span class="nf">child_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">child_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
 <a id="__codelineno-0-437" name="__codelineno-0-437"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">        Does not return all child contracts (recursively).</span>
 <a id="__codelineno-0-439" name="__codelineno-0-439"></a>
@@ -6793,7 +6793,7 @@
 <a id="__codelineno-0-443" name="__codelineno-0-443"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">c</span><span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_contracts</span><span class="p">)</span>
 <a id="__codelineno-0-444" name="__codelineno-0-444"></a>
 <a id="__codelineno-0-445" name="__codelineno-0-445"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractKind</span><span class="p">:</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractKind</span><span class="p">:</span>
 <a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-448" name="__codelineno-0-448"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-449" name="__codelineno-0-449"></a><span class="sd">            Contract kind.</span>
@@ -6801,7 +6801,7 @@
 <a id="__codelineno-0-451" name="__codelineno-0-451"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
 <a id="__codelineno-0-452" name="__codelineno-0-452"></a>
 <a id="__codelineno-0-453" name="__codelineno-0-453"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-454" name="__codelineno-0-454"></a>    <span class="k">def</span> <span class="nf">fully_implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<a id="__codelineno-0-454" name="__codelineno-0-454"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">fully_implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <a id="__codelineno-0-455" name="__codelineno-0-455"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-456" name="__codelineno-0-456"></a><span class="sd">        Is `None` when a file that imports this contract cannot be compiled. This may happen in the LSP server where partial project analysis is supported.</span>
 <a id="__codelineno-0-457" name="__codelineno-0-457"></a>
@@ -6811,7 +6811,7 @@
 <a id="__codelineno-0-461" name="__codelineno-0-461"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fully_implemented</span>
 <a id="__codelineno-0-462" name="__codelineno-0-462"></a>
 <a id="__codelineno-0-463" name="__codelineno-0-463"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="k">def</span> <span class="nf">linearized_base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">linearized_base_contracts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-465" name="__codelineno-0-465"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-466" name="__codelineno-0-466"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-467" name="__codelineno-0-467"></a><span class="sd">            C3 linearized list of all base contracts.</span>
@@ -6826,7 +6826,7 @@
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_contracts</span><span class="p">)</span>
 <a id="__codelineno-0-477" name="__codelineno-0-477"></a>
 <a id="__codelineno-0-478" name="__codelineno-0-478"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">def</span> <span class="nf">used_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">]:</span>
+<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">used_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">]:</span>
 <a id="__codelineno-0-480" name="__codelineno-0-480"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-481" name="__codelineno-0-481"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-482" name="__codelineno-0-482"></a><span class="sd">            Errors used in revert statements in this contract (or its base contracts) as well as all errors defined and inherited by the contract.</span>
@@ -6841,7 +6841,7 @@
 <a id="__codelineno-0-491" name="__codelineno-0-491"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">used_errors</span><span class="p">)</span>
 <a id="__codelineno-0-492" name="__codelineno-0-492"></a>
 <a id="__codelineno-0-493" name="__codelineno-0-493"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-494" name="__codelineno-0-494"></a>    <span class="k">def</span> <span class="nf">used_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">]:</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">used_events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">]:</span>
 <a id="__codelineno-0-495" name="__codelineno-0-495"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-496" name="__codelineno-0-496"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-497" name="__codelineno-0-497"></a><span class="sd">            Events emitted by the contract (or its base contracts) as well as all events defined and inherited by the contract.</span>
@@ -6849,7 +6849,7 @@
 <a id="__codelineno-0-499" name="__codelineno-0-499"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">e</span><span class="p">())</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_events</span><span class="p">)</span>
 <a id="__codelineno-0-500" name="__codelineno-0-500"></a>
 <a id="__codelineno-0-501" name="__codelineno-0-501"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <a id="__codelineno-0-503" name="__codelineno-0-503"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-504" name="__codelineno-0-504"></a><span class="sd">        Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.</span>
 <a id="__codelineno-0-505" name="__codelineno-0-505"></a>
@@ -6859,11 +6859,11 @@
 <a id="__codelineno-0-509" name="__codelineno-0-509"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
 <a id="__codelineno-0-510" name="__codelineno-0-510"></a>
 <a id="__codelineno-0-511" name="__codelineno-0-511"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-512" name="__codelineno-0-512"></a>    <span class="k">def</span> <span class="nf">compilation_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SolcOutputContractInfo</span><span class="p">]:</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">compilation_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SolcOutputContractInfo</span><span class="p">]:</span>
 <a id="__codelineno-0-513" name="__codelineno-0-513"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compilation_info</span>
 <a id="__codelineno-0-514" name="__codelineno-0-514"></a>
 <a id="__codelineno-0-515" name="__codelineno-0-515"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-516" name="__codelineno-0-516"></a>    <span class="k">def</span> <span class="nf">enums</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnumDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-516" name="__codelineno-0-516"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">enums</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EnumDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-517" name="__codelineno-0-517"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-518" name="__codelineno-0-518"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-519" name="__codelineno-0-519"></a><span class="sd">            Enum definitions contained in this contract.</span>
@@ -6871,7 +6871,7 @@
 <a id="__codelineno-0-521" name="__codelineno-0-521"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_enums</span><span class="p">)</span>
 <a id="__codelineno-0-522" name="__codelineno-0-522"></a>
 <a id="__codelineno-0-523" name="__codelineno-0-523"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-524" name="__codelineno-0-524"></a>    <span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-524" name="__codelineno-0-524"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ErrorDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-525" name="__codelineno-0-525"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-526" name="__codelineno-0-526"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-527" name="__codelineno-0-527"></a><span class="sd">            Error definitions contained in this contract.</span>
@@ -6879,7 +6879,7 @@
 <a id="__codelineno-0-529" name="__codelineno-0-529"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
 <a id="__codelineno-0-530" name="__codelineno-0-530"></a>
 <a id="__codelineno-0-531" name="__codelineno-0-531"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-532" name="__codelineno-0-532"></a>    <span class="k">def</span> <span class="nf">events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-532" name="__codelineno-0-532"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">events</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EventDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-533" name="__codelineno-0-533"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-534" name="__codelineno-0-534"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-535" name="__codelineno-0-535"></a><span class="sd">            Event definitions contained in this contract.</span>
@@ -6887,7 +6887,7 @@
 <a id="__codelineno-0-537" name="__codelineno-0-537"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">)</span>
 <a id="__codelineno-0-538" name="__codelineno-0-538"></a>
 <a id="__codelineno-0-539" name="__codelineno-0-539"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540"></a>    <span class="k">def</span> <span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-540" name="__codelineno-0-540"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">FunctionDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-541" name="__codelineno-0-541"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-542" name="__codelineno-0-542"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-543" name="__codelineno-0-543"></a><span class="sd">            Function definitions contained in this contract.</span>
@@ -6895,7 +6895,7 @@
 <a id="__codelineno-0-545" name="__codelineno-0-545"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">)</span>
 <a id="__codelineno-0-546" name="__codelineno-0-546"></a>
 <a id="__codelineno-0-547" name="__codelineno-0-547"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-548" name="__codelineno-0-548"></a>    <span class="k">def</span> <span class="nf">modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-548" name="__codelineno-0-548"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-549" name="__codelineno-0-549"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-550" name="__codelineno-0-550"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-551" name="__codelineno-0-551"></a><span class="sd">            Modifier definitions contained in this contract.</span>
@@ -6903,7 +6903,7 @@
 <a id="__codelineno-0-553" name="__codelineno-0-553"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modifiers</span><span class="p">)</span>
 <a id="__codelineno-0-554" name="__codelineno-0-554"></a>
 <a id="__codelineno-0-555" name="__codelineno-0-555"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-556" name="__codelineno-0-556"></a>    <span class="k">def</span> <span class="nf">structs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">StructDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-556" name="__codelineno-0-556"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">structs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">StructDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-557" name="__codelineno-0-557"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-558" name="__codelineno-0-558"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-559" name="__codelineno-0-559"></a><span class="sd">            Struct definitions contained in this contract.</span>
@@ -6911,7 +6911,7 @@
 <a id="__codelineno-0-561" name="__codelineno-0-561"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_structs</span><span class="p">)</span>
 <a id="__codelineno-0-562" name="__codelineno-0-562"></a>
 <a id="__codelineno-0-563" name="__codelineno-0-563"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-564" name="__codelineno-0-564"></a>    <span class="k">def</span> <span class="nf">user_defined_value_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UserDefinedValueTypeDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-564" name="__codelineno-0-564"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">user_defined_value_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UserDefinedValueTypeDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-565" name="__codelineno-0-565"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-566" name="__codelineno-0-566"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-567" name="__codelineno-0-567"></a><span class="sd">            User defined value type definitions contained in this contract.</span>
@@ -6919,7 +6919,7 @@
 <a id="__codelineno-0-569" name="__codelineno-0-569"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_defined_value_types</span><span class="p">)</span>
 <a id="__codelineno-0-570" name="__codelineno-0-570"></a>
 <a id="__codelineno-0-571" name="__codelineno-0-571"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-572" name="__codelineno-0-572"></a>    <span class="k">def</span> <span class="nf">using_for_directives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UsingForDirective</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-572" name="__codelineno-0-572"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">using_for_directives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">UsingForDirective</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-573" name="__codelineno-0-573"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-574" name="__codelineno-0-574"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-575" name="__codelineno-0-575"></a><span class="sd">            Using for directives contained in this contract.</span>
@@ -6927,14 +6927,14 @@
 <a id="__codelineno-0-577" name="__codelineno-0-577"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_using_for_directives</span><span class="p">)</span>
 <a id="__codelineno-0-578" name="__codelineno-0-578"></a>
 <a id="__codelineno-0-579" name="__codelineno-0-579"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-580" name="__codelineno-0-580"></a>    <span class="k">def</span> <span class="nf">declared_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-580" name="__codelineno-0-580"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">declared_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">VariableDeclaration</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-581" name="__codelineno-0-581"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-582" name="__codelineno-0-582"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-583" name="__codelineno-0-583"></a><span class="sd">            Variable declarations contained in this contract.</span>
 <a id="__codelineno-0-584" name="__codelineno-0-584"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-585" name="__codelineno-0-585"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_declared_variables</span><span class="p">)</span>
 <a id="__codelineno-0-586" name="__codelineno-0-586"></a>
-<a id="__codelineno-0-587" name="__codelineno-0-587"></a>    <span class="k">def</span> <span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-587" name="__codelineno-0-587"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-588" name="__codelineno-0-588"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-589" name="__codelineno-0-589"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-590" name="__codelineno-0-590"></a><span class="sd">            All declarations contained in this contract.</span>
@@ -6951,16 +6951,16 @@
 <a id="__codelineno-0-601" name="__codelineno-0-601"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">declared_variables</span>
 <a id="__codelineno-0-602" name="__codelineno-0-602"></a>
 <a id="__codelineno-0-603" name="__codelineno-0-603"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-604" name="__codelineno-0-604"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-604" name="__codelineno-0-604"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">references</span><span class="p">(</span>
 <a id="__codelineno-0-605" name="__codelineno-0-605"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-606" name="__codelineno-0-606"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">,</span> <span class="n">MemberAccess</span><span class="p">,]]:</span>
 <a id="__codelineno-0-607" name="__codelineno-0-607"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-608" name="__codelineno-0-608"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-609" name="__codelineno-0-609"></a><span class="sd">            Set of all IR nodes referencing this contract.</span>
 <a id="__codelineno-0-610" name="__codelineno-0-610"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-611" name="__codelineno-0-611"></a>        <span class="kn">from</span> <span class="nn">..expressions.identifier</span> <span class="kn">import</span> <span class="n">Identifier</span>
-<a id="__codelineno-0-612" name="__codelineno-0-612"></a>        <span class="kn">from</span> <span class="nn">..expressions.member_access</span> <span class="kn">import</span> <span class="n">MemberAccess</span>
-<a id="__codelineno-0-613" name="__codelineno-0-613"></a>        <span class="kn">from</span> <span class="nn">..meta.identifier_path</span> <span class="kn">import</span> <span class="n">IdentifierPathPart</span>
+<a id="__codelineno-0-611" name="__codelineno-0-611"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.identifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identifier</span>
+<a id="__codelineno-0-612" name="__codelineno-0-612"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.member_access</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemberAccess</span>
+<a id="__codelineno-0-613" name="__codelineno-0-613"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..meta.identifier_path</span><span class="w"> </span><span class="kn">import</span> <span class="n">IdentifierPathPart</span>
 <a id="__codelineno-0-614" name="__codelineno-0-614"></a>
 <a id="__codelineno-0-615" name="__codelineno-0-615"></a>        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">r</span><span class="p">())</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="p">]</span>
 <a id="__codelineno-0-616" name="__codelineno-0-616"></a>
@@ -7958,7 +7958,7 @@
 <span class="normal"><a href="#__codelineno-0-598">598</a></span>
 <span class="normal"><a href="#__codelineno-0-599">599</a></span>
 <span class="normal"><a href="#__codelineno-0-600">600</a></span>
-<span class="normal"><a href="#__codelineno-0-601">601</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-587" name="__codelineno-0-587"></a><span class="k">def</span> <span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-601">601</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-587" name="__codelineno-0-587"></a><span class="k">def</span><span class="w"> </span><span class="nf">declarations_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-588" name="__codelineno-0-588"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-589" name="__codelineno-0-589"></a><span class="sd">    Yields:</span>
 <a id="__codelineno-0-590" name="__codelineno-0-590"></a><span class="sd">        All declarations contained in this contract.</span>

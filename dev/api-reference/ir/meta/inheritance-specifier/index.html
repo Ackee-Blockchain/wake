@@ -5612,7 +5612,7 @@
 <span class="normal"><a href="#__codelineno-0-130">130</a></span>
 <span class="normal"><a href="#__codelineno-0-131">131</a></span>
 <span class="normal"><a href="#__codelineno-0-132">132</a></span>
-<span class="normal"><a href="#__codelineno-0-133">133</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="k">class</span> <span class="nc">InheritanceSpecifier</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="k">class</span><span class="w"> </span><span class="nc">InheritanceSpecifier</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">        `:::solidity A(0x1234567890123456789012345678901234567890)` in the following code:</span>
@@ -5635,7 +5635,7 @@
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">_base_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">_arguments</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]]</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="n">inheritance_specifier</span><span class="p">:</span> <span class="n">SolcInheritanceSpecifier</span><span class="p">,</span>
@@ -5659,7 +5659,7 @@
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>            <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">inheritance_specifier</span><span class="o">.</span><span class="n">arguments</span><span class="p">:</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="o">.</span><span class="n">from_ast</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_name</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -5667,7 +5667,7 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>                <span class="k">yield from</span> <span class="n">argument</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractDefinition</span><span class="p">:</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractDefinition</span><span class="p">:</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">            Parent IR node.</span>
@@ -5675,7 +5675,7 @@
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">,</span> <span class="n">ExpressionAbc</span><span class="p">]]:</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5687,7 +5687,7 @@
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">def</span> <span class="nf">base_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]:</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">base_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]:</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        The returned IR node holds a reference to the base contract definition ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        !!! example</span>
@@ -5702,7 +5702,7 @@
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_name</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]]:</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]]:</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="sd">        !!! warning</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="sd">            Is `None` when there are no round brackets after the inheritance specifier name.</span>

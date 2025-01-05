@@ -5940,7 +5940,7 @@
 <span class="normal"><a href="#__codelineno-0-479">479</a></span>
 <span class="normal"><a href="#__codelineno-0-480">480</a></span>
 <span class="normal"><a href="#__codelineno-0-481">481</a></span>
-<span class="normal"><a href="#__codelineno-0-482">482</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="k">class</span> <span class="nc">MemberAccess</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-482">482</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="k">class</span><span class="w"> </span><span class="nc">MemberAccess</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    Represents a member access using the dot notation.</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5952,7 +5952,7 @@
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="n">_member_name</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">_referenced_declaration_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AstNodeId</span><span class="p">]</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">member_access</span><span class="p">:</span> <span class="n">SolcMemberAccess</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="p">):</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">member_access</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5967,11 +5967,11 @@
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_post_process</span><span class="p">,</span> <span class="n">priority</span><span class="o">=-</span><span class="mi">1</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="p">)</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expression</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span> <span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="c1"># workaround for enum value bug in Solidity versions prior to 0.8.2</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_referenced_declaration_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_expression</span><span class="p">,</span> <span class="n">Identifier</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
@@ -6268,7 +6268,7 @@
 <a id="__codelineno-0-373" name="__codelineno-0-373"></a>            <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-374" name="__codelineno-0-374"></a>                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-375" name="__codelineno-0-375"></a>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">def</span> <span class="nf">_destroy</span><span class="p">(</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_destroy</span><span class="p">(</span>
 <a id="__codelineno-0-377" name="__codelineno-0-377"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">referenced_declaration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GlobalSymbol</span><span class="p">,</span> <span class="n">DeclarationAbc</span><span class="p">]</span>
 <a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-379" name="__codelineno-0-379"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">referenced_declaration</span><span class="p">,</span> <span class="n">GlobalSymbol</span><span class="p">):</span>
@@ -6281,11 +6281,11 @@
 <a id="__codelineno-0-386" name="__codelineno-0-386"></a>            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">referenced_declaration</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-387" name="__codelineno-0-387"></a>
 <a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
 <a id="__codelineno-0-390" name="__codelineno-0-390"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">()</span>
 <a id="__codelineno-0-391" name="__codelineno-0-391"></a>
 <a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-394" name="__codelineno-0-394"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-395" name="__codelineno-0-395"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="sd">            Direct children of this node.</span>
@@ -6293,7 +6293,7 @@
 <a id="__codelineno-0-398" name="__codelineno-0-398"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expression</span>
 <a id="__codelineno-0-399" name="__codelineno-0-399"></a>
 <a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="k">def</span> <span class="nf">expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
 <a id="__codelineno-0-402" name="__codelineno-0-402"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-403" name="__codelineno-0-403"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="sd">            Expression, whose member is accessed.</span>
@@ -6301,7 +6301,7 @@
 <a id="__codelineno-0-406" name="__codelineno-0-406"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expression</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407"></a>
 <a id="__codelineno-0-408" name="__codelineno-0-408"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-409" name="__codelineno-0-409"></a>    <span class="k">def</span> <span class="nf">member_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">member_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="sd">            Name of the member being accessed.</span>
@@ -6310,7 +6310,7 @@
 <a id="__codelineno-0-415" name="__codelineno-0-415"></a>
 <a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-417" name="__codelineno-0-417"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="k">def</span> <span class="nf">member_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">member_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-419" name="__codelineno-0-419"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="sd">        In the case of [MemberAccess][wake.ir.expressions.member_access.MemberAccess], [byte_location][wake.ir.abc.IrAbc.byte_location] returns the byte location including the expression, whose member is accessed.</span>
 <a id="__codelineno-0-421" name="__codelineno-0-421"></a><span class="sd">        This property returns the byte location of the member name only.</span>
@@ -6342,7 +6342,7 @@
 <a id="__codelineno-0-447" name="__codelineno-0-447"></a>        <span class="p">)</span>
 <a id="__codelineno-0-448" name="__codelineno-0-448"></a>
 <a id="__codelineno-0-449" name="__codelineno-0-449"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-450" name="__codelineno-0-450"></a>    <span class="k">def</span> <span class="nf">referenced_declaration</span><span class="p">(</span>
+<a id="__codelineno-0-450" name="__codelineno-0-450"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">referenced_declaration</span><span class="p">(</span>
 <a id="__codelineno-0-451" name="__codelineno-0-451"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-452" name="__codelineno-0-452"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DeclarationAbc</span><span class="p">,</span> <span class="n">GlobalSymbol</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">]:</span>
 <a id="__codelineno-0-453" name="__codelineno-0-453"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -6361,7 +6361,7 @@
 <a id="__codelineno-0-466" name="__codelineno-0-466"></a>
 <a id="__codelineno-0-467" name="__codelineno-0-467"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-468" name="__codelineno-0-468"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-469" name="__codelineno-0-469"></a>    <span class="k">def</span> <span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-469" name="__codelineno-0-469"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-470" name="__codelineno-0-470"></a>        <span class="n">referenced_declaration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">referenced_declaration</span>
 <a id="__codelineno-0-471" name="__codelineno-0-471"></a>        <span class="k">return</span> <span class="p">(</span>
 <a id="__codelineno-0-472" name="__codelineno-0-472"></a>            <span class="nb">isinstance</span><span class="p">(</span><span class="n">referenced_declaration</span><span class="p">,</span> <span class="n">VariableDeclaration</span><span class="p">)</span>
@@ -6371,7 +6371,7 @@
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a>
 <a id="__codelineno-0-477" name="__codelineno-0-477"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-478" name="__codelineno-0-478"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-480" name="__codelineno-0-480"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-481" name="__codelineno-0-481"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-482" name="__codelineno-0-482"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expression</span><span class="o">.</span><span class="n">modifies_state</span>

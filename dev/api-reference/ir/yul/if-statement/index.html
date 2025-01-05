@@ -5588,7 +5588,7 @@
 <span class="normal"><a href="#__codelineno-0-106">106</a></span>
 <span class="normal"><a href="#__codelineno-0-107">107</a></span>
 <span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span> <span class="nc">YulIf</span><span class="p">(</span><span class="n">YulStatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulIf</span><span class="p">(</span><span class="n">YulStatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    Represents an if statement with the following structure:</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>
@@ -5615,7 +5615,7 @@
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="n">_body</span><span class="p">:</span> <span class="n">YulBlock</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="n">_condition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">YulFunctionCall</span><span class="p">,</span> <span class="n">YulIdentifier</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">if_statement</span><span class="p">:</span> <span class="n">SolcYulIf</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">if_statement</span><span class="p">:</span> <span class="n">SolcYulIf</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">if_statement</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">YulBlock</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">if_statement</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">if_statement</span><span class="o">.</span><span class="n">condition</span><span class="p">,</span> <span class="n">SolcYulFunctionCall</span><span class="p">):</span>
@@ -5627,13 +5627,13 @@
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unexpected type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">if_statement</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">            Parent IR node.</span>
@@ -5641,7 +5641,7 @@
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">YulBlock</span><span class="p">,</span> <span class="n">YulFunctionCall</span><span class="p">,</span> <span class="n">YulIdentifier</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]]:</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5652,7 +5652,7 @@
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">            Body of the function executed if the condition is true.</span>
@@ -5660,7 +5660,7 @@
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">YulFunctionCall</span><span class="p">,</span> <span class="n">YulIdentifier</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]:</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">YulFunctionCall</span><span class="p">,</span> <span class="n">YulIdentifier</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]:</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">            Condition of the if statement.</span>
@@ -5668,7 +5668,7 @@
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span><span class="o">.</span><span class="n">modifies_state</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">modifies_state</span>

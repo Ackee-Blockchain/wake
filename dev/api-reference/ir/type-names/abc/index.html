@@ -5600,28 +5600,28 @@
 <span class="normal"><a href="#__codelineno-0-186">186</a></span>
 <span class="normal"><a href="#__codelineno-0-187">187</a></span>
 <span class="normal"><a href="#__codelineno-0-188">188</a></span>
-<span class="normal"><a href="#__codelineno-0-189">189</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">class</span> <span class="nc">TypeNameAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">class</span><span class="w"> </span><span class="nc">TypeNameAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Abstract base class for all IR type name nodes.</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">_type_descriptions</span><span class="p">:</span> <span class="n">TypeDescriptionsModel</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">type_name</span><span class="p">:</span> <span class="n">SolcTypeNameUnion</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">):</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">type_name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span> <span class="o">=</span> <span class="n">type_name</span><span class="o">.</span><span class="n">type_descriptions</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="nd">@staticmethod</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">def</span> <span class="nf">from_ast</span><span class="p">(</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_ast</span><span class="p">(</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">type_name</span><span class="p">:</span> <span class="n">SolcTypeNameUnion</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeNameAbc</span><span class="p">:</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="kn">from</span> <span class="nn">.array_type_name</span> <span class="kn">import</span> <span class="n">ArrayTypeName</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="kn">from</span> <span class="nn">.elementary_type_name</span> <span class="kn">import</span> <span class="n">ElementaryTypeName</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="kn">from</span> <span class="nn">.function_type_name</span> <span class="kn">import</span> <span class="n">FunctionTypeName</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="kn">from</span> <span class="nn">.mapping</span> <span class="kn">import</span> <span class="n">Mapping</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="kn">from</span> <span class="nn">.user_defined_type_name</span> <span class="kn">import</span> <span class="n">UserDefinedTypeName</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.array_type_name</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayTypeName</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.elementary_type_name</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementaryTypeName</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.function_type_name</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionTypeName</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.mapping</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.user_defined_type_name</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserDefinedTypeName</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_name</span><span class="p">,</span> <span class="n">SolcArrayTypeName</span><span class="p">):</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>            <span class="k">return</span> <span class="n">ArrayTypeName</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">type_name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5635,7 +5635,7 @@
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="k">return</span> <span class="n">UserDefinedTypeName</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">type_name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="n">VariableDeclaration</span><span class="p">,</span>
@@ -5654,7 +5654,7 @@
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="n">Array</span><span class="p">,</span>
@@ -5713,12 +5713,12 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="k">return</span> <span class="n">ret</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">def</span> <span class="nf">type_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_descriptions</span><span class="o">.</span><span class="n">type_identifier</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="k">def</span> <span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">            `:::solidity mapping(uint256 =&gt; int24[])` in the case of the `:::solidity mapping(uint =&gt; int24[])` type name in the following declaration:</span>

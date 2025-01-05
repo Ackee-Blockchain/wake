@@ -5498,7 +5498,7 @@
 <span class="normal"><a href="#__codelineno-0-68">68</a></span>
 <span class="normal"><a href="#__codelineno-0-69">69</a></span>
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">class</span> <span class="nc">YulTypedName</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulTypedName</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    As opposed to [YulIdentifier][wake.ir.yul.identifier.YulIdentifier] that serves as a reference to a variable and is evaluated to its value, `YulTypedName` is a declaration of a variable (an intention to use the given name for a variable).</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a>
@@ -5521,7 +5521,7 @@
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">_name</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">_type</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">typed_name</span><span class="p">:</span> <span class="n">SolcYulTypedName</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">typed_name</span><span class="p">:</span> <span class="n">SolcYulTypedName</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">typed_name</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">typed_name</span><span class="o">.</span><span class="n">name</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">typed_name</span><span class="o">.</span><span class="n">type</span>
@@ -5530,11 +5530,11 @@
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Expected YulTypedName type to be empty, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="si">}</span><span class="s2">&quot;</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">YulFunctionDefinition</span><span class="p">,</span> <span class="n">YulVariableDeclaration</span><span class="p">]:</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">YulFunctionDefinition</span><span class="p">,</span> <span class="n">YulVariableDeclaration</span><span class="p">]:</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">            Name of the typed name.</span>
@@ -5547,7 +5547,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="c1"># return self._type</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>

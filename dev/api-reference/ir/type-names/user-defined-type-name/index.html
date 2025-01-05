@@ -5968,7 +5968,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <span class="normal"><a href="#__codelineno-0-342">342</a></span>
 <span class="normal"><a href="#__codelineno-0-343">343</a></span>
 <span class="normal"><a href="#__codelineno-0-344">344</a></span>
-<span class="normal"><a href="#__codelineno-0-345">345</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="k">class</span> <span class="nc">UserDefinedTypeName</span><span class="p">(</span><span class="n">TypeNameAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-345">345</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="k">class</span><span class="w"> </span><span class="nc">UserDefinedTypeName</span><span class="p">(</span><span class="n">TypeNameAbc</span><span class="p">):</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">    User defined type name represents a name path to a user defined type. Path parts are separated by dots.</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    In Solidity 0.8.0 a new IR node ([IdentifierPath][wake.ir.meta.identifier_path.IdentifierPath]) was introduced to replace [UserDefinedTypeName][wake.ir.type_names.user_defined_type_name.UserDefinedTypeName] in some cases.</span>
@@ -6048,7 +6048,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="n">_path_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]</span>
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="n">_parts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IntervalTree</span><span class="p">]</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>        <span class="n">user_defined_type_name</span><span class="p">:</span> <span class="n">SolcUserDefinedTypeName</span><span class="p">,</span>
@@ -6069,8 +6069,8 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>            <span class="p">)</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_parts</span> <span class="o">=</span> <span class="kc">None</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="k">def</span> <span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140"></a>        <span class="k">def</span> <span class="nf">find_referenced_source_unit</span><span class="p">(</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">find_referenced_source_unit</span><span class="p">(</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141"></a>            <span class="n">searched_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_source_unit</span><span class="p">:</span> <span class="n">SourceUnit</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142"></a>        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143"></a>            <span class="n">source_units_queue</span><span class="p">:</span> <span class="n">Deque</span><span class="p">[</span><span class="n">SourceUnit</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start_source_unit</span><span class="p">])</span>
@@ -6104,7 +6104,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a>            <span class="k">assert</span> <span class="n">referenced_declaration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-0-172" name="__codelineno-0-172"></a>            <span class="k">return</span> <span class="n">referenced_declaration</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="kn">from</span> <span class="nn">..meta.source_unit</span> <span class="kn">import</span> <span class="n">SourceUnit</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..meta.source_unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceUnit</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="n">source</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">)</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a>        <span class="n">_</span><span class="p">,</span> <span class="n">stripped_sums</span> <span class="o">=</span> <span class="n">SoliditySourceParser</span><span class="o">.</span><span class="n">strip_comments</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
@@ -6166,13 +6166,13 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-233" name="__codelineno-0-233"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">_source_unit</span><span class="p">,</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234"></a>            <span class="p">)</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a>
-<a id="__codelineno-0-236" name="__codelineno-0-236"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_node</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240"></a>
 <a id="__codelineno-0-241" name="__codelineno-0-241"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">VariableDeclaration</span><span class="p">,</span>
@@ -6190,7 +6190,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-258" name="__codelineno-0-258"></a>
 <a id="__codelineno-0-259" name="__codelineno-0-259"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]:</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]:</span>
 <a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">            Direct children of this node.</span>
@@ -6199,7 +6199,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_node</span>
 <a id="__codelineno-0-267" name="__codelineno-0-267"></a>
 <a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Contract</span><span class="p">,</span> <span class="n">Struct</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">UserDefinedValueType</span><span class="p">]:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Contract</span><span class="p">,</span> <span class="n">Struct</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">UserDefinedValueType</span><span class="p">]:</span>
 <a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="sd">            Type description.</span>
@@ -6209,7 +6209,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="k">return</span> <span class="n">t</span>
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">        !!! note</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">            Should be the same as [source][wake.ir.abc.IrAbc.source] and is the same as [path_node.name][wake.ir.meta.identifier_path.IdentifierPath.name] if [path_node][wake.ir.type_names.user_defined_type_name.UserDefinedTypeName.path_node] is not `None`.</span>
@@ -6223,7 +6223,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-290" name="__codelineno-0-290"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 <a id="__codelineno-0-291" name="__codelineno-0-291"></a>
 <a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">def</span> <span class="nf">identifier_path_parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">identifier_path_parts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">            Parts of the user defined type name.</span>
@@ -6237,7 +6237,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-304" name="__codelineno-0-304"></a>            <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parts</span><span class="p">)</span>
 <a id="__codelineno-0-305" name="__codelineno-0-305"></a>        <span class="p">)</span>
 <a id="__codelineno-0-306" name="__codelineno-0-306"></a>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="k">def</span> <span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
 <a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">            byte_offset: Byte offset in the source file.</span>
@@ -6256,7 +6256,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="k">return</span> <span class="n">intervals</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span><span class="o">.</span><span class="n">data</span>
 <a id="__codelineno-0-324" name="__codelineno-0-324"></a>
 <a id="__codelineno-0-325" name="__codelineno-0-325"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="k">def</span> <span class="nf">referenced_declaration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeclarationAbc</span><span class="p">:</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">referenced_declaration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DeclarationAbc</span><span class="p">:</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">            Declaration IR node referenced by this user defined type name.</span>
@@ -6268,7 +6268,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <a id="__codelineno-0-335" name="__codelineno-0-335"></a>        <span class="k">return</span> <span class="n">node</span>
 <a id="__codelineno-0-336" name="__codelineno-0-336"></a>
 <a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="k">def</span> <span class="nf">path_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]:</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">path_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">]:</span>
 <a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">        Always present since Solidity 0.8.0. If not `None`, it represents the same source code as this node ([byte_location][wake.ir.abc.IrAbc.byte_location] properties are the same) and references the same declaration.</span>
 <a id="__codelineno-0-341" name="__codelineno-0-341"></a>
@@ -6681,7 +6681,7 @@ In Solidity 0.8.0 a new IR node (<a class="autorefs autorefs-internal" href="../
 <span class="normal"><a href="#__codelineno-0-320">320</a></span>
 <span class="normal"><a href="#__codelineno-0-321">321</a></span>
 <span class="normal"><a href="#__codelineno-0-322">322</a></span>
-<span class="normal"><a href="#__codelineno-0-323">323</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="k">def</span> <span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-323">323</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="k">def</span><span class="w"> </span><span class="nf">identifier_path_part_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IdentifierPathPart</span><span class="p">]:</span>
 <a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">    Args:</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">        byte_offset: Byte offset in the source file.</span>

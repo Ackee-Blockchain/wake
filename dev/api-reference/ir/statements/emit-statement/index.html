@@ -5557,7 +5557,7 @@
 <span class="normal"><a href="#__codelineno-0-104">104</a></span>
 <span class="normal"><a href="#__codelineno-0-105">105</a></span>
 <span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="k">class</span> <span class="nc">EmitStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="k">class</span><span class="w"> </span><span class="nc">EmitStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">        `:::solidity emit Transfer(msg.sender, to, amount)` in the following code:</span>
@@ -5582,16 +5582,16 @@
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="n">_event_call</span><span class="p">:</span> <span class="n">FunctionCall</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">emit</span><span class="p">:</span> <span class="n">SolcEmitStatement</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span><span class="p">):</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">emit</span><span class="p">:</span> <span class="n">SolcEmitStatement</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">emit</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_event_call</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">emit</span><span class="o">.</span><span class="n">event_call</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_call</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">Block</span><span class="p">,</span>
@@ -5608,7 +5608,7 @@
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">            Direct children of this node.</span>
@@ -5616,7 +5616,7 @@
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_call</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">def</span> <span class="nf">event_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">event_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">:</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">            ```solidity</span>
@@ -5634,7 +5634,7 @@
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="k">return</span> <span class="p">{(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ModifiesStateFlag</span><span class="o">.</span><span class="n">EMITS</span><span class="p">)}</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_call</span><span class="o">.</span><span class="n">modifies_state</span>

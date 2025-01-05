@@ -5640,7 +5640,7 @@
 <span class="normal"><a href="#__codelineno-0-138">138</a></span>
 <span class="normal"><a href="#__codelineno-0-139">139</a></span>
 <span class="normal"><a href="#__codelineno-0-140">140</a></span>
-<span class="normal"><a href="#__codelineno-0-141">141</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span> <span class="nc">IfStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span><span class="w"> </span><span class="nc">IfStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        Lines 2-6 in the following code:</span>
@@ -5671,7 +5671,7 @@
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">_true_body</span><span class="p">:</span> <span class="n">StatementAbc</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">_false_body</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">if_statement</span><span class="p">:</span> <span class="n">SolcIfStatement</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="p">):</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">if_statement</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5683,7 +5683,7 @@
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>            <span class="k">else</span> <span class="n">StatementAbc</span><span class="o">.</span><span class="n">from_ast</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">if_statement</span><span class="o">.</span><span class="n">false_body</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="p">)</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_body</span>
@@ -5691,7 +5691,7 @@
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_body</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">Block</span><span class="p">,</span>
@@ -5708,7 +5708,7 @@
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">]]:</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">]]:</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            Direct children of this node.</span>
@@ -5719,7 +5719,7 @@
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_body</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">            Condition of the if statement.</span>
@@ -5727,7 +5727,7 @@
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="k">def</span> <span class="nf">true_body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatementAbc</span><span class="p">:</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">true_body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatementAbc</span><span class="p">:</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="sd">            Statement executed if the condition is true.</span>
@@ -5735,7 +5735,7 @@
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_body</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span> <span class="nf">false_body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">false_body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">            Statement executed if the condition is false (if any).</span>
@@ -5744,7 +5744,7 @@
 <a id="__codelineno-0-125" name="__codelineno-0-125"></a>
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="k">return</span> <span class="p">(</span>
@@ -5753,7 +5753,7 @@
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">false_body</span><span class="o">.</span><span class="n">modifies_state</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">set</span><span class="p">())</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="p">)</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">def</span> <span class="nf">statements_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">statements_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">StatementAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_body</span><span class="o">.</span><span class="n">statements_iter</span><span class="p">()</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

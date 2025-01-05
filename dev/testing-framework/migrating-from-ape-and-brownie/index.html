@@ -5443,18 +5443,18 @@
 </code></pre></div>
 <p>An optional <code>-w</code> flag can be used to generate <code>pytypes</code> in a watch mode.</p>
 <p>If there is a <code>Counter</code> contract in <code>contracts/Counter.sol</code>, then the following import statement can be used:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 </code></pre></div>
 <p>A contract named <code>ERC1967Proxy</code> in <code>node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol</code> can be imported using:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pytypes.node_modules.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span> <span class="kn">import</span> <span class="n">ERC1967Proxy</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.node_modules.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ERC1967Proxy</span>
 </code></pre></div>
 <h2 id="accessing-accounts">Accessing accounts<a class="headerlink" href="#accessing-accounts" title="Permanent link">#</a></h2>
 <p>In Wake, accounts are a property of a chain. With the default chain instance named <code>chain</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">def</span> <span class="nf">test_accounts</span><span class="p">():</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_accounts</span><span class="p">():</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="configuring-networks">Configuring networks<a class="headerlink" href="#configuring-networks" title="Permanent link">#</a></h2>
@@ -5481,12 +5481,12 @@
 <h2 id="events-and-user-defined-errors">Events and user-defined errors<a class="headerlink" href="#events-and-user-defined-errors" title="Permanent link">#</a></h2>
 <p>Events and user-defined errors are generated in <code>pytypes</code> in a form of dataclasses.</p>
 <p>If there is an event named <code>Incremented</code> and error named <code>NotOwner</code> in <code>contracts/Counter.sol</code>, then the following can be used to test the contract:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_counter</span><span class="p">():</span>
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">tx</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="k">assert</span> <span class="n">Counter</span><span class="o">.</span><span class="n">Incremented</span><span class="p">()</span> <span class="ow">in</span> <span class="n">tx</span><span class="o">.</span><span class="n">events</span>
@@ -5522,8 +5522,8 @@
 </code></pre></div>
 <h2 id="multi-chain-testing">Multi-chain testing<a class="headerlink" href="#multi-chain-testing" title="Permanent link">#</a></h2>
 <p>Wake does not use context managers to change the current chain interface. Instead, the <code>chain</code> keyword argument can be passed when deploying a contract:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">chain1</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">chain2</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
@@ -5531,7 +5531,7 @@
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nd">@chain1</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nd">@chain2</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">def</span> <span class="nf">test_counter</span><span class="p">():</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_counter</span><span class="p">():</span>
 <a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="n">counter1</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="n">chain1</span><span class="p">)</span>
 <a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>    <span class="n">counter2</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="n">chain2</span><span class="p">)</span>
 </code></pre></div>

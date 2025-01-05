@@ -5572,7 +5572,7 @@
 <span class="normal"><a href="#__codelineno-0-143">143</a></span>
 <span class="normal"><a href="#__codelineno-0-144">144</a></span>
 <span class="normal"><a href="#__codelineno-0-145">145</a></span>
-<span class="normal"><a href="#__codelineno-0-146">146</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">class</span> <span class="nc">YulBlock</span><span class="p">(</span><span class="n">YulStatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulBlock</span><span class="p">(</span><span class="n">YulStatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    Block statements group multiple statements into a single block.</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5584,22 +5584,22 @@
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="p">]</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="n">_statements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">YulStatementAbc</span><span class="p">]</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">block</span><span class="p">:</span> <span class="n">SolcYulBlock</span><span class="p">,</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">InlineAssembly</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="p">):</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="kn">from</span> <span class="nn">.assignment</span> <span class="kn">import</span> <span class="n">YulAssignment</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="kn">from</span> <span class="nn">.break_statement</span> <span class="kn">import</span> <span class="n">YulBreak</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="kn">from</span> <span class="nn">.continue_statement</span> <span class="kn">import</span> <span class="n">YulContinue</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="kn">from</span> <span class="nn">.expression_statement</span> <span class="kn">import</span> <span class="n">YulExpressionStatement</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="kn">from</span> <span class="nn">.for_loop</span> <span class="kn">import</span> <span class="n">YulForLoop</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="kn">from</span> <span class="nn">.function_definition</span> <span class="kn">import</span> <span class="n">YulFunctionDefinition</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="kn">from</span> <span class="nn">.if_statement</span> <span class="kn">import</span> <span class="n">YulIf</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="kn">from</span> <span class="nn">.leave</span> <span class="kn">import</span> <span class="n">YulLeave</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="kn">from</span> <span class="nn">.switch</span> <span class="kn">import</span> <span class="n">YulSwitch</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="kn">from</span> <span class="nn">.variable_declaration</span> <span class="kn">import</span> <span class="n">YulVariableDeclaration</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.assignment</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulAssignment</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.break_statement</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulBreak</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.continue_statement</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulContinue</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.expression_statement</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulExpressionStatement</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.for_loop</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulForLoop</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.function_definition</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulFunctionDefinition</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.if_statement</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulIf</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.leave</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulLeave</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.switch</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulSwitch</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.variable_declaration</span><span class="w"> </span><span class="kn">import</span> <span class="n">YulVariableDeclaration</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_statements</span> <span class="o">=</span> <span class="p">[]</span>
@@ -5629,13 +5629,13 @@
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a>            <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>                <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unexpected type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="k">for</span> <span class="n">statement</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements</span><span class="p">:</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>            <span class="k">yield from</span> <span class="n">statement</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">InlineAssembly</span><span class="p">,</span> <span class="n">YulBlock</span><span class="p">,</span> <span class="n">YulForLoop</span><span class="p">,</span> <span class="n">YulFunctionDefinition</span><span class="p">,</span> <span class="n">YulIf</span><span class="p">,</span> <span class="n">YulCase</span>
@@ -5647,7 +5647,7 @@
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulStatementAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5657,7 +5657,7 @@
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statements</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">def</span> <span class="nf">statements</span><span class="p">(</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">statements</span><span class="p">(</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">YulStatementAbc</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5667,7 +5667,7 @@
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_statements</span><span class="p">)</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142"></a>        <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span>

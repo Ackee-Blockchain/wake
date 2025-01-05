@@ -5497,10 +5497,10 @@
 The behavior depends on whether <code>wake.testing</code> or <code>wake.deployment</code> is imported.</p>
 <p><code>wake.deployment</code> should be used when interacting with a live chain (testnet or mainnet). <code>wake.testing</code> should be used when interacting with a local development chain (like Anvil, Ganache, or Hardhat).</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># use wake.deployment when interacting with a live chain</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">wake.deployment</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.deployment</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># use wake.testing when interacting with a local development chain</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre></div>
 <h3 id="chainconnect-keyword-arguments"><code>chain.connect</code> keyword arguments<a class="headerlink" href="#chainconnect-keyword-arguments" title="Permanent link">#</a></h3>
 <p>The context manager <code>chain.connect</code> takes <code>min_gas_price</code> and <code>block_base_fee_per_gas</code> keyword arguments.
@@ -5543,14 +5543,14 @@ This way, integration tests can be written using the same conventions as unit te
 <p>To distinguish between tests and deployment scripts, it is possible to execute Python scripts using the <code>wake run</code> CLI command.
 The Python scripts must define a <code>main</code> function, which will be executed when the script is run.</p>
 <p>When no arguments are passed to <code>wake run</code>, the <code>scripts</code> directory is searched for Python scripts.</p>
-<div class="highlight"><span class="filename">scripts/deploy.py</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">wake.deployment</span> <span class="kn">import</span> <span class="o">*</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<div class="highlight"><span class="filename">scripts/deploy.py</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.deployment</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">ALCHEMY_API_KEY</span> <span class="o">=</span> <span class="s2">&quot;YOUR_ALCHEMY_API_KEY&quot;</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;wss://eth-mainnet.g.alchemy.com/v2/</span><span class="si">{</span><span class="n">ALCHEMY_API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">acc</span> <span class="o">=</span> <span class="n">Account</span><span class="o">.</span><span class="n">from_alias</span><span class="p">(</span><span class="s2">&quot;deployment&quot;</span><span class="p">)</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">chain</span><span class="o">.</span><span class="n">set_default_accounts</span><span class="p">(</span><span class="n">acc</span><span class="p">)</span>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>

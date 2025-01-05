@@ -5851,7 +5851,7 @@
 <span class="normal"><a href="#__codelineno-0-317">317</a></span>
 <span class="normal"><a href="#__codelineno-0-318">318</a></span>
 <span class="normal"><a href="#__codelineno-0-319">319</a></span>
-<span class="normal"><a href="#__codelineno-0-320">320</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">class</span> <span class="nc">ImportDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-320">320</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">class</span><span class="w"> </span><span class="nc">ImportDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        ```solidity</span>
@@ -5878,7 +5878,7 @@
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="n">_symbol_aliases</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SymbolAlias</span><span class="p">]</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="n">_unit_alias</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="n">import_directive</span><span class="p">:</span> <span class="n">SolcImportDirective</span><span class="p">,</span>
@@ -5905,13 +5905,13 @@
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_post_process</span><span class="p">,</span> <span class="n">priority</span><span class="o">=-</span><span class="mi">2</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="p">)</span>
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="k">for</span> <span class="n">symbol_alias</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbol_aliases</span><span class="p">:</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a>            <span class="k">yield from</span> <span class="n">symbol_alias</span><span class="o">.</span><span class="n">foreign</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>
-<a id="__codelineno-0-134" name="__codelineno-0-134"></a>    <span class="k">def</span> <span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
-<a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="kn">from</span> <span class="nn">..declarations.function_definition</span> <span class="kn">import</span> <span class="n">FunctionDefinition</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..declarations.function_definition</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionDefinition</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="c1"># referenced declaration ID is missing in import directive symbol aliases</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="c1"># the reason is that the Identifier may refer to multiple overloaded functions</span>
@@ -5972,7 +5972,7 @@
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a>            <span class="p">)</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a>
 <a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">            Parent IR node.</span>
@@ -5980,7 +5980,7 @@
 <a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]:</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Identifier</span><span class="p">]:</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">            Direct children of this node.</span>
@@ -5989,7 +5989,7 @@
 <a id="__codelineno-0-210" name="__codelineno-0-210"></a>            <span class="k">yield</span> <span class="n">symbol_alias</span><span class="o">.</span><span class="n">foreign</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211"></a>
 <a id="__codelineno-0-212" name="__codelineno-0-212"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a>    <span class="k">def</span> <span class="nf">imported_source_unit_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">imported_source_unit_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-215" name="__codelineno-0-215"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="sd">            Source unit name of the imported file.</span>
@@ -5997,7 +5997,7 @@
 <a id="__codelineno-0-218" name="__codelineno-0-218"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imported_source_unit_name</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219"></a>
 <a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="k">def</span> <span class="nf">imported_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">imported_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">            Absolute path of the imported file.</span>
@@ -6005,7 +6005,7 @@
 <a id="__codelineno-0-226" name="__codelineno-0-226"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imported_file</span>
 <a id="__codelineno-0-227" name="__codelineno-0-227"></a>
 <a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">def</span> <span class="nf">import_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">import_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-230" name="__codelineno-0-230"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="sd">            Import string as it appears in the source code.</span>
@@ -6013,12 +6013,12 @@
 <a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_import_string</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a>
 <a id="__codelineno-0-236" name="__codelineno-0-236"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">def</span> <span class="nf">imported_source_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">imported_source_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-238" name="__codelineno-0-238"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="sd">            Source unit imported by this import directive.</span>
 <a id="__codelineno-0-241" name="__codelineno-0-241"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="kn">from</span> <span class="nn">.source_unit</span> <span class="kn">import</span> <span class="n">SourceUnit</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.source_unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceUnit</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">resolve_node</span><span class="p">(</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_imported_source_unit_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_unit</span><span class="o">.</span><span class="n">cu_hash</span>
@@ -6027,7 +6027,7 @@
 <a id="__codelineno-0-248" name="__codelineno-0-248"></a>        <span class="k">return</span> <span class="n">node</span>
 <a id="__codelineno-0-249" name="__codelineno-0-249"></a>
 <a id="__codelineno-0-250" name="__codelineno-0-250"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="k">def</span> <span class="nf">symbol_aliases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SymbolAlias</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">symbol_aliases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">SymbolAlias</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="sd">        Is only set in the case of `:::solidity import { SafeType as CustomSafeType } from &quot;SafeLib.sol&quot;;` import directive type.</span>
 <a id="__codelineno-0-254" name="__codelineno-0-254"></a>
@@ -6037,7 +6037,7 @@
 <a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symbol_aliases</span><span class="p">)</span>
 <a id="__codelineno-0-259" name="__codelineno-0-259"></a>
 <a id="__codelineno-0-260" name="__codelineno-0-260"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="k">def</span> <span class="nf">unit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-264" name="__codelineno-0-264"></a><span class="sd">            Is `SafeLib` in the case of these import directives:</span>
@@ -6063,7 +6063,7 @@
 <a id="__codelineno-0-284" name="__codelineno-0-284"></a>
 <a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">def</span> <span class="nf">import_string_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">import_string_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-290" name="__codelineno-0-290"></a><span class="sd">            Byte offsets (start, end) of the import string in the source file.</span>
@@ -6604,7 +6604,7 @@
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
 <span class="normal"><a href="#__codelineno-0-71">71</a></span>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">class</span> <span class="nc">SymbolAlias</span><span class="p">:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">class</span><span class="w"> </span><span class="nc">SymbolAlias</span><span class="p">:</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    Helper class representing a symbol alias in an import directive of the`:::solidity import {symbol as alias} from &quot;file.sol&quot;;` form.</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>

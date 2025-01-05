@@ -5580,7 +5580,7 @@
 <span class="normal"><a href="#__codelineno-0-105">105</a></span>
 <span class="normal"><a href="#__codelineno-0-106">106</a></span>
 <span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="k">class</span> <span class="nc">Conditional</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="k">class</span><span class="w"> </span><span class="nc">Conditional</span><span class="p">(</span><span class="n">ExpressionAbc</span><span class="p">):</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">        ```solidity</span>
@@ -5595,7 +5595,7 @@
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="n">_false_expression</span><span class="p">:</span> <span class="n">ExpressionAbc</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="n">_true_expression</span><span class="p">:</span> <span class="n">ExpressionAbc</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">conditional</span><span class="p">:</span> <span class="n">SolcConditional</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="p">):</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">conditional</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5607,18 +5607,18 @@
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="n">init</span><span class="p">,</span> <span class="n">conditional</span><span class="o">.</span><span class="n">true_expression</span><span class="p">,</span> <span class="bp">self</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="p">)</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_expression</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_expression</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SolidityAbc</span><span class="p">:</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">            Direct children of this node.</span>
@@ -5628,7 +5628,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_expression</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">            Condition expression.</span>
@@ -5636,7 +5636,7 @@
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_condition</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span> <span class="nf">false_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">false_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">            Expression evaluated when the condition is false.</span>
@@ -5644,7 +5644,7 @@
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_expression</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">def</span> <span class="nf">true_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">true_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAbc</span><span class="p">:</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">            Expression evaluated when the condition is true.</span>
@@ -5653,7 +5653,7 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">def</span> <span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_ref_to_state_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="k">return</span> <span class="p">(</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">true_expression</span><span class="o">.</span><span class="n">is_ref_to_state_variable</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_expression</span><span class="o">.</span><span class="n">is_ref_to_state_variable</span>
@@ -5661,7 +5661,7 @@
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="k">return</span> <span class="p">(</span>

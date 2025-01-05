@@ -5714,7 +5714,7 @@
 <span class="normal"><a href="#__codelineno-0-80">80</a></span>
 <span class="normal"><a href="#__codelineno-0-81">81</a></span>
 <span class="normal"><a href="#__codelineno-0-82">82</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="nd">@total_ordering</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="k">class</span> <span class="nc">DetectorConfidence</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="k">class</span><span class="w"> </span><span class="nc">DetectorConfidence</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    The confidence of a [DetectorResult][wake.detectors.api.DetectorResult].</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5723,7 +5723,7 @@
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">MEDIUM</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">HIGH</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DetectorConfidence</span><span class="p">):</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="k">return</span> <span class="bp">NotImplemented</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="n">prio</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">]</span>
@@ -5853,7 +5853,7 @@
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
 <span class="normal"><a href="#__codelineno-0-65">65</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="nd">@total_ordering</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">class</span> <span class="nc">DetectorImpact</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">class</span><span class="w"> </span><span class="nc">DetectorImpact</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    The impact of a [DetectorResult][wake.detectors.api.DetectorResult].</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5864,7 +5864,7 @@
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">MEDIUM</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="n">HIGH</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DetectorImpact</span><span class="p">):</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="k">return</span> <span class="bp">NotImplemented</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">prio</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">]</span>
@@ -6106,7 +6106,7 @@ This attribute determines whether the detection should be filtered out if all su
 <span class="normal"><a href="#__codelineno-0-102">102</a></span>
 <span class="normal"><a href="#__codelineno-0-103">103</a></span>
 <span class="normal"><a href="#__codelineno-0-104">104</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="k">class</span> <span class="nc">Detection</span><span class="p">:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="k">class</span><span class="w"> </span><span class="nc">Detection</span><span class="p">:</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">    A single detection bound to a location in the source code through an IR node. May contain any number of subdetections.</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>
@@ -6251,7 +6251,7 @@ This attribute determines whether the detection should be filtered out if all su
 <span class="normal"><a href="#__codelineno-0-126">126</a></span>
 <span class="normal"><a href="#__codelineno-0-127">127</a></span>
 <span class="normal"><a href="#__codelineno-0-128">128</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="k">class</span> <span class="nc">DetectorResult</span><span class="p">:</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="k">class</span><span class="w"> </span><span class="nc">DetectorResult</span><span class="p">:</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">    A single result reported by a [Detector][wake.detectors.api.Detector].</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>
@@ -6267,7 +6267,7 @@ This attribute determines whether the detection should be filtered out if all su
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="n">confidence</span><span class="p">:</span> <span class="n">DetectorConfidence</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="n">uri</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <a id="__codelineno-0-123" name="__codelineno-0-123"></a>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">impact</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DetectorImpact</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid impact: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">impact</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DetectorConfidence</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -6392,7 +6392,7 @@ In this case, the detector should operate on all paths. May be ignored unless <a
 <span class="normal"><a href="#__codelineno-0-163">163</a></span>
 <span class="normal"><a href="#__codelineno-0-164">164</a></span>
 <span class="normal"><a href="#__codelineno-0-165">165</a></span>
-<span class="normal"><a href="#__codelineno-0-166">166</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="k">class</span> <span class="nc">Detector</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="k">class</span><span class="w"> </span><span class="nc">Detector</span><span class="p">(</span><span class="n">Visitor</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="sd">    Base class for detectors.</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>
@@ -6408,7 +6408,7 @@ In this case, the detector should operate on all paths. May be ignored unless <a
 <a id="__codelineno-0-144" name="__codelineno-0-144"></a>    <span class="n">execution_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cli&quot;</span><span class="p">,</span> <span class="s2">&quot;lsp&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;both&quot;</span>  <span class="c1"># TODO is this needed?</span>
 <a id="__codelineno-0-145" name="__codelineno-0-145"></a>
 <a id="__codelineno-0-146" name="__codelineno-0-146"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="k">def</span> <span class="nf">visit_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;paths&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">]:</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">visit_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;paths&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">]:</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">        Configurable visit mode of the detector. If set to `paths`, the detector `visit_` methods will be called only for the paths specified by the user.</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">        If set to `all`, the detector `visit_` methods will be called for all paths, leaving the filtering of detections to the detector implementation.</span>
@@ -6420,7 +6420,7 @@ In this case, the detector should operate on all paths. May be ignored unless <a
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a>        <span class="k">return</span> <span class="s2">&quot;paths&quot;</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a>
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="k">def</span> <span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DetectorResult</span><span class="p">]:</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DetectorResult</span><span class="p">]:</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">        Abstract method that must be implemented in a detector to return the discovered detections.</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a>
@@ -6540,7 +6540,7 @@ In this case, the detector should use the <code>paths</code> attribute to determ
 <span class="normal"><a href="#__codelineno-0-164">164</a></span>
 <span class="normal"><a href="#__codelineno-0-165">165</a></span>
 <span class="normal"><a href="#__codelineno-0-166">166</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="k">def</span> <span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DetectorResult</span><span class="p">]:</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DetectorResult</span><span class="p">]:</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    Abstract method that must be implemented in a detector to return the discovered detections.</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a>

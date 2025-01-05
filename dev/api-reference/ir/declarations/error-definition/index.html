@@ -5711,7 +5711,7 @@
 <span class="normal"><a href="#__codelineno-0-187">187</a></span>
 <span class="normal"><a href="#__codelineno-0-188">188</a></span>
 <span class="normal"><a href="#__codelineno-0-189">189</a></span>
-<span class="normal"><a href="#__codelineno-0-190">190</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span> <span class="nc">ErrorDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span><span class="w"> </span><span class="nc">ErrorDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    Definition of an error.</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>
@@ -5731,7 +5731,7 @@
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="c1"># not a part of the AST</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">_used_in</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">weakref</span><span class="o">.</span><span class="n">ReferenceType</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]]</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="n">SolcErrorDefinition</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="p">):</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5746,22 +5746,22 @@
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="p">)</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_used_in</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_used_in</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="nd">@classmethod</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">def</span> <span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_strip_weakrefs</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_used_in&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span> <span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="c1"># SolcErrorDefinition node always contains name_location attribute</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="c1"># this method is implemented here just for completeness and to satisfy the linter</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="n">byte_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ast_node</span><span class="o">.</span><span class="n">name_location</span><span class="o">.</span><span class="n">byte_offset</span>
@@ -5769,7 +5769,7 @@
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">return</span> <span class="n">byte_start</span><span class="p">,</span> <span class="n">byte_start</span> <span class="o">+</span> <span class="n">byte_length</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">]:</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">]:</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">            Parent IR node.</span>
@@ -5777,7 +5777,7 @@
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">,</span> <span class="n">StructuredDocumentation</span><span class="p">]]:</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">,</span> <span class="n">StructuredDocumentation</span><span class="p">]]:</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            Direct children of this node.</span>
@@ -5788,8 +5788,8 @@
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span> <span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="kn">from</span> <span class="nn">.contract_definition</span> <span class="kn">import</span> <span class="n">ContractDefinition</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">.contract_definition</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContractDefinition</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ContractDefinition</span><span class="p">):</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">canonical_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -5797,7 +5797,7 @@
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span> <span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a>            <span class="sa">f</span><span class="s2">&quot;error </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2">(&quot;</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>            <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -5815,7 +5815,7 @@
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="k">return</span> <span class="n">ret</span>
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterList</span><span class="p">:</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterList</span><span class="p">:</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="sd">            Parameter list describing parameters of the error.</span>
@@ -5823,7 +5823,7 @@
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138"></a>    <span class="k">def</span> <span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">]:</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">]:</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.</span>
@@ -5832,7 +5832,7 @@
 <a id="__codelineno-0-144" name="__codelineno-0-144"></a>
 <a id="__codelineno-0-145" name="__codelineno-0-145"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="k">def</span> <span class="nf">error_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">error_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">            Selector of the error.</span>
@@ -5849,7 +5849,7 @@
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a>            <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="mi">4</span><span class="p">]</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162"></a>
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">def</span> <span class="nf">used_in</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">used_in</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">]:</span>
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="sd">            Contracts (including child contracts) that use this error in a revert statement, a contract that defines this error and contracts that inherit this error.</span>
@@ -5857,15 +5857,15 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">c</span><span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_in</span><span class="p">)</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">references</span><span class="p">(</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">MemberAccess</span><span class="p">,]]:</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">            Set of all IR nodes referencing this error.</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="kn">from</span> <span class="nn">..expressions.identifier</span> <span class="kn">import</span> <span class="n">Identifier</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="kn">from</span> <span class="nn">..expressions.member_access</span> <span class="kn">import</span> <span class="n">MemberAccess</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.identifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identifier</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.member_access</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemberAccess</span>
 <a id="__codelineno-0-181" name="__codelineno-0-181"></a>
 <a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">r</span><span class="p">())</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="p">]</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183"></a>

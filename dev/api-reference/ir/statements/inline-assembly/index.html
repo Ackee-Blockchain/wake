@@ -5876,7 +5876,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <span class="normal"><a href="#__codelineno-0-216">216</a></span>
 <span class="normal"><a href="#__codelineno-0-217">217</a></span>
 <span class="normal"><a href="#__codelineno-0-218">218</a></span>
-<span class="normal"><a href="#__codelineno-0-219">219</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">class</span> <span class="nc">ExternalReference</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">class</span><span class="w"> </span><span class="nc">ExternalReference</span><span class="p">:</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    Reference from an inline assembly block to a Solidity declaration.</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    !!! warning</span>
@@ -5895,7 +5895,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">_suffix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InlineAssemblySuffix</span><span class="p">]</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">_yul_identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">YulIdentifier</span><span class="p">]</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">inline_assembly</span><span class="p">:</span> <span class="n">InlineAssembly</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
@@ -5921,14 +5921,14 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">register_post_process_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_post_process</span><span class="p">)</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_inline_assembly&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_source_unit&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_reference_resolver&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="k">return</span> <span class="n">state</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">def</span> <span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_params</span><span class="p">:</span> <span class="n">CallbackParams</span><span class="p">):</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="n">referenced_declaration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">referenced_declaration</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="n">referenced_declaration</span><span class="o">.</span><span class="n">register_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">register_destroy_callback</span><span class="p">(</span>
@@ -5944,11 +5944,11 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_yul_identifier</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">data</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_yul_identifier</span><span class="o">.</span><span class="n">_external_reference</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span> <span class="nf">_destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">referenced_declaration</span><span class="p">:</span> <span class="n">VariableDeclaration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">referenced_declaration</span><span class="p">:</span> <span class="n">VariableDeclaration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="n">referenced_declaration</span><span class="o">.</span><span class="n">unregister_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">def</span> <span class="nf">source_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">source_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">            Source unit that contains this node.</span>
@@ -5956,7 +5956,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>        <span class="k">return</span> <span class="n">is_not_none</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_unit</span><span class="p">())</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>
 <a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span> <span class="nf">byte_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">byte_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">            Byte offsets (start and end) of the external reference in the source file.</span>
@@ -5969,7 +5969,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">def</span> <span class="nf">identifier_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">identifier_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">            Returns the byte location of `stateVar` on line 6, not `stateVar.slot`:</span>
@@ -6008,7 +6008,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="k">def</span> <span class="nf">referenced_declaration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VariableDeclaration</span><span class="p">:</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">referenced_declaration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VariableDeclaration</span><span class="p">:</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">            Solidity variable declaration referenced by this external reference.</span>
@@ -6020,7 +6020,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-185" name="__codelineno-0-185"></a>        <span class="k">return</span> <span class="n">node</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186"></a>
 <a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="k">def</span> <span class="nf">inline_assembly</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineAssembly</span><span class="p">:</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">inline_assembly</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineAssembly</span><span class="p">:</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="sd">            Inline assembly block this external references belongs to.</span>
@@ -6028,7 +6028,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="k">return</span> <span class="n">is_not_none</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inline_assembly</span><span class="p">())</span>
 <a id="__codelineno-0-194" name="__codelineno-0-194"></a>
 <a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">def</span> <span class="nf">yul_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulIdentifier</span><span class="p">:</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">yul_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulIdentifier</span><span class="p">:</span>
 <a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">            Yul Identifier node representing this external reference.</span>
@@ -6037,12 +6037,12 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yul_identifier</span>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="k">def</span> <span class="nf">value_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">value_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206"></a>        <span class="c1"># TODO document this?</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_size</span>
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">def</span> <span class="nf">suffix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InlineAssemblySuffix</span><span class="p">]:</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">suffix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InlineAssemblySuffix</span><span class="p">]:</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">        - `.slot` and `.offset` suffixes may be applied to storage variables.</span>
 <a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">        - `.length` suffix may be applied to dynamically-sized `calldata` arrays, `calldata` bytes and `calldata` strings.</span>
@@ -6589,7 +6589,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <span class="normal"><a href="#__codelineno-0-369">369</a></span>
 <span class="normal"><a href="#__codelineno-0-370">370</a></span>
 <span class="normal"><a href="#__codelineno-0-371">371</a></span>
-<span class="normal"><a href="#__codelineno-0-372">372</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="k">class</span> <span class="nc">InlineAssembly</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-372">372</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssembly</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">    Inline assembly block in Solidity.</span>
 <a id="__codelineno-0-225" name="__codelineno-0-225"></a><span class="sd">    !!! example</span>
@@ -6621,7 +6621,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="n">_external_references</span><span class="p">:</span> <span class="n">IntervalTree</span>
 <a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="n">_flags</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">InlineAssemblyFlag</span><span class="p">]</span>
 <a id="__codelineno-0-253" name="__codelineno-0-253"></a>
-<a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-256" name="__codelineno-0-256"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="n">inline_assembly</span><span class="p">:</span> <span class="n">SolcInlineAssembly</span><span class="p">,</span>
@@ -6646,12 +6646,12 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-276" name="__codelineno-0-276"></a>
 <a id="__codelineno-0-277" name="__codelineno-0-277"></a>        <span class="n">init</span><span class="o">.</span><span class="n">inline_assembly</span> <span class="o">=</span> <span class="kc">None</span>
 <a id="__codelineno-0-278" name="__codelineno-0-278"></a>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-280" name="__codelineno-0-280"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yul_block</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282"></a>
 <a id="__codelineno-0-283" name="__codelineno-0-283"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-285" name="__codelineno-0-285"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-287" name="__codelineno-0-287"></a>        <span class="n">Block</span><span class="p">,</span>
@@ -6668,7 +6668,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-299" name="__codelineno-0-299"></a>
 <a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulBlock</span><span class="p">]:</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulBlock</span><span class="p">]:</span>
 <a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">            Direct children of this node.</span>
@@ -6676,7 +6676,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yul_block</span>
 <a id="__codelineno-0-307" name="__codelineno-0-307"></a>
 <a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="k">def</span> <span class="nf">yul_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">yul_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">            Yul block containing Yul IR nodes ([YulAbc][wake.ir.yul.abc.YulAbc]).</span>
@@ -6684,7 +6684,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-314" name="__codelineno-0-314"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yul_block</span>
 <a id="__codelineno-0-315" name="__codelineno-0-315"></a>
 <a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="k">def</span> <span class="nf">evm_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineAssemblyEvmVersion</span><span class="p">:</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">evm_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineAssemblyEvmVersion</span><span class="p">:</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="sd">        Depends on the version of the `solc` compiler used to compile the contract and settings passed to the compiler.</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320"></a>
@@ -6694,7 +6694,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evm_version</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325"></a>
 <a id="__codelineno-0-326" name="__codelineno-0-326"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">InlineAssemblyFlag</span><span class="p">]:</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">InlineAssemblyFlag</span><span class="p">]:</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">            ```solidity</span>
@@ -6713,14 +6713,14 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-343" name="__codelineno-0-343"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="p">)</span>
 <a id="__codelineno-0-344" name="__codelineno-0-344"></a>
 <a id="__codelineno-0-345" name="__codelineno-0-345"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="k">def</span> <span class="nf">external_references</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">external_references</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">            External references in the inline assembly block.</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-351" name="__codelineno-0-351"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_external_references</span><span class="p">)</span>
 <a id="__codelineno-0-352" name="__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a>    <span class="k">def</span> <span class="nf">external_reference_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">]:</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">external_reference_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">]:</span>
 <a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">        Args:</span>
 <a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            byte_offset: Byte offset in the source file.</span>
@@ -6736,7 +6736,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <a id="__codelineno-0-366" name="__codelineno-0-366"></a>
 <a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-370" name="__codelineno-0-370"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-372" name="__codelineno-0-372"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">yul_block</span><span class="o">.</span><span class="n">modifies_state</span>
@@ -7105,7 +7105,7 @@ Since this is not an IR node, there must still be a Yul IR node (<a class="autor
 <span class="normal"><a href="#__codelineno-0-362">362</a></span>
 <span class="normal"><a href="#__codelineno-0-363">363</a></span>
 <span class="normal"><a href="#__codelineno-0-364">364</a></span>
-<span class="normal"><a href="#__codelineno-0-365">365</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="k">def</span> <span class="nf">external_reference_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-365">365</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="k">def</span><span class="w"> </span><span class="nf">external_reference_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExternalReference</span><span class="p">]:</span>
 <a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">    Args:</span>
 <a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">        byte_offset: Byte offset in the source file.</span>

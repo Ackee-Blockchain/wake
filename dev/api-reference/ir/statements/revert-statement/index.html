@@ -5562,7 +5562,7 @@ This is an <a class="autorefs autorefs-internal" href="../expression-statement/#
 <span class="normal"><a href="#__codelineno-0-107">107</a></span>
 <span class="normal"><a href="#__codelineno-0-108">108</a></span>
 <span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span> <span class="nc">RevertStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span><span class="w"> </span><span class="nc">RevertStatement</span><span class="p">(</span><span class="n">StatementAbc</span><span class="p">):</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    !!! warning</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">        Only matches reverts with user-defined errors:</span>
@@ -5589,18 +5589,18 @@ This is an <a class="autorefs autorefs-internal" href="../expression-statement/#
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="n">_error_call</span><span class="p">:</span> <span class="n">FunctionCall</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">revert</span><span class="p">:</span> <span class="n">SolcRevertStatement</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="p">):</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">revert</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_error_call</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">revert</span><span class="o">.</span><span class="n">error_call</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_call</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">Block</span><span class="p">,</span>
@@ -5617,7 +5617,7 @@ This is an <a class="autorefs autorefs-internal" href="../expression-statement/#
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">FunctionCall</span><span class="p">]:</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">FunctionCall</span><span class="p">]:</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">            Direct children of this node.</span>
@@ -5625,7 +5625,7 @@ This is an <a class="autorefs autorefs-internal" href="../expression-statement/#
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_call</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span> <span class="nf">error_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">:</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">error_call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">:</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">            ```solidity</span>
@@ -5643,7 +5643,7 @@ This is an <a class="autorefs autorefs-internal" href="../expression-statement/#
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_call</span><span class="o">.</span><span class="n">modifies_state</span>

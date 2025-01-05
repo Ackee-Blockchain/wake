@@ -5542,7 +5542,7 @@
 <span class="normal"><a href="#__codelineno-0-87">87</a></span>
 <span class="normal"><a href="#__codelineno-0-88">88</a></span>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">class</span> <span class="nc">StructuredDocumentation</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">class</span><span class="w"> </span><span class="nc">StructuredDocumentation</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">        Lines 1-4 in the following example:</span>
@@ -5575,7 +5575,7 @@
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">_text</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">structured_documentation</span><span class="p">:</span> <span class="n">SolcStructuredDocumentation</span><span class="p">,</span>
@@ -5585,7 +5585,7 @@
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_text</span> <span class="o">=</span> <span class="n">structured_documentation</span><span class="o">.</span><span class="n">text</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">ContractDefinition</span><span class="p">,</span>
@@ -5604,7 +5604,7 @@
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        Does not include the leading `///` or `/**` and trailing `*/`.</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>

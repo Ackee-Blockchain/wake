@@ -5602,7 +5602,7 @@
 <span class="normal"><a href="#__codelineno-0-103">103</a></span>
 <span class="normal"><a href="#__codelineno-0-104">104</a></span>
 <span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="k">class</span> <span class="nc">YulCase</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulCase</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    Represents a single case in a [YulSwitch][wake.ir.yul.switch.YulSwitch] statement.</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a>
@@ -5630,7 +5630,7 @@
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="n">_body</span><span class="p">:</span> <span class="n">YulBlock</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="n">_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">],</span> <span class="n">YulLiteral</span><span class="p">]</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">case_</span><span class="p">:</span> <span class="n">SolcYulCase</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">case_</span><span class="p">:</span> <span class="n">SolcYulCase</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">case_</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">YulBlock</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">case_</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="k">if</span> <span class="n">case_</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
@@ -5638,14 +5638,14 @@
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">YulLiteral</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">case_</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">YulAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulSwitch</span><span class="p">:</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulSwitch</span><span class="p">:</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            Parent IR node.</span>
@@ -5653,7 +5653,7 @@
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">YulBlock</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]]:</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">YulBlock</span><span class="p">,</span> <span class="n">YulLiteral</span><span class="p">]]:</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">            Direct children of this node.</span>
@@ -5663,7 +5663,7 @@
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulBlock</span><span class="p">:</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">            Body of the case.</span>
@@ -5671,7 +5671,7 @@
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">],</span> <span class="n">YulLiteral</span><span class="p">]:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">],</span> <span class="n">YulLiteral</span><span class="p">]:</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">        May be either a [YulLiteral][wake.ir.yul.literal.YulLiteral] or the string `default`.</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        `default` is used for the default case when neither of the cases match. The default case</span>
@@ -5683,7 +5683,7 @@
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">modifies_state</span>

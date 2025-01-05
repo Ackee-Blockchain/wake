@@ -5736,7 +5736,7 @@
 <span class="normal"><a href="#__codelineno-0-180">180</a></span>
 <span class="normal"><a href="#__codelineno-0-181">181</a></span>
 <span class="normal"><a href="#__codelineno-0-182">182</a></span>
-<span class="normal"><a href="#__codelineno-0-183">183</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span> <span class="nc">UsingForDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span><span class="w"> </span><span class="nc">UsingForDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    !!! note</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        Either [library_name][wake.ir.meta.using_for_directive.UsingForDirective.library_name] must be set or one of [functions][wake.ir.meta.using_for_directive.UsingForDirective.functions] or [operator_functions][wake.ir.meta.using_for_directive.UsingForDirective.operator_functions] must be non-empty.</span>
@@ -5780,7 +5780,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">_type_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TypeNameAbc</span><span class="p">]</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="c1"># TODO add _global</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="n">using_for_directive</span><span class="p">:</span> <span class="n">SolcUsingForDirective</span><span class="p">,</span>
@@ -5824,7 +5824,7 @@
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a>                <span class="n">init</span><span class="p">,</span> <span class="n">using_for_directive</span><span class="o">.</span><span class="n">type_name</span><span class="p">,</span> <span class="bp">self</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a>            <span class="p">)</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>            <span class="k">yield from</span> <span class="n">function</span>
@@ -5836,7 +5836,7 @@
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_name</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>
 <a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">]:</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ContractDefinition</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">]:</span>
 <a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">            Parent IR node.</span>
@@ -5844,7 +5844,7 @@
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">,</span> <span class="n">TypeNameAbc</span><span class="p">]]:</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5860,7 +5860,7 @@
 <a id="__codelineno-0-145" name="__codelineno-0-145"></a>            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type_name</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146"></a>
 <a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148"></a>    <span class="k">def</span> <span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">            List of functions that are attached to the target type.</span>
@@ -5868,7 +5868,7 @@
 <a id="__codelineno-0-153" name="__codelineno-0-153"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">)</span>
 <a id="__codelineno-0-154" name="__codelineno-0-154"></a>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="k">def</span> <span class="nf">operator_functions</span><span class="p">(</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">operator_functions</span><span class="p">(</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">UnaryOpOperator</span><span class="p">,</span> <span class="n">BinaryOpOperator</span><span class="p">]],</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -5878,7 +5878,7 @@
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_operator_functions</span><span class="p">)</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164"></a>
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">def</span> <span class="nf">library_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]]:</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">library_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IdentifierPath</span><span class="p">,</span> <span class="n">UserDefinedTypeName</span><span class="p">]]:</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">        Is only set in the case of `:::solidity using LibraryName for TypeName;` directive type.</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>
@@ -5888,7 +5888,7 @@
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_library_name</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="k">def</span> <span class="nf">type_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TypeNameAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">type_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TypeNameAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">        Is `None` in the case of `:::solidity using Lib for *;`.</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179"></a>

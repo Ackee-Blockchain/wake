@@ -5540,14 +5540,14 @@ However, in most cases, API functions accept both <code>Account</code> and <code
 <h2 id="addresses">Addresses<a class="headerlink" href="#addresses" title="Permanent link">#</a></h2>
 <p><code>Address</code> is a 20-byte value encoded as a hex string. It can be constructed from
 a hex string or an integer:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Address</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Address</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">Address</span><span class="p">(</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Address</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 <p>The hex string does not have to be <a href="https://eips.ethereum.org/EIPS/eip-55">EIP-55</a> compliant.</p>
 <p>Addresses can be compared with each other:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Address</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Address</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">assert</span> <span class="n">Address</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">Address</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
@@ -5555,7 +5555,7 @@ a hex string or an integer:</p>
 <p><code>Account</code> is an <code>Address</code> bound to a specific <code>Chain</code>. It can be constructed from
 an <code>Address</code>, a hex string or an integer. Optionally, a chain can be specified, otherwise
 the <code>chain</code> global object is used:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">chain</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">chain</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">other_chain</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">()</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
@@ -5572,25 +5572,25 @@ this limitation, it is possible to use the <code>address</code> property of an <
 </div>
 <h3 id="importing-accounts-and-addresses">Importing accounts and addresses<a class="headerlink" href="#importing-accounts-and-addresses" title="Permanent link">#</a></h3>
 <p><code>Account</code> and <code>Address</code> instances can be imported from a private key:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">Account</span><span class="o">.</span><span class="n">from_key</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="s2">&quot;a&quot;</span> <span class="o">*</span> <span class="mi">64</span><span class="p">)</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">Address</span><span class="o">.</span><span class="n">from_key</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="s2">&quot;a&quot;</span> <span class="o">*</span> <span class="mi">64</span><span class="p">)</span>
 </code></pre></div>
 <p>From a mnemonic:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">Account</span><span class="o">.</span><span class="n">from_mnemonic</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">11</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;junk&quot;</span><span class="p">]))</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">Address</span><span class="o">.</span><span class="n">from_mnemonic</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">11</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;junk&quot;</span><span class="p">]))</span>
 </code></pre></div>
 <p>Or from an alias (see <a href="../deployment/#managing-accounts-with-private-keys">Managing accounts with private keys</a>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span><span class="p">,</span> <span class="n">Address</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Account</span><span class="o">.</span><span class="n">from_alias</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">)</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">Address</span><span class="o">.</span><span class="n">from_alias</span><span class="p">(</span><span class="s2">&quot;alice&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>It is also possible to create a new account with a random private key:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">Account</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 </code></pre></div>
@@ -5601,7 +5601,7 @@ The private key must be imported using one of the methods described in the previ
 the client (the account must be present in <code>chain.accounts</code>).</p>
 <h4 id="signing-raw-messages">Signing raw messages<a class="headerlink" href="#signing-raw-messages" title="Permanent link">#</a></h4>
 <p>Using <code>account.sign(message)</code> it is possible to sign any message in the form of bytes:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="o">.</span><span class="n">from_mnemonic</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">11</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;junk&quot;</span><span class="p">]))</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">signature</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
@@ -5609,12 +5609,12 @@ the client (the account must be present in <code>chain.accounts</code>).</p>
 <p>The message is signed according to the <a href="https://eips.ethereum.org/EIPS/eip-191">EIP-191</a> standard (version <code>0x45</code>).</p>
 <h4 id="signing-structured-messages">Signing structured messages<a class="headerlink" href="#signing-structured-messages" title="Permanent link">#</a></h4>
 <p>Using <code>account.sign_structured(message)</code> it is possible to sign structured messages:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">class</span> <span class="nc">Transfer</span><span class="p">:</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">Transfer</span><span class="p">:</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">sender</span><span class="p">:</span> <span class="n">Address</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">recipient</span><span class="p">:</span> <span class="n">Address</span>
 <a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">amount</span><span class="p">:</span> <span class="n">uint256</span>
@@ -5637,7 +5637,7 @@ the client (the account must be present in <code>chain.accounts</code>).</p>
 <h4 id="signing-message-hash">Signing message hash<a class="headerlink" href="#signing-message-hash" title="Permanent link">#</a></h4>
 <p>While it is not recommended to sign message hashes directly, it is sometimes necessary.
 To sign a message hash, use <code>account.sign_hash(message_hash)</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="o">.</span><span class="n">from_mnemonic</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">11</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;junk&quot;</span><span class="p">]))</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">signature</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">sign_hash</span><span class="p">(</span><span class="n">keccak256</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">))</span>
@@ -5649,7 +5649,7 @@ To sign a message hash, use <code>account.sign_hash(message_hash)</code>:</p>
 <h3 id="assigning-labels">Assigning labels<a class="headerlink" href="#assigning-labels" title="Permanent link">#</a></h3>
 <p><code>Account</code> instances can be assigned labels. Labels override the default string representation
 of the account:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="n">Account</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Account</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">account</span> <span class="o">=</span> <span class="n">Account</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">account</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;ZERO&quot;</span>
@@ -5699,11 +5699,11 @@ of the account:</p>
 <h3 id="low-level-calls-and-transactions">Low-level calls and transactions<a class="headerlink" href="#low-level-calls-and-transactions" title="Permanent link">#</a></h3>
 <p>Each <code>Account</code> instance has <code>call</code>, <code>transact</code>, <code>estimate</code> and <code>access_list</code> methods that can be used to perform arbitrary
 requests (see <a href="../interacting-with-contracts/">Interacting with contracts</a>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 <a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">def</span> <span class="nf">test_accounts</span><span class="p">():</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_accounts</span><span class="p">():</span>
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">alice</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">bob</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">accounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
@@ -5729,7 +5729,7 @@ also applies to contract accounts. However, contract accounts have additional me
 <li><code>deploy</code> - deploys the contract, requires equivalent arguments as the constructor of the contract in Solidity,</li>
 <li>other contract-specific methods generated in <code>pytypes</code>, including getters for public state variables.</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">get_creation_code</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">Counter</span><span class="o">.</span><span class="n">setCount</span><span class="o">.</span><span class="n">selector</span><span class="o">.</span><span class="n">hex</span><span class="p">())</span>
@@ -5739,12 +5739,12 @@ also applies to contract accounts. However, contract accounts have additional me
 <p class="admonition-title">Constructing contracts from an address</p>
 <p>The ability to construct a contract from an address (and an optional <code>Chain</code> instance) can be very useful
 when interacting with contracts through proxies:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span> <span class="nn">wake.testing</span> <span class="kn">import</span> <span class="o">*</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span> <span class="nn">pytypes.contracts.Counter</span> <span class="kn">import</span> <span class="n">Counter</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kn">from</span> <span class="nn">pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span> <span class="kn">import</span> <span class="n">ERC1967Proxy</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">wake.testing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.contracts.Counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pytypes.openzeppelin.contracts.proxy.ERC1967.ERC1967Proxy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ERC1967Proxy</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nd">@chain</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">def</span> <span class="nf">test_proxy</span><span class="p">():</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_proxy</span><span class="p">():</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="n">impl</span> <span class="o">=</span> <span class="n">Counter</span><span class="o">.</span><span class="n">deploy</span><span class="p">()</span>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="n">proxy</span> <span class="o">=</span> <span class="n">ERC1967Proxy</span><span class="o">.</span><span class="n">deploy</span><span class="p">(</span><span class="n">impl</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>

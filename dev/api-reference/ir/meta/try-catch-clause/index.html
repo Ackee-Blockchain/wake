@@ -5673,7 +5673,7 @@
 <span class="normal"><a href="#__codelineno-0-166">166</a></span>
 <span class="normal"><a href="#__codelineno-0-167">167</a></span>
 <span class="normal"><a href="#__codelineno-0-168">168</a></span>
-<span class="normal"><a href="#__codelineno-0-169">169</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span> <span class="nc">TryCatchClause</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">class</span><span class="w"> </span><span class="nc">TryCatchClause</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    !!! example</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        All the following are try/catch clauses in the example below:</span>
@@ -5706,7 +5706,7 @@
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="n">_error_name</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="n">_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">]</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">try_catch_clause</span><span class="p">:</span> <span class="n">SolcTryCatchClause</span><span class="p">,</span>
@@ -5721,14 +5721,14 @@
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">ParameterList</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">try_catch_clause</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="k">yield</span> <span class="bp">self</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TryStatement</span><span class="p">:</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TryStatement</span><span class="p">:</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">            Parent IR node.</span>
@@ -5736,7 +5736,7 @@
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Block</span><span class="p">,</span> <span class="n">ParameterList</span><span class="p">]]:</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Block</span><span class="p">,</span> <span class="n">ParameterList</span><span class="p">]]:</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">        Yields:</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">            Direct children of this node.</span>
@@ -5746,7 +5746,7 @@
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">def</span> <span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Block</span><span class="p">:</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Block</span><span class="p">:</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">            Body of the try/catch clause.</span>
@@ -5754,7 +5754,7 @@
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="k">def</span> <span class="nf">error_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">error_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">            For the following snippet:</span>
@@ -5781,7 +5781,7 @@
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_name</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">]:</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParameterList</span><span class="p">]:</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">        Can be `None` if the try clause does not have return parameters or if the catch clause does not accept parameters.</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">        !!! example</span>
@@ -5815,7 +5815,7 @@
 <a id="__codelineno-0-163" name="__codelineno-0-163"></a>
 <a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">modifies_state</span>

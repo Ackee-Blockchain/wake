@@ -5605,7 +5605,7 @@
 <span class="normal"><a href="#__codelineno-0-130">130</a></span>
 <span class="normal"><a href="#__codelineno-0-131">131</a></span>
 <span class="normal"><a href="#__codelineno-0-132">132</a></span>
-<span class="normal"><a href="#__codelineno-0-133">133</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="k">class</span> <span class="nc">YulLiteral</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulLiteral</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    String literals may have up to 32 bytes.</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a>
@@ -5640,7 +5640,7 @@
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">_hex_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">SolcYulLiteral</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">SolcYulLiteral</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">YulAbc</span><span class="p">):</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">literal</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">kind</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">literal</span><span class="o">.</span><span class="n">type</span>
@@ -5653,7 +5653,7 @@
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="p">)</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="n">YulAssignment</span><span class="p">,</span>
@@ -5672,7 +5672,7 @@
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulLiteralKind</span><span class="p">:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">YulLiteralKind</span><span class="p">:</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">            Kind of the literal.</span>
@@ -5685,7 +5685,7 @@
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="c1"># return self._type</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106"></a>
 <a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">        Is `None` for hex-escaped strings that are not valid UTF-8 sequences, e.g. `:::solidity &quot;\\xaa\\xbb&quot;`.</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111"></a>
@@ -5696,7 +5696,7 @@
 <a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span> <span class="nf">hex_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hex_value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        !!! note</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">            Only set for [YulLiteralKind.STRING][wake.ir.enums.YulLiteralKind.STRING] literals in Solidity &gt;= 0.8.5.</span>
@@ -5707,7 +5707,7 @@
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hex_value</span>
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">def</span> <span class="nf">modifies_state</span><span class="p">(</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">modifies_state</span><span class="p">(</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ExpressionAbc</span><span class="p">,</span> <span class="n">StatementAbc</span><span class="p">,</span> <span class="n">YulAbc</span><span class="p">],</span> <span class="n">ModifiesStateFlag</span><span class="p">]]:</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>

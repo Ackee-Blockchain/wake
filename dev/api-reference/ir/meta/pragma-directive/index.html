@@ -5492,20 +5492,20 @@
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
 <span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">class</span> <span class="nc">PragmaDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">class</span><span class="w"> </span><span class="nc">PragmaDirective</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">):</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">_ast_node</span><span class="p">:</span> <span class="n">SolcPragmaDirective</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">_parent</span><span class="p">:</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ReferenceType</span><span class="p">[</span><span class="n">SourceUnit</span><span class="p">]</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">_literals</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">pragma</span><span class="p">:</span> <span class="n">SolcPragmaDirective</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="p">):</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">pragma</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_literals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pragma</span><span class="o">.</span><span class="n">literals</span><span class="p">)</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceUnit</span><span class="p">:</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">            Parent IR node.</span>
@@ -5513,7 +5513,7 @@
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="k">def</span> <span class="nf">literals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">literals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">            `:::py (&#39;solidity&#39;, &#39;^&#39;, &#39;0.8&#39;, &#39;||&#39;, &#39;0.7&#39;, &#39;.1&#39;, &#39;-&#39;, &#39;0.7&#39;, &#39;.6&#39;)` for the following pragma:</span>

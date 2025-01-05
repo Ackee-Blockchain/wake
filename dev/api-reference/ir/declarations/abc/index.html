@@ -5676,7 +5676,7 @@
 <span class="normal"><a href="#__codelineno-0-212">212</a></span>
 <span class="normal"><a href="#__codelineno-0-213">213</a></span>
 <span class="normal"><a href="#__codelineno-0-214">214</a></span>
-<span class="normal"><a href="#__codelineno-0-215">215</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">class</span> <span class="nc">DeclarationAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">class</span><span class="w"> </span><span class="nc">DeclarationAbc</span><span class="p">(</span><span class="n">SolidityAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    Abstract base class for all Solidity declarations.</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -5696,7 +5696,7 @@
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="p">]</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="p">]</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">IrInitTuple</span><span class="p">,</span> <span class="n">solc_node</span><span class="p">:</span> <span class="n">SolcDeclarationUnion</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">SolidityAbc</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="p">):</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">solc_node</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
@@ -5711,16 +5711,16 @@
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>            <span class="p">)</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_references</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_references</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="nd">@classmethod</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span> <span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_strip_weakrefs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_strip_weakrefs</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_references&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span> <span class="nf">register_reference</span><span class="p">(</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register_reference</span><span class="p">(</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">reference</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>            <span class="n">Identifier</span><span class="p">,</span>
@@ -5733,7 +5733,7 @@
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="p">):</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">reference</span><span class="p">))</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="k">def</span> <span class="nf">unregister_reference</span><span class="p">(</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_reference</span><span class="p">(</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="n">reference</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="n">Identifier</span><span class="p">,</span>
@@ -5747,7 +5747,7 @@
 <a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span> <span class="k">if</span> <span class="n">r</span><span class="p">()</span> <span class="ow">is</span> <span class="n">reference</span><span class="p">)</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
 <a id="__codelineno-0-115" name="__codelineno-0-115"></a>
-<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">def</span> <span class="nf">get_all_references</span><span class="p">(</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_references</span><span class="p">(</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">include_declarations</span><span class="p">:</span> <span class="nb">bool</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119"></a>        <span class="n">Union</span><span class="p">[</span>
@@ -5767,11 +5767,11 @@
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">references</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="k">def</span> <span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="o">...</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140"></a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="sd">        Returns:</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">            User-defined name of the declared object.</span>
@@ -5780,7 +5780,7 @@
 <a id="__codelineno-0-146" name="__codelineno-0-146"></a>
 <a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149"></a>    <span class="k">def</span> <span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">canonical_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">        !!! example</span>
 <a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="sd">            `ContractName.StructName.FieldName` in the case of the `FieldName` [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] declaration in the following example:</span>
@@ -5799,7 +5799,7 @@
 <a id="__codelineno-0-165" name="__codelineno-0-165"></a>
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">def</span> <span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">declaration_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">        Declaration string that can be used for example in LSP hover. Does not include the declaration body, if any.</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">        Does not need to match the actual declaration string in the source code (may use a different order of keywords, for example).</span>
@@ -5818,7 +5818,7 @@
 <a id="__codelineno-0-184" name="__codelineno-0-184"></a>
 <a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="nd">@abstractmethod</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="k">def</span> <span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">references</span><span class="p">(</span>
 <a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">Union</span><span class="p">[</span>
@@ -5837,7 +5837,7 @@
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="o">...</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">def</span> <span class="nf">name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">name_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        Similar to [byte_location][wake.ir.abc.IrAbc.byte_location], but returns the location of the declaration name in the source code.</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>
