@@ -1024,3 +1024,8 @@ else:
         31: List31,
         32: List32,
     }
+
+    def new_fixed_list(length: int, items: Iterable[T]) -> FixedSizeList[T]:
+        cls = type(f"List{length}", (FixedSizeList,), {"length": length})
+        cls.__module__ = "wake.development.primitive_types"
+        return cls(items)
