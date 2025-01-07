@@ -732,7 +732,6 @@ async def run_init_pytypes(
     return_tx: bool,
     warnings: bool,
     watch: bool,
-    revm: bool,
     incremental: Optional[bool],
 ):
     import glob
@@ -749,7 +748,7 @@ async def run_init_pytypes(
     def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
         start = time.perf_counter()
         with console.status("[bold green]Generating pytypes..."):
-            type_generator = TypeGenerator(config, return_tx, revm)
+            type_generator = TypeGenerator(config, return_tx)
             type_generator.generate_types(compiler)
         end = time.perf_counter()
         console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
@@ -839,7 +838,7 @@ async def run_init_pytypes(
 
     start = time.perf_counter()
     with console.status("[bold green]Generating pytypes..."):
-        type_generator = TypeGenerator(config, return_tx, revm)
+        type_generator = TypeGenerator(config, return_tx)
         type_generator.generate_types(compiler)
     end = time.perf_counter()
     console.log(f"[green]Generated pytypes in [bold green]{end - start:.2f} s[/]")
@@ -881,12 +880,6 @@ async def run_init_pytypes(
     is_flag=True,
     default=False,
     help="Watch for changes in the project and regenerate pytypes on change.",
-)
-@click.option(
-    "--revm",
-    is_flag=True,
-    default=False,
-    help="Generate revm pytypes.",
 )
 @click.option(
     "--incremental/--no-incremental",
@@ -979,7 +972,6 @@ def init_pytypes(
     return_tx: bool,
     warnings: bool,
     watch: bool,
-    revm: bool,
     incremental: Optional[bool],
     allow_paths: Tuple[str],
     evm_version: Optional[str],
@@ -1029,7 +1021,7 @@ def init_pytypes(
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
     asyncio.run(
-        run_init_pytypes(config, paths, return_tx, warnings, watch, revm, incremental)
+        run_init_pytypes(config, paths, return_tx, warnings, watch, incremental)
     )
 
 

@@ -30,15 +30,11 @@ def run_accounts(ctx: Context):
     """
     Run Wake accounts manager.
     """
-    from eth_account import Account
-
     from wake.config import WakeConfig
 
     config = WakeConfig(local_config_path=ctx.obj.get("local_config_path", None))
     config.load_configs()
     ctx.obj["config"] = config
-
-    Account.enable_unaudited_hdwallet_features()
 
 
 @run_accounts.command(name="new")
@@ -54,7 +50,26 @@ def run_accounts(ctx: Context):
 @click.option(
     "--mnemonic/--no-mnemonic", is_flag=True, default=True, help="Print mnemonic"
 )
-@click.option("--language", "--lang", default="english", help="Mnemonic language")
+@click.option(
+    "--language",
+    "--lang",
+    type=click.Choice(
+        [
+            "english",
+            "chinese_simplified",
+            "chinese_traditional",
+            "czech",
+            "french",
+            "italian",
+            "japanese",
+            "korean",
+            "portuguese",
+            "spanish",
+        ]
+    ),
+    default="english",
+    help="Mnemonic language",
+)
 @click.option("--words", default=12, help="Number of words")
 @click.option("--hd-path", default="m/44'/60'/0'/0/0", help="HD path")
 @click.option("--keystore", type=click.Path(file_okay=False), help="Keystore path")
@@ -74,10 +89,9 @@ def accounts_new(
     """
     Create a new account.
     """
-    import json
+    import os
 
-    from eth_account import Account
-    from eth_utils.address import to_checksum_address
+    from wake_rs import Address, keccak256, new_mnemonic, to_checksum_address
 
     if keystore is None:
         path = Path(ctx.obj["config"].global_data_path) / "keystore"
@@ -89,29 +103,26 @@ def accounts_new(
     if not path.is_dir():
         raise click.BadParameter("Keystore path must be a directory")
 
-    path = path / f"{alias}.json"
-    if path.exists():
+    if (path / f"{alias}.json").exists():
         raise click.BadParameter("Alias already exists, remove it first")
 
     if mnemonic:
+        mnemonic_str = new_mnemonic(words, language)
+
         passphrase = click.prompt(
             "Mnemonic passphrase", default="", hide_input=True, confirmation_prompt=True
         )
-        acc, mnemonic_str = Account.create_with_mnemonic(
-            passphrase, words, language, hd_path
-        )
+        acc = Address.from_mnemonic(mnemonic_str, passphrase, hd_path)
         if click.confirm("Mnemonic will be printed, continue?"):
             console.print(f"[bold]{mnemonic_str}[/bold]")
     else:
-        acc = Account.create()
+        pk = keccak256(os.urandom(32))
+        acc = Address.from_key(pk)
 
-    k = Account.encrypt(acc.key, password, kdf)
-
-    with path.open("w") as f:
-        json.dump(k, f)
+    acc.export_keystore(alias, password, path)
 
     console.print(
-        f"[green]Account created: {alias} {to_checksum_address(acc.address)}[/green]"
+        f"[green]Account created: {alias} {to_checksum_address(str(acc))}[/green]"
     )
 
 
@@ -127,7 +138,7 @@ def accounts_remove(ctx: Context, keystore: Optional[str], alias: str):
     """
     import json
 
-    from eth_utils.address import to_checksum_address
+    from wake_rs import to_checksum_address
 
     if keystore is None:
         path = Path(ctx.obj["config"].global_data_path) / "keystore"
@@ -158,7 +169,7 @@ def accounts_list(ctx: Context, keystore: Optional[str]):
     """
     import json
 
-    from eth_utils.address import to_checksum_address
+    from wake_rs import to_checksum_address
 
     if keystore is None:
         path = Path(ctx.obj["config"].global_data_path) / "keystore"
@@ -201,10 +212,7 @@ def accounts_import(
     """
     Import an account from a private key or mnemonic.
     """
-    import json
-
-    from eth_account import Account
-    from eth_utils.address import to_checksum_address
+    from wake_rs import Address, to_checksum_address
 
     if keystore is None:
         path = Path(ctx.obj["config"].global_data_path) / "keystore"
@@ -216,8 +224,7 @@ def accounts_import(
     if not path.is_dir():
         raise click.BadParameter("Keystore path must be a directory")
 
-    path = path / f"{alias}.json"
-    if path.exists():
+    if (path / f"{alias}.json").exists():
         raise click.BadParameter("Alias already exists, remove it first")
 
     key_or_mnemonic = click.prompt("Private key or mnemonic", hide_input=True)
@@ -236,17 +243,14 @@ def accounts_import(
             key = None
 
     if key is not None:
-        acc = Account.from_key(key)
+        acc = Address.from_key(key)
     else:
-        acc = Account.from_mnemonic(key_or_mnemonic, "", hd_path)
+        acc = Address.from_mnemonic(key_or_mnemonic, "", hd_path)
 
-    k = Account.encrypt(acc.key, password, kdf)
-
-    with path.open("w") as f:
-        json.dump(k, f)
+    acc.export_keystore(alias, password, path)
 
     console.print(
-        f"[green]Account imported: {alias} {to_checksum_address(acc.address)}[/green]"
+        f"[green]Account imported: {alias} {to_checksum_address(acc)}[/green]"
     )
 
 
@@ -260,10 +264,7 @@ def accounts_export(ctx: Context, keystore: Optional[str], alias: str):
     """
     Export an account's private key.
     """
-    import json
-
-    from eth_account import Account
-    from eth_utils.address import to_checksum_address
+    from wake_rs import Address, to_checksum_address
 
     if keystore is None:
         path = Path(ctx.obj["config"].global_data_path) / "keystore"
@@ -272,14 +273,13 @@ def accounts_export(ctx: Context, keystore: Optional[str], alias: str):
     if not path.is_dir():
         raise click.BadParameter("Keystore path must be a directory")
 
-    path = path / f"{alias}.json"
-    if not path.exists():
+    if not (path / f"{alias}.json").exists():
         raise click.BadParameter("Alias does not exist")
 
-    with path.open() as f:
-        k = json.load(f)
+    acc = Address.from_alias(
+        alias, click.prompt("Password", default="", hide_input=True), path
+    )
 
-    x = Account.decrypt(k, click.prompt("Password", default="", hide_input=True))
     console.print(
-        f"[green]Address {to_checksum_address(k['address'])} with private key {x.hex()}[/green]"
+        f"[green]Address {to_checksum_address(acc)} with private key 0x{acc.private_key.hex()}[/green]"
     )
