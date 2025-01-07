@@ -31,6 +31,7 @@ from urllib.request import Request, urlopen
 
 from Crypto.Hash import keccak
 from pydantic import TypeAdapter, ValidationError
+from wake_rs import Abi, Account, Address, Contract, abi
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
 from ..compiler.solc_frontend import (
@@ -44,13 +45,7 @@ from ..config import WakeConfig
 from ..core.solidity_version import SolidityVersion
 from ..svm import SolcVersionManager
 from ..utils import get_package_version
-from wake_rs import abi, Abi, Account, Address, Contract
-from .core import (
-    #Abi,
-    #Account,
-    #Address,
-    #Contract,
-    #abi,
+from .core import (  # Abi,; Account,; Address,; Contract,; abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_user_defined_value_types_index,
@@ -1549,10 +1544,13 @@ def _try_change_erc1155_total_supply(
 
 
 def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
-    info, source = get_info_from_explorer(addr, chain_id)
+    config = get_config()
+    info, source = get_info_from_explorer(addr, chain_id, config)
 
     if source == "sourcify":
-        metadata = json.loads(next(f for f in info["files"] if f["name"] == "metadata.json")["content"])
+        metadata = json.loads(
+            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
+        )
         name = next(iter(metadata["settings"]["compilationTarget"].values()))
         abi = metadata["output"]["abi"]
         return name, abi
@@ -1566,8 +1564,9 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
         return name, abi
 
 
-def get_info_from_explorer(addr: str, chain_id: int) -> Tuple[Dict[str, Any], str]:
-    config = get_config()
+def get_info_from_explorer(
+    addr: str, chain_id: int, config: WakeConfig
+) -> Tuple[Dict[str, Any], str]:
     if chain_id not in chain_explorer_urls:
         api_key = None
     else:
@@ -1612,7 +1611,10 @@ def get_info_from_explorer(addr: str, chain_id: int) -> Tuple[Dict[str, Any], st
             if e.code == 404:
                 if chain_id in chain_explorer_urls:
                     u = urlparse(chain_explorer_urls[chain_id].url)
-                    raise AbiNotFound(method="sourcify", api_key_name=".".join(u.netloc.split(".")[:-1])) from None
+                    raise AbiNotFound(
+                        method="sourcify",
+                        api_key_name=".".join(u.netloc.split(".")[:-1]),
+                    ) from None
                 else:
                     raise AbiNotFound(method="sourcify") from None
             else:
@@ -1628,18 +1630,21 @@ def _get_storage_layout_from_explorer(
 ) -> SolcOutputStorageLayout:
     loop = asyncio.get_event_loop()
 
-    info, source = get_info_from_explorer(addr, chain_id)
     config = get_config()
+    info, source = get_info_from_explorer(addr, chain_id, config)
 
     if source == "sourcify":
         # sourcify is currently Solidity-only
-        metadata = json.loads(next(f for f in info["files"] if f["name"] == "metadata.json")["content"])
+        metadata = json.loads(
+            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
+        )
         name = next(iter(metadata["settings"]["compilationTarget"].values()))
 
         version = SolidityVersion.fromstring(metadata["compiler"]["version"])
 
         sources = {
-            config.project_root_path / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
+            config.project_root_path
+            / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
             for file in info["files"]
             if file["name"].endswith(".sol")
         }
@@ -1699,7 +1704,9 @@ def _get_storage_layout_from_explorer(
                     "remappings"
                 ] = standard_input.settings.remappings
 
-            if any(source.urls is not None for source in standard_input.sources.values()):
+            if any(
+                source.urls is not None for source in standard_input.sources.values()
+            ):
                 raise NotImplementedError("Compilation from URLs not supported")
 
             sources = {
@@ -1725,7 +1732,9 @@ def _get_storage_layout_from_explorer(
 
     if version < SolidityVersion(0, 5, 13):
         # storageLayout is only available in 0.5.13 and above
-        raise ValueError(f"Cannot get storage layout of contract written in Solidity {version}, must be >=0.5.13")
+        raise ValueError(
+            f"Cannot get storage layout of contract written in Solidity {version}, must be >=0.5.13"
+        )
 
     svm = SolcVersionManager(config)
     if not svm.installed(version):
@@ -1752,7 +1761,9 @@ def _get_storage_layout_from_explorer(
         compiler.compile_unit_raw(
             compilation_units[0],
             version,
-            compiler.create_build_settings([SolcOutputSelectionEnum.STORAGE_LAYOUT], None),
+            compiler.create_build_settings(
+                [SolcOutputSelectionEnum.STORAGE_LAYOUT], None
+            ),
             dummy_logger,
         )
     )
@@ -1761,11 +1772,7 @@ def _get_storage_layout_from_explorer(
         raise ValueError("Errors during compilation")
 
     try:
-        info = next(
-            c[name]
-            for c in solc_output.contracts.values()
-            if name in c
-        )
+        info = next(c[name] for c in solc_output.contracts.values() if name in c)
     except StopIteration:
         raise ValueError("Contract not found in compilation output")
 

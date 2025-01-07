@@ -80,18 +80,11 @@ async def open_address(
     from wake.compiler.solc_frontend import SolcInput, SolcInputSource
     from wake.config import WakeConfig
     from wake.core.solidity_version import SolidityVersion
-    from wake.development.utils import chain_explorer_urls
+    from wake.development.utils import get_info_from_explorer
     from wake.svm import SolcVersionManager
 
     config = WakeConfig()
     config.load_configs()
-
-    try:
-        chain_explorer = chain_explorer_urls[chain_id]
-    except KeyError:
-        raise ValueError("Invalid chain") from None
-
-    api_key = config.api_keys.get(chain_explorer.config_key, None)
 
     if project_dir is None:
         project_dir = (
@@ -105,93 +98,127 @@ async def open_address(
     )
 
     if project_dir.exists() and not force:
-        console.print(f"{address} already exists at [link={link}]{project_dir}[/link]")
-        return
+        existing_files = list(project_dir.iterdir())
+        if len(existing_files) != 1 or existing_files[0].name not in {
+            "sourcify.json",
+            "etherscan.json",
+        }:
+            console.print(
+                f"{address} already exists at [link={link}]{project_dir}[/link]"
+            )
+            return
 
     project_dir.mkdir(parents=True, exist_ok=True)
 
-    url = (
-        chain_explorer_urls[chain_id].api_url
-        + f"?module=contract&action=getsourcecode&address={address}"
-    )
-    if api_key is not None:
-        url += f"&apikey={api_key}"
+    with console.status(f"Fetching {address} from explorer..."):
+        info, source = get_info_from_explorer(address, chain_id, config)
 
-    with console.status(
-        f"Fetching {address} from {chain_explorer_urls[chain_id].url}..."
-    ):
-        with urllib.request.urlopen(url) as response:
-            parsed = json.loads(response.read())
+    if source == "sourcify":
+        metadata = json.loads(
+            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
+        )
+        version = SolidityVersion.fromstring(metadata["compiler"]["version"])
 
-    version: str = parsed["result"][0]["CompilerVersion"]
-    if version.startswith("vyper"):
-        raise NotImplementedError("Vyper contracts are not supported")
+        if any(
+            f
+            for f in info["files"]
+            if f["name"].endswith(".sol") and PurePosixPath(f["name"]).is_absolute()
+        ):
+            raise NotImplementedError("Absolute paths are not supported")
 
-    if version.startswith("v"):
-        version = version[1:]
-    parsed_version = SolidityVersion.fromstring(version)
+        sources = {
+            project_dir
+            / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
+            for file in info["files"]
+            if file["name"].endswith(".sol")
+        }
 
-    project_config_raw: Dict[str, Any] = {
-        "compiler": {
-            "solc": {
-                "optimizer": {
-                    "enabled": bool(parsed["result"][0]["OptimizationUsed"]),
-                    "runs": parsed["result"][0]["Runs"],
+        config_dict = {
+            "compiler": {
+                "solc": {
+                    "target_version": str(version),
+                    "evm_version": metadata["settings"]["evmVersion"],
+                    "remappings": metadata["settings"]["remappings"],
+                    "optimizer": metadata["settings"]["optimizer"],
                 }
             }
         }
-    }
+    else:
+        compiler_version: str = info["CompilerVersion"]
+        if compiler_version.startswith("vyper"):
+            raise ValueError("Cannot set balance of Vyper contract")
+
+        if compiler_version.startswith("v"):
+            compiler_version = compiler_version[1:]
+        version = SolidityVersion.fromstring(compiler_version)
+
+        optimizations = bool(info["OptimizationUsed"])
+        runs = info["Runs"]
+
+        config_dict = {
+            "compiler": {
+                "solc": {
+                    "target_version": str(version),
+                    "optimizer": {
+                        "enabled": optimizations,
+                        "runs": runs,
+                    },
+                }
+            }
+        }
+
+        code = info["SourceCode"]
+        try:
+            standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
+            if any(
+                PurePosixPath(filename).is_absolute()
+                for filename in standard_input.sources.keys()
+            ):
+                raise NotImplementedError("Absolute paths are not supported")
+            if standard_input.settings is not None:
+                if standard_input.settings.evm_version is not None:
+                    config_dict["compiler"]["solc"]["evm_version"] = str(
+                        standard_input.settings.evm_version
+                    )
+                if standard_input.settings.via_IR is not None:
+                    config_dict["compiler"]["solc"][
+                        "via_IR"
+                    ] = standard_input.settings.via_IR
+                if standard_input.settings.remappings is not None:
+                    config_dict["compiler"]["solc"][
+                        "remappings"
+                    ] = standard_input.settings.remappings
+                if standard_input.settings.optimizer is not None:
+                    if standard_input.settings.optimizer.enabled is not None:
+                        config_dict["compiler"]["solc"]["optimizer"][
+                            "enabled"
+                        ] = standard_input.settings.optimizer.enabled
+                    if standard_input.settings.optimizer.runs is not None:
+                        config_dict["compiler"]["solc"]["optimizer"][
+                            "runs"
+                        ] = standard_input.settings.optimizer.runs
+                    # TODO optimizer details
+
+            sources = {
+                project_dir / path: source.content
+                for path, source in standard_input.sources.items()
+            }
+        except ValidationError as e:
+            try:
+                a = TypeAdapter(Dict[str, SolcInputSource])
+                s = a.validate_json(code)
+                if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
+                    raise NotImplementedError("Absolute paths are not supported")
+
+                sources = {
+                    project_dir / path: source.content for path, source in s.items()
+                }
+            except (ValidationError, json.JSONDecodeError) as e:
+                sources = {project_dir / "contracts" / "Source.sol": code}
 
     svm = SolcVersionManager(config)
-    if not svm.installed(parsed_version):
-        await svm.install(parsed_version)
-
-    code = parsed["result"][0]["SourceCode"]
-    try:
-        standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
-        if any(
-            PurePosixPath(filename).is_absolute()
-            for filename in standard_input.sources.keys()
-        ):
-            raise NotImplementedError("Absolute paths are not supported")
-        if standard_input.settings is not None:
-            if standard_input.settings.evm_version is not None:
-                project_config_raw["compiler"]["solc"]["evm_version"] = str(
-                    standard_input.settings.evm_version
-                )
-            if standard_input.settings.via_IR is not None:
-                project_config_raw["compiler"]["solc"][
-                    "via_IR"
-                ] = standard_input.settings.via_IR
-            if standard_input.settings.remappings is not None:
-                project_config_raw["compiler"]["solc"][
-                    "remappings"
-                ] = standard_input.settings.remappings
-            if standard_input.settings.optimizer is not None:
-                if standard_input.settings.optimizer.enabled is not None:
-                    project_config_raw["compiler"]["solc"]["optimizer"][
-                        "enabled"
-                    ] = standard_input.settings.optimizer.enabled
-                if standard_input.settings.optimizer.runs is not None:
-                    project_config_raw["compiler"]["solc"]["optimizer"][
-                        "runs"
-                    ] = standard_input.settings.optimizer.runs
-                # TODO optimizer details
-
-        sources = {
-            project_dir / path: source.content
-            for path, source in standard_input.sources.items()
-        }
-    except ValidationError as e:
-        try:
-            a = TypeAdapter(Dict[str, SolcInputSource])
-            s = a.validate_json(code)
-            if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
-                raise NotImplementedError("Absolute paths are not supported")
-
-            sources = {project_dir / path: source.content for path, source in s.items()}
-        except (ValidationError, json.JSONDecodeError) as e:
-            sources = {project_dir / "contracts" / "Source.sol": code}
+    if not svm.installed(version):
+        await svm.install(version)
 
     with console.status(f"Writing {address} to {project_dir}..."):
         for path, content in sources.items():
@@ -200,7 +227,7 @@ async def open_address(
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
 
-    project_dir.joinpath("wake.toml").write_text(tomli_w.dumps(project_config_raw))
+    project_dir.joinpath("wake.toml").write_text(tomli_w.dumps(config_dict))
 
     console.print(f"Opened {address} at [link={link}]{project_dir}[/link]")
 
