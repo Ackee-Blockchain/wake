@@ -150,7 +150,7 @@ class ChainTransactions:
                 )
             except (KeyError, StopIteration):
                 abi = None
-                return_type = bytearray
+                return_type = bytes
         else:
             try:
                 fqn = get_fqn_from_creation_code(tx_params["data"])[0]
@@ -536,12 +536,12 @@ class TransactionAbc(ABC, Generic[T]):
 
         if isinstance(raw_value, Account):
             return self._return_type(raw_value.address, self._chain)
-        elif isinstance(raw_value, bytearray):
+        elif isinstance(raw_value, bytes):
             if self._abi is None:
                 return self._return_type(raw_value)
 
             return self._chain._process_return_data(
-                self, bytes(raw_value), self._abi, self._return_type
+                self, raw_value, self._abi, self._return_type
             )
         else:
             raise TypeError(
@@ -550,7 +550,7 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_receipt
-    def raw_return_value(self) -> Union[Account, bytearray]:
+    def raw_return_value(self) -> Union[Account, bytes]:
         if self.status != TransactionStatusEnum.SUCCESS:
             e = self.error
             assert e is not None
@@ -609,7 +609,7 @@ class TransactionAbc(ABC, Generic[T]):
         else:
             raise NotImplementedError
 
-        return bytearray(output)
+        return output
 
     @property
     @_fetch_tx_data
