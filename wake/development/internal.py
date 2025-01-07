@@ -14,10 +14,10 @@ class UnknownEvent:
     data: bytes
 
 
-def read_from_memory(offset: int, length: int, memory: List) -> bytearray:
+def read_from_memory(offset: int, length: int, memory: List) -> bytes:
     if isinstance(memory, str):
         m = bytes.fromhex(memory[2:] if memory.startswith("0x") else memory)
-        return bytearray(m[offset : offset + length])
+        return m[offset : offset + length]
 
     start_block = offset // 32
     start_offset = offset % 32
@@ -26,8 +26,8 @@ def read_from_memory(offset: int, length: int, memory: List) -> bytearray:
 
     if start_block == end_block:
         if start_block >= len(memory):
-            return bytearray(length)
-        return bytearray.fromhex(memory[start_block])[start_offset:end_offset]
+            return bytes(length)
+        return bytes.fromhex(memory[start_block])[start_offset:end_offset]
     else:
         if start_block >= len(memory):
             ret = bytearray(32 - start_offset)
@@ -42,4 +42,4 @@ def read_from_memory(offset: int, length: int, memory: List) -> bytearray:
             ret += bytearray(end_offset)
         else:
             ret += bytearray.fromhex(memory[end_block])[:end_offset]
-        return ret
+        return bytes(ret)

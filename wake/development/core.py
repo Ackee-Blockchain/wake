@@ -878,7 +878,7 @@ class Account:
         return self._chain.chain_interface.get_code(str(self._address))
 
     @code.setter
-    def code(self, value: Union[bytes, bytearray]) -> None:
+    def code(self, value: bytes) -> None:
         if not isinstance(value, (bytes, bytearray)):
             raise TypeError("value must be a bytes object")
         self._chain.chain_interface.set_code(str(self.address), value)
@@ -903,7 +903,7 @@ class Account:
     def _setup_tx_params(
         self,
         request_type: RequestType,
-        data: Union[bytes, bytearray],
+        data: bytes,
         value: Union[int, str],
         from_: Optional[Union[Account, Address, str]],
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]],
@@ -994,7 +994,7 @@ class Account:
 
     def call(
         self,
-        data: Union[bytes, bytearray] = b"",
+        data: bytes = b"",
         value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
@@ -1013,7 +1013,7 @@ class Account:
             Literal["safe"],
             Literal["finalized"],
         ] = "latest",
-    ) -> bytearray:
+    ) -> bytes:
         params = self._setup_tx_params(
             RequestType.CALL,
             data,
@@ -1045,11 +1045,11 @@ class Account:
         except JsonRpcError as e:
             raise self._chain._process_call_revert(e) from None
 
-        return bytearray(output)
+        return output
 
     def estimate(
         self,
-        data: Union[bytes, bytearray] = b"",
+        data: bytes = b"",
         value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
@@ -1090,7 +1090,7 @@ class Account:
 
     def access_list(
         self,
-        data: Union[bytes, bytearray] = b"",
+        data: bytes = b"",
         value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
@@ -1134,7 +1134,7 @@ class Account:
 
     def transact(
         self,
-        data: Union[bytes, bytearray] = b"",
+        data: bytes = b"",
         value: Union[int, str] = 0,
         from_: Optional[Union[Account, Address, str]] = None,
         gas_limit: Optional[Union[int, Literal["max"], Literal["auto"]]] = None,
@@ -1146,7 +1146,7 @@ class Account:
         ] = None,
         type: Optional[int] = None,
         confirmations: Optional[int] = None,
-    ) -> TransactionAbc[bytearray]:
+    ) -> TransactionAbc[bytes]:
         tx_params = self._setup_tx_params(
             RequestType.TX,
             data,
@@ -1168,15 +1168,15 @@ class Account:
         if "type" not in tx_params:
             from .transactions import LegacyTransaction
 
-            tx_type = LegacyTransaction[bytearray]
+            tx_type = LegacyTransaction[bytes]
         elif tx_params["type"] == 1:
             from .transactions import Eip2930Transaction
 
-            tx_type = Eip2930Transaction[bytearray]
+            tx_type = Eip2930Transaction[bytes]
         elif tx_params["type"] == 2:
             from .transactions import Eip1559Transaction
 
-            tx_type = Eip1559Transaction[bytearray]
+            tx_type = Eip1559Transaction[bytes]
         else:
             raise ValueError(f"Unknown transaction type {tx_params['type']}")
 
@@ -1184,7 +1184,7 @@ class Account:
             tx_hash,
             tx_params,
             None,
-            bytearray,
+            bytes,
             self.chain,
         )
 
@@ -2043,7 +2043,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
-    ) -> bytearray:
+    ) -> bytes:
         ...
 
     @overload
@@ -2163,7 +2163,7 @@ class Chain(ABC):
         ] = None,
         confirmations: Optional[int] = None,
     ) -> Union[
-        bytearray,
+        bytes,
         Contract,
         int,
         Tuple[Dict[Address, List[int]], int],
@@ -2708,7 +2708,7 @@ class Chain(ABC):
 
         # deploy
         if "to" not in params:
-            return bytearray(output)
+            return output
 
         assert abi is not None
         return self._process_return_data(None, output, abi, return_type)
