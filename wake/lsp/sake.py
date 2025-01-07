@@ -699,7 +699,7 @@ class SakeContext:
             assert tx._tx_receipt is not None
 
             if success:
-                assert isinstance(tx.raw_return_value, bytearray)
+                assert isinstance(tx.raw_return_value, bytes)
                 return_value = tx.raw_return_value.hex()
             else:
                 assert tx.raw_error is not None

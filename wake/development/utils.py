@@ -332,7 +332,7 @@ def read_storage_variable(
 
             if type_name == "t_string_storage":
                 return raw.decode("utf-8")
-            return raw
+            return bytes(raw)
         elif type_name.startswith("t_struct"):
             if len(keys) > 0:
                 if not isinstance(keys[0], str):

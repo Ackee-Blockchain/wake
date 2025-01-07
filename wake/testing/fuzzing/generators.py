@@ -6,7 +6,7 @@ from typing import Callable, Optional, Type
 from typing_extensions import get_args, get_origin, get_type_hints
 
 from wake.development.core import Wei, detect_default_chain
-from wake.development.globals import random, get_config
+from wake.development.globals import get_config, random
 from wake.development.primitive_types import (
     FixedSizeBytes,  # pyright: ignore reportAttributeAccessIssue
 )
@@ -142,18 +142,18 @@ def random_bytes(
     max: Optional[int] = None,
     *,
     predicate: Optional[Callable[[bytes], bool]] = None,
-) -> bytearray:
+) -> bytes:
     """
-    Generates a random bytearray of length between min and max.
+    Generates random bytes of length between min and max.
     If max is None, the length is exactly min.
     """
 
-    def gen() -> bytearray:
+    def gen() -> bytes:
         if max is None:
             len = min
         else:
             len = random.randint(min, max)
-        return bytearray(random.getrandbits(8 * len).to_bytes(len, "little"))
+        return random.getrandbits(8 * len).to_bytes(len, "little")
 
     ret = gen()
     if predicate is None:
@@ -196,9 +196,9 @@ def generate(t: Type):
             # fallback for int used directly
             return random.randint(-(2**255), 2**255 - 1)
         elif t is bytes:
-            return bytes(random_bytes(min_len, max_len))
-        elif t is bytearray:
             return random_bytes(min_len, max_len)
+        elif t is bytearray:
+            return bytearray(random_bytes(min_len, max_len))
         elif t is str:
             return random_string(min_len, max_len)
         elif issubclass(t, enum.Enum):
