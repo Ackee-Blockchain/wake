@@ -793,7 +793,8 @@ def mint_erc721(
         assert token_id >= 0, "token_id must be non-negative"
         assert owner_mapping_slot >= 0, "owner_mapping_slot must be non-negative"
         owner_slot = int.from_bytes(
-            keccak256(abi.encode(uint256(token_id), uint256(owner_mapping_slot)))
+            keccak256(abi.encode(uint256(token_id), uint256(owner_mapping_slot))),
+            byteorder="big",
         )
     if owner_slot is None:
         owner_data = _detect_erc721_owner_slot(contract, token_id)
@@ -1017,22 +1018,12 @@ def _detect_erc721_owner_slot(
     access_list, _ = contract.access_list(
         data=abi.encode_with_signature("ownerOf(uint256)", token_id),
         from_=access_list_acc,
+        revert=False,
     )
 
     impl = get_logic_contract(contract)
 
-    try:
-        owner_before = abi.decode(
-            contract.call(
-                data=abi.encode_with_signature("ownerOf(uint256)", token_id),
-                from_=call_acc,
-            ),
-            [Address],
-        )
-    except Exception:
-        return None
-
-    new_owner = Address(int(owner_before) + 1)
+    new_owner = Address("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
         for slot in access_list[addr]:
@@ -1256,17 +1247,17 @@ def _get_storage_layout(
 
     fqn = get_fqn_from_address(contract.address, "latest", contract.chain)
     if fqn is None:
-        if contract.chain._forked_chain_id is None:
+        if contract.chain.forked_chain_id is None:
             raise ValueError("Contract not found")
 
-        if contract.chain._forked_chain_id not in chain_explorer_urls:
+        if contract.chain.forked_chain_id not in chain_explorer_urls:
             raise ValueError(
-                f"Chain explorer URL not found for chain ID {contract.chain._forked_chain_id}"
+                f"Chain explorer URL not found for chain ID {contract.chain.forked_chain_id}"
             )
 
         try:
             return _get_storage_layout_from_explorer(
-                str(contract.address), contract.chain.chain_id
+                str(contract.address), contract.chain.forked_chain_id
             )
         except Exception as e:
             raise ValueError("Could not get storage layout from chain explorer") from e

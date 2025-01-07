@@ -29,6 +29,8 @@ from typing_extensions import get_args, get_origin, get_type_hints
 if TYPE_CHECKING:
     from .blocks import Block
 
+from wake_rs import Account, Address
+
 from .call_trace import CallTrace
 from .chain_interfaces import (
     AnvilChainInterface,
@@ -38,12 +40,10 @@ from .chain_interfaces import (
     TxParams,
 )
 from .core import (
-    Account,
-    Address,
     Chain,
     Wei,
-    get_contracts_by_fqn,
     get_contract_from_fqn,
+    get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_creation_code,
     process_debug_trace_for_fqn_overrides,
@@ -471,7 +471,10 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
 
-            if "result" not in self._trace_transaction[0] or self._trace_transaction[0]["result"] is None:
+            if (
+                "result" not in self._trace_transaction[0]
+                or self._trace_transaction[0]["result"] is None
+            ):
                 return Halt(self._trace_transaction[0]["error"])
 
         # due to a bug, Anvil does not return revert data for failed contract creations
@@ -631,26 +634,13 @@ class TransactionAbc(ABC, Generic[T]):
 
         assert len(fqn_overrides.maps) == 1
 
-        contracts_by_fqn = get_contracts_by_fqn()
-
-        def fqn_to_contract_abi(fqn: str):
-            module_name, attrs = contracts_by_fqn[fqn]
-            obj = getattr(importlib.import_module(module_name), attrs[0])
-            for attr in attrs[1:]:
-                obj = getattr(obj, attr)
-            contract_abi = obj._abi
-            return obj, contract_abi
-
         return CallTrace.from_debug_trace(
             self._debug_trace_transaction,  # pyright: ignore reportGeneralTypeIssues
             self._tx_params,
             self.chain,
-            self.to,
             self.return_value if self.status == TransactionStatusEnum.SUCCESS else None,
-            fqn_overrides,
             self.block_number - 1,
-            contracts_by_fqn.keys(),
-            fqn_to_contract_abi,
+            fqn_overrides,
         )
 
     @property

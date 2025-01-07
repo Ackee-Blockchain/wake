@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import reprlib
 from collections import ChainMap
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ from rich.console import Console
 from rich.highlighter import RegexHighlighter
 from rich.text import Text
 from rich.tree import Tree
+from wake_rs import Account, Address, Chain, Contract
 
 from wake.utils import StrEnum
 
@@ -38,6 +40,7 @@ from .core import (
     Contract,
     Wei,
     fix_library_abi,
+    get_contracts_by_fqn,
     get_fqn_from_address,
     get_fqn_from_creation_code,
 )
@@ -1000,16 +1003,38 @@ class CallTrace:
         trace: Dict[str, Any],
         tx_params: TxParams,
         chain: Chain,
-        to: Optional[Account],
         created_contract: Optional[Account],
-        fqn_overrides: ChainMap[Address, Optional[str]],
         fqn_block_number: int,  # the last block before the tx (or call) to fetch fqn
-        all_fqns: AbstractSet[str],
-        fqn_to_contract_abi: Callable[[str], Tuple[Optional[Contract], Dict]],
+        fqn_overrides: Optional[ChainMap[Address, Optional[str]]] = None,
+        all_fqns: Optional[AbstractSet[str]] = None,
+        fqn_to_contract_abi: Optional[
+            Callable[[str], Tuple[Optional[Contract], Dict]]
+        ] = None,
     ):
         from .transactions import PanicCodeEnum
 
+        def fqn_to_contract_abi_impl(fqn: str):
+            module_name, attrs = contracts_by_fqn[fqn]
+            obj = getattr(importlib.import_module(module_name), attrs[0])
+            for attr in attrs[1:]:
+                obj = getattr(obj, attr)
+            contract_abi = obj._abi
+            return obj, contract_abi
+
         assert tx_params["gas"] != "auto"
+
+        if fqn_overrides is None:
+            fqn_overrides = ChainMap()
+
+        contracts_by_fqn = get_contracts_by_fqn()
+
+        if all_fqns is None:
+            all_fqns = contracts_by_fqn.keys()
+
+        if fqn_to_contract_abi is None:
+            fqn_to_contract_abi = fqn_to_contract_abi_impl
+
+        to = Account(tx_params["to"], chain) if "to" in tx_params else None
 
         if to is None:
             try:
@@ -1039,11 +1064,11 @@ class CallTrace:
                 precompiled_info = get_precompiled_info(
                     to.address, b"" if "data" not in tx_params else tx_params["data"]
                 )
-            elif chain._fork is not None:
+            elif chain.forked_chain_id is not None:
                 explorer_info = _get_info_from_explorer(
                     to.address,
-                    chain._forked_chain_id
-                    if chain._forked_chain_id is not None
+                    chain.forked_chain_id
+                    if chain.forked_chain_id is not None
                     else chain.chain_id,
                 )
 
@@ -1340,11 +1365,11 @@ class CallTrace:
                 ):
                     if Address(0) < addr <= Address(9):
                         precompiled_info = get_precompiled_info(addr, data)
-                    elif chain._fork is not None:
+                    elif chain.forked_chain_id is not None:
                         explorer_info = _get_info_from_explorer(
                             addr,
-                            chain._forked_chain_id
-                            if chain._forked_chain_id is not None
+                            chain.forked_chain_id
+                            if chain.forked_chain_id is not None
                             else chain.chain_id,
                         )
 

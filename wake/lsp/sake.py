@@ -632,10 +632,9 @@ class SakeContext:
                 tx._debug_trace_transaction,  # pyright: ignore reportArgumentType
                 tx._tx_params,
                 chain,
-                tx.to,
                 tx.return_value if success else None,
-                ChainMap(),
                 tx.block_number - 1,
+                ChainMap(),
                 self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
@@ -690,10 +689,9 @@ class SakeContext:
                 tx._debug_trace_transaction,  # pyright: ignore reportArgumentType
                 tx._tx_params,
                 chain,
-                tx.to,
                 None,
-                ChainMap(),
                 tx.block_number - 1,
+                ChainMap(),
                 self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
@@ -753,10 +751,9 @@ class SakeContext:
                 trace,
                 tx_params,
                 chain,
-                account,
                 None,
-                ChainMap(),
                 chain.blocks["latest"].number,
+                ChainMap(),
                 self.info_by_fqn.keys(),
                 fqn_to_contract_abi,
             )
