@@ -731,10 +731,7 @@ def detect_default_chain() -> Chain:
         import wake.deployment
         import wake.testing
 
-        if (
-            wake.deployment.default_chain.connected
-            and wake.testing.chain.connected
-        ):
+        if wake.deployment.default_chain.connected and wake.testing.chain.connected:
             raise ValueError(
                 "Both wake.testing.default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
             )
@@ -1554,6 +1551,7 @@ class Chain(ABC):
 
     def __init__(self):
         self._connected = False
+        self._labels = {}
 
     def _connect(
         self,
@@ -1748,7 +1746,6 @@ class Chain(ABC):
                 self.set_default_accounts(None)
             self._default_tx_confirmations = 1
             self._blocks = ChainBlocks(self)
-            self._labels = {}
             self._fork = fork
 
             self._single_source_errors = {
@@ -1789,6 +1786,15 @@ class Chain(ABC):
     @check_connected
     def chain_id(self) -> uint256:
         return uint256(self._chain_id)
+
+    @property
+    @check_connected
+    def forked_chain_id(self) -> Optional[uint256]:
+        return (
+            uint256(self._forked_chain_id)
+            if self._forked_chain_id is not None
+            else None
+        )
 
     @property
     @check_connected
