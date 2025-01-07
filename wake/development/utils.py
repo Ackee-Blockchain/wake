@@ -1567,6 +1567,15 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
 def get_info_from_explorer(
     addr: str, chain_id: int, config: WakeConfig
 ) -> Tuple[Dict[str, Any], str]:
+    cache_dir = config.global_cache_path / "explorers" / str(chain_id) / addr.lower()
+
+    if (cache_dir / "sourcify.json").exists():
+        with open(cache_dir / "sourcify.json", "r") as f:
+            return json.load(f), "sourcify"
+    elif (cache_dir / "etherscan.json").exists():
+        with open(cache_dir / "etherscan.json", "r") as f:
+            return json.load(f), "etherscan"
+
     if chain_id not in chain_explorer_urls:
         api_key = None
     else:
@@ -1591,6 +1600,10 @@ def get_info_from_explorer(
 
         if parsed["status"] != "1":
             raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
+
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        with open(cache_dir / "etherscan.json", "w") as f:
+            json.dump(parsed["result"][0], f)
 
         return parsed["result"][0], "etherscan"
     else:
@@ -1619,6 +1632,10 @@ def get_info_from_explorer(
                     raise AbiNotFound(method="sourcify") from None
             else:
                 raise
+
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        with open(cache_dir / "sourcify.json", "w") as f:
+            json.dump(parsed, f)
 
         return parsed, "sourcify"
 
