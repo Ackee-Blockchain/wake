@@ -877,6 +877,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(f"Shrunken data file written to {shrank_file}")
 
 
+SNAPSHOT_PERIOD = 100
+
 def single_fuzz_test(
     test_class: type[FuzzTest],
     sequences_count: int,
@@ -894,23 +896,123 @@ def single_fuzz_test(
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     dry_run = False
 
-    for i in range(sequences_count):
-        flows_counter: DefaultDict[Callable, int] = defaultdict(int)
-        invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+    states = StateSnapShot()
+    flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
 
-        # Snapshot all connected chains
-        snapshots = [chain.snapshot() for chain in chains]
+    flows_counter_snapshots: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods_snapshots: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+    # run fuzz test normally.
 
-        state = serialize_random_state(random.getstate())
-        set_sequence_initial_internal_state(state)
+    original_exception = None
+    try:
+        for i in range(sequences_count):
 
-        test_instance._flow_num = 0
-        set_executing_flow_num(0)
-        set_executing_sequence_num(i)
-        test_instance._sequence_num = i
-        test_instance.pre_sequence()
+            flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+            invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
 
-        for j in range(flows_count):
+            # Snapshot all connected chains
+            snapshots = [chain.snapshot() for chain in chains]
+
+            state = serialize_random_state(random.getstate())
+            set_sequence_initial_internal_state(state)
+
+            test_instance._flow_num = 0
+            set_executing_flow_num(0)
+            set_executing_sequence_num(i)
+            test_instance._sequence_num = i
+            test_instance.pre_sequence()
+
+            states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+            flows_counter_snapshots = flows_counter.copy()
+            invariant_periods_snapshots = invariant_periods.copy()
+
+            for j in range(flows_count):
+                # from wake.development.globals import get_debug_back
+                # if get_debug_back():
+                #     print(j, "debug back!!!!!!!!!!!!!!!!")
+                if j % SNAPSHOT_PERIOD == 0:
+                    states.take_snapshot(test_instance, test_class(), chains, overwrite=True, random_state=random.getstate())
+                    flows_counter_snapshots = flows_counter.copy()
+                    invariant_periods_snapshots = invariant_periods.copy()
+                valid_flows = [
+                    f
+                    for f in flows
+                    if (
+                        not hasattr(f, "max_times")
+                        or flows_counter[f] < getattr(f, "max_times")
+                    )
+                    and (
+                        not hasattr(f, "precondition")
+                        or getattr(f, "precondition")(test_instance)
+                    )
+                ]
+                weights = [getattr(f, "weight") for f in valid_flows]
+                if len(valid_flows) == 0:
+                    max_times_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
+                    ]
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(test_instance)
+                    ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                    )
+
+                # Pick a flow and generate the parameters
+                flow = random.choices(valid_flows, weights=weights)[0]
+                flow_params = [
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
+                ]
+
+                test_instance._flow_num = j
+                set_executing_flow_num(j)
+                test_instance.pre_flow(flow)
+                flow(test_instance, *flow_params)  # Execute the selected flow
+                flows_counter[flow] += 1
+                test_instance.post_flow(flow)
+
+                if not dry_run:
+                    test_instance.pre_invariants()
+                    for inv in invariants:
+                        if invariant_periods[inv] == 0:
+                            test_instance.pre_invariant(inv)
+                            inv(test_instance)
+                            test_instance.post_invariant(inv)
+
+                        invariant_periods[inv] += 1
+                        if invariant_periods[inv] == getattr(inv, "period"):
+                            invariant_periods[inv] = 0
+                    test_instance.post_invariants()
+
+            test_instance.post_sequence()
+            # Revert all chains back to their initial snapshot
+            for snapshot, chain in zip(snapshots, chains):
+                chain.revert(snapshot)
+
+    except Exception as e:
+        print("ERROR HAPPEN!!")
+        print(e)
+        original_exception = e
+        print("sequence", test_instance._sequence_num)
+        print("flow", test_instance._flow_num)
+
+        error_flow_num = test_instance._flow_num
+        states.revert(test_instance, chains, with_random_state=True)
+        flows_counter = flows_counter_snapshots.copy()
+        invariant_periods = invariant_periods_snapshots.copy()
+        j = 0
+        # run fuzz test again from snapshot untill right before error flow.
+        for j in range(test_instance._flow_num+1, error_flow_num):
+            # since test_instance._flow_num flow is already executed, we start from test_instance._flow_num+1
             valid_flows = [
                 f
                 for f in flows
@@ -952,6 +1054,14 @@ def single_fuzz_test(
             test_instance._flow_num = j
             set_executing_flow_num(j)
             test_instance.pre_flow(flow)
+
+            if j >= error_flow_num:
+                from ipdb.__main__ import _init_pdb
+
+                frame = sys._getframe()  # Get the parent frame
+                p = _init_pdb(commands=["s"])  # Initialize with two step commands
+                p.set_trace(frame)
+
             flow(test_instance, *flow_params)  # Execute the selected flow
             flows_counter[flow] += 1
             test_instance.post_flow(flow)
@@ -969,8 +1079,201 @@ def single_fuzz_test(
                         invariant_periods[inv] = 0
                 test_instance.post_invariants()
 
-        test_instance.post_sequence()
+        print("reach before error")
+        states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+        flows_counter_snapshots = flows_counter.copy()
+        invariant_periods_snapshots = invariant_periods.copy()
+        error_place = None
+        reproduced_exception = None
+        try:
+            valid_flows = [
+                f
+                for f in flows
+                if (
+                    not hasattr(f, "max_times")
+                    or flows_counter[f] < getattr(f, "max_times")
+                )
+                and (
+                    not hasattr(f, "precondition")
+                    or getattr(f, "precondition")(test_instance)
+                )
+            ]
+            weights = [getattr(f, "weight") for f in valid_flows]
+            if len(valid_flows) == 0:
+                max_times_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "max_times")
+                    and flows_counter[f] >= getattr(f, "max_times")
+                ]
+                precondition_flows = [
+                    f
+                    for f in flows
+                    if hasattr(f, "precondition")
+                    and not getattr(f, "precondition")(test_instance)
+                ]
+                raise Exception(
+                    f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                )
 
-        # Revert all chains back to their initial snapshot
-        for snapshot, chain in zip(snapshots, chains):
-            chain.revert(snapshot)
+            # Pick a flow and generate the parameters
+            flow = random.choices(valid_flows, weights=weights)[0]
+            flow_params = [
+                generate(v)
+                for k, v in get_type_hints(flow, include_extras=True).items()
+                if k != "return"
+            ]
+
+            test_instance._flow_num = j
+            test_instance.pre_flow(flow)
+            # this flow cause error or vioration of invariant.
+            flow(test_instance, *flow_params)  # Execute the selected flow
+            # After flow execution, I would have option to take snapshot and execute or
+            # Revert to previous state and execute this flow again.
+            # Print flow information before execution
+
+            flows_counter[flow] += 1
+            error_place = "post_flow"
+            test_instance.post_flow(flow)
+            error_place = "pre_invariants"
+            test_instance.pre_invariants()
+            error_place = "invariants"
+            for inv in invariants:
+                if invariant_periods[inv] == 0:
+                    test_instance.pre_invariant(inv)
+                    inv(test_instance)
+                    test_instance.post_invariant(inv)
+
+                invariant_periods[inv] += 1
+                if invariant_periods[inv] == getattr(inv, "period"):
+                    invariant_periods[inv] = 0
+        except Exception as e:
+            reproduced_exception = e
+
+        assert reproduced_exception is not None
+        print("original_exception", original_exception)
+        print("reproduced_exception", reproduced_exception)
+
+
+        assert type(original_exception) is type(reproduced_exception)
+        assert original_exception.args == reproduced_exception.args
+        print("exception verified")
+
+        states.revert(test_instance, chains, with_random_state=True)
+        flows_counter = flows_counter_snapshots.copy()
+        invariant_periods = invariant_periods_snapshots.copy()
+        states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+
+        j = 0
+        print("test_instance._flow_num", test_instance._flow_num)
+        print("flows_count", flows_count)
+        for j in range(test_instance._flow_num, flows_count):
+            try:
+                valid_flows = [
+                    f
+                    for f in flows
+                    if (
+                        not hasattr(f, "max_times")
+                        or flows_counter[f] < getattr(f, "max_times")
+                    )
+                    and (
+                        not hasattr(f, "precondition")
+                        or getattr(f, "precondition")(test_instance)
+                    )
+                ]
+                weights = [getattr(f, "weight") for f in valid_flows]
+                if len(valid_flows) == 0:
+                    max_times_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
+                    ]
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(test_instance)
+                    ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                    )
+
+                # Pick a flow and generate the parameters
+                flow = random.choices(valid_flows, weights=weights)[0]
+                flow_params = [
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
+                ]
+
+                test_instance._flow_num = j
+                test_instance.pre_flow(flow)
+                error_place = "flow"
+                from ipdb.__main__ import _init_pdb
+                print("oepnning debugger")
+
+                frame = sys._getframe()  # Get the parent frame
+                p = _init_pdb(commands=["s"])  # Initialize with two step commands
+                p.set_trace(frame)
+                # this flow cause error or vioration of invariant.
+                flow(test_instance, *flow_params)  # Execute the selected flow
+                # After flow execution, I would have option to take snapshot and execute or
+                # Revert to previous state and execute this flow again.
+                # Print flow information before execution
+
+                flows_counter[flow] += 1
+                error_place = "post_flow"
+                test_instance.post_flow(flow)
+                error_place = "pre_invariants"
+                test_instance.pre_invariants()
+                error_place = "invariants"
+                for inv in invariants:
+                    if invariant_periods[inv] == 0:
+                        test_instance.pre_invariant(inv)
+                        inv(test_instance)
+                        test_instance.post_invariant(inv)
+
+                    invariant_periods[inv] += 1
+                    if invariant_periods[inv] == getattr(inv, "period"):
+                        invariant_periods[inv] = 0
+            except Exception as e:
+                print(f"Error at {error_place} with\n{e}")
+            finally:
+                # repeat option till user type valid input
+                quit = False
+                while True:
+                    print("Flow Step Execution")
+                    print("Options:")
+                    print("1. take snapshot and continue")
+                    print("2. Revert and repeat current flow")
+                    print("3. run post_sequence and exit")
+                    choice = input("Enter your choice (1-3): ").strip()
+                    if choice == "1":
+                        states.take_snapshot(
+                            test_instance,
+                            test_class(),
+                            chains,
+                            overwrite=True,
+                            random_state=random.getstate(),
+                        )
+                        break
+                    elif choice == "2":
+                        states.revert(test_instance, chains, with_random_state=True)
+                        states.take_snapshot(
+                            test_instance,
+                            test_class(),
+                            chains,
+                            overwrite=False,
+                            random_state=random.getstate(),
+                        )
+                        j -= 1
+                        break
+                    elif choice == "3":
+                        quit = True
+                        break
+                    else:
+                        print("Invalid choice. Please try again.")
+                if quit:
+                    break
+        test_instance.post_sequence()
