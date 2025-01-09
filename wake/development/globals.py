@@ -71,6 +71,15 @@ _shrink_exact_exception: bool = False
 _shrink_target_invariants_only: bool = False
 _is_fuzzing: bool = False
 
+_debug: bool = False
+
+def set_debug(debug: bool):
+    global _debug
+    _debug = debug
+
+def get_debug() -> bool:
+    return _debug
+
 def set_is_fuzzing(is_fuzzing: bool):
     global _is_fuzzing
     _is_fuzzing = is_fuzzing

@@ -31,6 +31,7 @@ from wake.development.globals import (
     set_executing_sequence_num,
     set_is_fuzzing,
     set_sequence_initial_internal_state,
+    get_debug,
 )
 from wake.development.transactions import Error, Panic
 from wake.testing.core import default_chain as global_default_chain
@@ -71,6 +72,12 @@ def clear_previous_lines(num_lines):
     for _ in range(num_lines):
         sys.stdout.write("\033[F")  # Move cursor up one line
         sys.stdout.write("\033[K")  # Clear the line
+
+def get_assertion_message(exc: AssertionError) -> str:
+    """Extract the core assertion message without memory addresses"""
+    message = str(exc)
+    # Split on ' + ' to remove the "where" clauses
+    return message.split(" + ")[0].strip()
 
 
 def compare_exceptions(e1: Exception, e2: Exception):
@@ -120,8 +127,23 @@ def compare_exceptions(e1: Exception, e2: Exception):
         return False
 
     if EXACT_EXCEPTION_MATCH:
-        if e1.args != e2.args:
-            return False
+         # Special handling for AssertionError
+         # if the error in python, exception contains python object with address
+
+        # reproduced_exception assert Something is None
+        # +  where  something = <wake.development.transactions.ExceptionWrapper object at 0x1073add00>
+        # In this case, the value 0x1073add00 can be change and assertion content can be changed.
+        # get_assertion_message() function get only the original condition without variable description. since 0x1073add00 can contain in the original condition.
+        if isinstance(e1, AssertionError):
+            assert isinstance(e2, AssertionError)
+            e1_message = get_assertion_message(e1)
+            e2_message = get_assertion_message(e2)
+            if e1_message != e2_message:
+                return False
+        else:
+            # For other exception types, compare args as before
+            if e1.args != e2.args:
+                return False
     return True
 
 
@@ -879,6 +901,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
 SNAPSHOT_PERIOD = 100
 
+DEBUG_BACK = True
+
 def single_fuzz_test(
     test_class: type[FuzzTest],
     sequences_count: int,
@@ -895,6 +919,8 @@ def single_fuzz_test(
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     dry_run = False
+
+    debug_with_single_process = get_debug()
 
     states = StateSnapShot()
     flows_counter: DefaultDict[Callable, int] = defaultdict(int)
@@ -917,21 +943,19 @@ def single_fuzz_test(
             state = serialize_random_state(random.getstate())
             set_sequence_initial_internal_state(state)
 
-            test_instance._flow_num = 0
+            test_instance._flow_num = -1
             set_executing_flow_num(0)
             set_executing_sequence_num(i)
             test_instance._sequence_num = i
             test_instance.pre_sequence()
 
-            states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
-            flows_counter_snapshots = flows_counter.copy()
-            invariant_periods_snapshots = invariant_periods.copy()
+            if debug_with_single_process:
+                states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+                flows_counter_snapshots = flows_counter.copy()
+                invariant_periods_snapshots = invariant_periods.copy()
 
             for j in range(flows_count):
-                # from wake.development.globals import get_debug_back
-                # if get_debug_back():
-                #     print(j, "debug back!!!!!!!!!!!!!!!!")
-                if j % SNAPSHOT_PERIOD == 0:
+                if debug_with_single_process and j % SNAPSHOT_PERIOD == 0:
                     states.take_snapshot(test_instance, test_class(), chains, overwrite=True, random_state=random.getstate())
                     flows_counter_snapshots = flows_counter.copy()
                     invariant_periods_snapshots = invariant_periods.copy()
@@ -999,93 +1023,121 @@ def single_fuzz_test(
                 chain.revert(snapshot)
 
     except Exception as e:
-        print("ERROR HAPPEN!!")
-        print(e)
+        if not debug_with_single_process:
+            raise e
+
+        debug_back = True
+        while True:
+            print("Flow Step Execution")
+            print("Options:")
+            print("1. Debug at exception")
+            print("2. Goes right before exception")
+            choice = input("Enter your choice:").strip()
+            if choice == "1" or choice == "":
+                debug_back = False
+                break
+            elif choice == "2":
+                debug_back = True
+                break
+            else:
+                print("Invalid choice. Please try again.")
+        if not debug_back:
+            raise e
+
+        import rich.traceback
+        rich_tb = rich.traceback.Traceback.from_exception(
+            type(e), e, e.__traceback__
+        )
+        console.print(rich_tb)
         original_exception = e
-        print("sequence", test_instance._sequence_num)
-        print("flow", test_instance._flow_num)
+        print("sequence: ", test_instance._sequence_num)
+        print("flow: ", test_instance._flow_num)
 
         error_flow_num = test_instance._flow_num
+        # revert t the latest snapshot
         states.revert(test_instance, chains, with_random_state=True)
         flows_counter = flows_counter_snapshots.copy()
         invariant_periods = invariant_periods_snapshots.copy()
         j = 0
-        # run fuzz test again from snapshot untill right before error flow.
-        for j in range(test_instance._flow_num+1, error_flow_num):
-            # since test_instance._flow_num flow is already executed, we start from test_instance._flow_num+1
-            valid_flows = [
-                f
-                for f in flows
-                if (
-                    not hasattr(f, "max_times")
-                    or flows_counter[f] < getattr(f, "max_times")
-                )
-                and (
-                    not hasattr(f, "precondition")
-                    or getattr(f, "precondition")(test_instance)
-                )
-            ]
-            weights = [getattr(f, "weight") for f in valid_flows]
-            if len(valid_flows) == 0:
-                max_times_flows = [
+        with print_ignore():
+            # run fuzz test again from snapshot untill right before error flow.
+            for j in range(test_instance._flow_num+1, error_flow_num):
+                # since test_instance._flow_num flow is already executed, we start from test_instance._flow_num+1
+                valid_flows = [
                     f
                     for f in flows
-                    if hasattr(f, "max_times")
-                    and flows_counter[f] >= getattr(f, "max_times")
+                    if (
+                        not hasattr(f, "max_times")
+                        or flows_counter[f] < getattr(f, "max_times")
+                    )
+                    and (
+                        not hasattr(f, "precondition")
+                        or getattr(f, "precondition")(test_instance)
+                    )
                 ]
-                precondition_flows = [
-                    f
-                    for f in flows
-                    if hasattr(f, "precondition")
-                    and not getattr(f, "precondition")(test_instance)
+                weights = [getattr(f, "weight") for f in valid_flows]
+                if len(valid_flows) == 0:
+                    max_times_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
+                    ]
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(test_instance)
+                    ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
+                    )
+
+                # Pick a flow and generate the parameters
+                flow = random.choices(valid_flows, weights=weights)[0]
+                flow_params = [
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
                 ]
-                raise Exception(
-                    f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
-                )
 
-            # Pick a flow and generate the parameters
-            flow = random.choices(valid_flows, weights=weights)[0]
-            flow_params = [
-                generate(v)
-                for k, v in get_type_hints(flow, include_extras=True).items()
-                if k != "return"
-            ]
+                assert test_instance._flow_num + 1 == j
+                test_instance._flow_num = j
+                set_executing_flow_num(j)
+                test_instance.pre_flow(flow)
 
-            test_instance._flow_num = j
-            set_executing_flow_num(j)
-            test_instance.pre_flow(flow)
+                if j >= error_flow_num:
+                    from ipdb.__main__ import _init_pdb
 
-            if j >= error_flow_num:
-                from ipdb.__main__ import _init_pdb
+                    frame = sys._getframe()  # Get the parent frame
+                    p = _init_pdb(commands=["s"])  # Initialize with two step commands
+                    p.set_trace(frame)
 
-                frame = sys._getframe()  # Get the parent frame
-                p = _init_pdb(commands=["s"])  # Initialize with two step commands
-                p.set_trace(frame)
+                flow(test_instance, *flow_params)  # Execute the selected flow
+                flows_counter[flow] += 1
+                test_instance.post_flow(flow)
 
-            flow(test_instance, *flow_params)  # Execute the selected flow
-            flows_counter[flow] += 1
-            test_instance.post_flow(flow)
+                if not dry_run:
+                    test_instance.pre_invariants()
+                    for inv in invariants:
+                        if invariant_periods[inv] == 0:
+                            test_instance.pre_invariant(inv)
+                            inv(test_instance)
+                            test_instance.post_invariant(inv)
 
-            if not dry_run:
-                test_instance.pre_invariants()
-                for inv in invariants:
-                    if invariant_periods[inv] == 0:
-                        test_instance.pre_invariant(inv)
-                        inv(test_instance)
-                        test_instance.post_invariant(inv)
+                        invariant_periods[inv] += 1
+                        if invariant_periods[inv] == getattr(inv, "period"):
+                            invariant_periods[inv] = 0
+                    test_instance.post_invariants()
 
-                    invariant_periods[inv] += 1
-                    if invariant_periods[inv] == getattr(inv, "period"):
-                        invariant_periods[inv] = 0
-                test_instance.post_invariants()
-
-        print("reach before error")
+        print("Reached before error")
         states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
         flows_counter_snapshots = flows_counter.copy()
         invariant_periods_snapshots = invariant_periods.copy()
         error_place = None
         reproduced_exception = None
         try:
+            j+=1
             valid_flows = [
                 f
                 for f in flows
@@ -1124,6 +1176,7 @@ def single_fuzz_test(
                 if k != "return"
             ]
 
+            assert test_instance._flow_num + 1 == j
             test_instance._flow_num = j
             test_instance.pre_flow(flow)
             # this flow cause error or vioration of invariant.
@@ -1147,17 +1200,32 @@ def single_fuzz_test(
                 invariant_periods[inv] += 1
                 if invariant_periods[inv] == getattr(inv, "period"):
                     invariant_periods[inv] = 0
+
         except Exception as e:
             reproduced_exception = e
 
         assert reproduced_exception is not None
-        print("original_exception", original_exception)
-        print("reproduced_exception", reproduced_exception)
 
+        # print("reproduced_exception", reproduced_exception)
+        # print("original_exception", original_exception)
 
-        assert type(original_exception) is type(reproduced_exception)
-        assert original_exception.args == reproduced_exception.args
-        print("exception verified")
+        # First check exact type match
+        assert type(reproduced_exception) is type(original_exception), \
+            f"Exception types do not match: {type(original_exception)} != {type(reproduced_exception)}"
+
+        # Special handling for AssertionError
+        if isinstance(original_exception, AssertionError):
+            assert isinstance(reproduced_exception, AssertionError)
+            orig_message = get_assertion_message(original_exception)
+            repro_message = get_assertion_message(reproduced_exception)
+            assert orig_message == repro_message, \
+                f"Assertion messages do not match:\nOriginal: {orig_message}\nReproduced: {repro_message}"
+        else:
+            # For other exception types, compare args as before
+            assert original_exception.args == reproduced_exception.args, \
+                f"Exception args do not match:\nOriginal: {original_exception.args}\nReproduced: {reproduced_exception.args}"
+
+        print("Exception verified")
 
         states.revert(test_instance, chains, with_random_state=True)
         flows_counter = flows_counter_snapshots.copy()
@@ -1165,8 +1233,6 @@ def single_fuzz_test(
         states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
 
         j = 0
-        print("test_instance._flow_num", test_instance._flow_num)
-        print("flows_count", flows_count)
         for j in range(test_instance._flow_num, flows_count):
             try:
                 valid_flows = [

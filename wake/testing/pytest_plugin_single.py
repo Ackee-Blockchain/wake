@@ -38,6 +38,7 @@ from wake.development.globals import (
     set_fuzz_mode,
     get_fuzz_mode,
     get_is_fuzzing,
+    set_debug,
 )
 from wake.testing.coverage import (
     CoverageHandler,
@@ -73,6 +74,7 @@ class PytestWakePluginSingle:
         self._test_mode = test_mode
         self._test_info_path = test_info_path
         self._test_random_state = {}
+        set_debug(debug)
 
     def get_shrink_argument_path(self, shrink_path_str: str, dir_name: str) -> Path:
 
