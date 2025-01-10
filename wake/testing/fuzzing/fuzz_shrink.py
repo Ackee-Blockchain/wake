@@ -57,6 +57,7 @@ ONLY_TARGET_INVARIANTS = (
 )  # True if you want to check only target invariants.
 # True makes one fuzz test run faster. but it may lose chance to shortcut that finding the same error earlier.
 
+SNAPSHOT_PERIOD = 100
 
 def __get_methods(target, attr: str) -> List[Callable]:
     ret = []
@@ -174,6 +175,11 @@ class StateSnapShot:
     flow_number: int | None  # Current flow number
     random_state: Any | None
     default_chain: Chain | None
+    flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+
+    def snapshot_flow_number(self):
+        return self.flow_number if self.flow_number is int else 0
 
     def __init__(self):
         self._python_state = None
@@ -324,7 +330,11 @@ def fuzz_shrink(
         single_fuzz_test(test_class, sequences_count, flows_count, dry_run)
         set_is_fuzzing(False)
     elif fuzz_mode == 1:
-        shrink_test(test_class, flows_count)
+        backward = False
+        if backward:
+            backward_shrink_test(test_class, flows_count)
+        else:
+            shrink_test(test_class, flows_count)
     elif fuzz_mode == 2:
         shrank_reproduce(test_class, dry_run)
     else:
@@ -333,7 +343,6 @@ def fuzz_shrink(
 
 def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
     test_instance = test_class()
-
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     shrank_path = get_shrank_path()
@@ -353,7 +362,7 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
 
     invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
     for j in range(len(store_data.required_flows)):
-
+        print("j: ", j)
         flow = next(
             (
                 flow
@@ -500,9 +509,318 @@ def shrink_collecting_phase(
     assert exception_content is not None
     return exception_content, time_spent
 
+def backward_shrink_test(test_class: type[FuzzTest], flows_count: int):
+    import json
+
+    error_flow_num = get_executing_flow_num()  # argument
+    print(
+        "Fuzz test shrink start! First of all, collect random/flow information!!! >_<"
+    )
+    initial_state: tuple[int, tuple[int, ...], float | None] = deserialize_random_state(
+        get_sequence_initial_internal_state()
+    )
+
+    shrink_start_time = datetime.now()
+    print("Start time: ", shrink_start_time)
+    test_instance = test_class()
+    chains = get_connected_chains()
+    flows: List[Callable] = __get_methods(test_instance, "flow")
+    invariants: List[Callable] = __get_methods(test_instance, "invariant")
+    flow_states: List[FlowState] = []
+    print("Shrinking flow length: ", error_flow_num)
+
+    if error_flow_num < 1:
+        raise Exception("Flow number is less than 1, not supported for shrinking")
+
+    exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
+        test_instance,
+        flows,
+        invariants,
+        flow_states,
+        chains,
+        flows_count,
+        initial_state,
+        error_flow_num,
+    )
+    flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+
+    flows_counter_snapshots: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods_snapshots: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+    initial_state_snapshot = StateSnapShot()
+    previous_snapshot = StateSnapShot()
+
+    random.setstate(initial_state)
+    with print_ignore():
+        test_instance._flow_num = 0
+        test_instance._sequence_num = 0
+        test_instance.pre_sequence()
+
+    initial_state_snapshot.take_snapshot(
+        test_instance, test_class(), chains, overwrite=False
+    )
+
+    previous_snapshot.take_snapshot(
+        test_instance, test_class(), chains, overwrite=False
+    )
+
+    print("here")
+    j = 0
+    shrink_start = error_flow_num
+    # remove flow by brute force
+    end_of_process = False
+    while not end_of_process:
+
+        initial_state_snapshot.revert(test_instance, chains)
+        initial_state_snapshot.take_snapshot(test_instance, test_class(), chains, overwrite=False)
+        # fuzz test to get snapshot
+        flows_counter = defaultdict(int)
+        invariant_periods = defaultdict(int)
+
+        flows_counter_snapshots = defaultdict(int)
+        invariant_periods_snapshots = defaultdict(int)
+
+        try:
+            # Python state and chain state is same as snapshot
+            # and start running from flow at "prev_curr".
+            for j in range(0, error_flow_num + 2):
+
+                if j == -1:
+                    continue
+
+                if j > error_flow_num:
+                    raise OverRunException()
+
+                # Execute untill curr flow.(curr flow is not executed yet) and take snapshot, since we still do not know if it is required or not.
+                # curr == 0 state is already taken.
+
+                curr_flow_state = flow_states[j]
+                random.setstate(curr_flow_state.random_state)
+                flow = curr_flow_state.flow
+                flow_params = curr_flow_state.flow_params
+
+                test_instance._flow_num = j
+                if flow_states[j].required:
+                    if not hasattr(flow, "precondition") or getattr(
+                        flow, "precondition"
+                    )(test_instance):
+                        test_instance.pre_flow(flow)
+                        flow(test_instance, *flow_params)
+                        test_instance.post_flow(flow)
+
+                test_instance.pre_invariants()
+                if (not ONLY_TARGET_INVARIANTS and flow_states[j].required):
+                # or ( ONLY_TARGET_INVARIANTS and j == error_flow_num)
+
+                    for inv in invariants:
+                        if invariant_periods[inv] == 0:
+                            test_instance.pre_invariant(inv)
+                            inv(test_instance)
+                            test_instance.post_invariant(inv)
+
+                        invariant_periods[inv] += 1
+                        if invariant_periods[inv] == getattr(inv, "period"):
+                            invariant_periods[inv] = 0
+                test_instance.post_invariants()
+
+                if j % SNAPSHOT_PERIOD == 0 and shrink_start >= j:
+                    previous_snapshot.take_snapshot(
+                        test_instance, test_class(), chains, overwrite=True,
+                        random_state=random.getstate()
+                    )
+                    flow_checksum = sum(flows_counter.values())
+                    invariant_checksum = sum(invariant_periods.values())
+                    print("flow_count checksum:", flow_checksum)
+                    print("invariant_periods checksum:", invariant_checksum)
+                    flows_counter_snapshots = flows_counter.copy()
+                    invariant_periods_snapshots = invariant_periods.copy()
+
+            test_instance.post_sequence()
+        except OverRunException:
+            raise AssertionError("Unexpected un-failing flow")
+
+        except Exception as e:
+            reason = "at " + str(j) + " with " + str(e)
+            # Check exception type and exception lines in the test file.
+            print("original exception: ", exception_content)
+            print("exception: ", e)
+            assert test_instance._flow_num == error_flow_num
+            assert compare_exceptions(e, exception_content)
+            # assert (
+            #     not EXACT_FLOW_INDEX or test_instance._flow_num == error_flow_num
+            # ) and
+
+        finally:
+            # goes previous chunk for next chunk test
+            previous_snapshot.revert(test_instance, chains)
+            flows_counter = flows_counter_snapshots.copy()
+            invariant_periods = invariant_periods_snapshots.copy()
+            previous_snapshot.take_snapshot(
+                test_instance, test_class(), chains, overwrite=False
+            )
+
+
+        # now test state is at top of the chunk
+        shrink_start = test_instance._flow_num
+        curr = shrink_start
+
+        if shrink_start == 0:
+            end_of_process = True
+        # try remove in chunk
+
+        loop_exit = min(shrink_start + SNAPSHOT_PERIOD, error_flow_num)
+
+
+        print("getting min :construction:")
+
+
+        while curr < loop_exit:
+
+            print("Shrink chunk: ", shrink_start, "curr: ", curr)
+
+            if curr > error_flow_num:
+                break
+
+            print("removeing ", curr)
+            # since we are still not test
+            assert flow_states[curr].required == True
+            # since we want to test the result without this flow.
+            flow_states[curr].required = False
+
+            success = False
+            shortcut = False
+            reason: str = ""
+            j: int = 0
+
+            # we have snapshot, so shrink in the range.
+            # try remove one step
+            try:
+                for j in range(shrink_start, error_flow_num + 2):
+                    print("j: ", j)
+
+
+                    if j > error_flow_num:
+                        raise OverRunException()
+
+                    curr_flow_state = flow_states[j]
+                    random.setstate(curr_flow_state.random_state)
+                    flow = curr_flow_state.flow
+                    flow_params = curr_flow_state.flow_params
+
+                    test_instance._flow_num = j
+                    if flow_states[j].required:
+                        if not hasattr(flow, "precondition") or getattr(
+                            flow, "precondition"
+                        )(test_instance):
+                            test_instance.pre_flow(flow)
+                            flow(test_instance, *flow_params)
+                            test_instance.post_flow(flow)
+
+                    test_instance.pre_invariants()
+                    if (not ONLY_TARGET_INVARIANTS and flow_states[j].required) or (
+                        ONLY_TARGET_INVARIANTS and j == error_flow_num
+                    ):
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                test_instance.pre_invariant(inv)
+                                inv(test_instance)
+                                test_instance.post_invariant(inv)
+
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                    test_instance.post_invariants()
+
+                print("complete test")
+
+            except OverRunException:
+                flow_states[curr].required = True
+                success = False
+                reason = "Over run (Did not reproduce error)"
+                print("overrun")
+            except Exception as e:
+                if isinstance(e, AssertionError):
+                    reason = "at " + str(j) + " with " + get_assertion_message(e)
+                else:
+                    reason = "at " + str(j) + " with " + str(e)
+                # Check exception type and exception lines in the test file.
+                print("compareing exception")
+                print("test_instance._flow_num == error_flow_num: ", test_instance._flow_num == error_flow_num)
+                if (
+                     test_instance._flow_num == error_flow_num
+                ) and compare_exceptions(e, exception_content):
+                    # The removed flow is not necessary to reproduce the same error.  Try to remove next flow
+
+                    assert flow_states[curr].required == False
+                    success = True
+                else:
+                    # Removing the flow caused a different error. This flow should not removed to reproduce the error, restore current flow and try to remove the next flow
+                    flow_states[curr].required = True
+                    success = False
+                    reason = "Different error"
+            finally:
+                print("something")
+
+                print("success: ", success)
+                print("reason: ", reason)
+                # Revert to the snapshot state which has data until the "curr".
+                previous_snapshot.revert(test_instance, chains)
+                flows_counter = flows_counter_snapshots.copy()
+                invariant_periods = invariant_periods_snapshots.copy()
+                previous_snapshot.take_snapshot(
+                    test_instance, test_class(), chains, overwrite=False
+                )
+
+            curr = curr + 1
+
+        # run fuzz test from start to make one previous chunk for the fuzzing.
+        print("going next chunk")
+
+        shrink_start = shrink_start - SNAPSHOT_PERIOD
+
+    print("Shrinking completed")
+    print("Those flows were required to reproduce the error")
+    for i in range(0, error_flow_num + 1):
+        if flow_states[i].required:
+            print(flow_states[i].flow_name, " : ", flow_states[i].flow_params)
+    print("")
+    project_root_path = get_config().project_root_path
+    print("Time spent for shrinking: ", datetime.now() - shrink_start_time)
+    crash_logs_dir = project_root_path / ".wake" / "logs" / "shrank"
+
+    crash_logs_dir.mkdir(parents=True, exist_ok=True)
+    # write crash log file.
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Assuming `call.execinfo` contains the crash information
+
+    # initial_state
+    required_flows: List[ReproducibleFlowState] = [
+        flow_states[i] for i in range(len(flow_states)) if flow_states[i].required
+    ]
+    current_test_id = get_current_test_id()
+    assert current_test_id is not None
+    store_data: ShrankInfoFile = ShrankInfoFile(
+        target_fuzz_node=current_test_id,
+        initial_state=get_sequence_initial_internal_state(),
+        required_flows=required_flows,
+    )
+
+    # Write to a JSON file
+    shrank_file = crash_logs_dir / f"{timestamp}.json"
+    # I would like if file already exists, then create new indexed file
+    if shrank_file.exists():
+        i = 0
+        while shrank_file.with_suffix(f"_{i}.json").exists():
+            i += 1
+        shrank_file = shrank_file.with_suffix(f"_{i}.json")
+    with open(shrank_file, "w") as f:
+        json.dump(store_data.to_dict(), f, indent=2)
+    print(f"Shrunken data file written to {shrank_file}")
+
+
+
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
-    import inspect
     import json
 
     error_flow_num = get_executing_flow_num()  # argument
@@ -525,6 +843,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
     if error_flow_num < 1:
         raise Exception("Flow number is less than 1, not supported for shrinking")
+
+    previous_snapshot = StateSnapShot()
 
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
         test_instance,
@@ -712,8 +1032,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(
         f"Estimated maximum completion time for brute force removal: (remaining flow count={actual_error_flow_num-removed_sum}) * (time for one fuzz={time_spent_for_one_fuzz}) = {(actual_error_flow_num-removed_sum) * time_spent_for_one_fuzz}"
     )
-    while curr < len(flow_states) and flow_states[curr].required == False:
-        curr += 1
+
     # remove flow by brute force
     while curr <= error_flow_num:
         assert flow_states[curr].required == True
@@ -897,11 +1216,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     with open(shrank_file, "w") as f:
         json.dump(store_data.to_dict(), f, indent=2)
     print(f"Shrunken data file written to {shrank_file}")
-
-
-SNAPSHOT_PERIOD = 100
-
-DEBUG_BACK = True
 
 def single_fuzz_test(
     test_class: type[FuzzTest],
