@@ -30,9 +30,9 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from Crypto.Hash import keccak
 import eth_utils
 from pydantic import TypeAdapter, ValidationError
+from wake_rs import keccak256
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
 from ..compiler.solc_frontend import (
@@ -46,13 +46,12 @@ from ..config import WakeConfig
 from ..core.solidity_version import SolidityVersion
 from ..svm import SolcVersionManager
 from ..utils import get_package_version
-from wake_rs import abi, Abi, Account, Address, Contract
 from .core import (
-    #Abi,
-    #Account,
-    #Address,
-    #Contract,
-    #abi,
+    Abi,
+    Account,
+    Address,
+    Contract,
+    abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
     get_user_defined_value_types_index,
@@ -154,11 +153,6 @@ def partition(
         else:
             not_p.append(el)
     return p, not_p
-
-
-def keccak256(b: bytes) -> bytes32:
-    h = keccak.new(data=b, digest_bits=256)
-    return bytes32(h.digest())
 
 
 def get_current_fn_name(back_count=1) -> str:
@@ -997,7 +991,7 @@ def _detect_erc721_owner_slot(
     access_list, _ = contract.access_list(
         data=abi.encode_with_signature("ownerOf(uint256)", token_id),
         from_=access_list_acc,
-        revert=False,
+        revert_on_failure=False,
     )
 
     impl = get_logic_contract(contract)

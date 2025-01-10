@@ -29,8 +29,6 @@ from typing_extensions import get_args, get_origin, get_type_hints
 if TYPE_CHECKING:
     from .blocks import Block
 
-from wake_rs import Account, Address
-
 from .call_trace import CallTrace
 from .chain_interfaces import (
     AnvilChainInterface,
@@ -40,6 +38,8 @@ from .chain_interfaces import (
     TxParams,
 )
 from .core import (
+    Account,
+    Address,
     Chain,
     Wei,
     get_contract_from_fqn,
