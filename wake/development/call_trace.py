@@ -26,7 +26,6 @@ from rich.console import Console
 from rich.highlighter import RegexHighlighter
 from rich.text import Text
 from rich.tree import Tree
-from wake_rs import Account, Address, Chain, Contract
 
 from wake.utils import StrEnum
 
@@ -36,7 +35,6 @@ from .chain_interfaces import TxParams
 from .core import (
     Account,
     Address,
-    Chain,
     Contract,
     Wei,
     fix_library_abi,
@@ -50,6 +48,8 @@ from .utils import get_name_abi_from_explorer
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
+
+    from .core import Chain
 
 
 class ReprHighlighter(RegexHighlighter):
