@@ -183,7 +183,7 @@ def get_precompiled_info(
 
 def _get_info_from_explorer(addr: Address, chain_id: int) -> Optional[Tuple[str, Dict]]:
     try:
-        name, abi = get_name_abi_from_explorer(addr, chain_id)
+        name, abi = get_name_abi_from_explorer(str(addr), chain_id)
     except Exception:
         return None
 
