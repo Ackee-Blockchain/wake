@@ -511,7 +511,7 @@ async def detect_(
                     f"Error while running detector {detector_name}: {exception}"
                 )
 
-        if export is not None:
+        if export not in {None, "json", "json-html"}:
             console.record = True
 
         all_detections: List[Tuple[str, DetectorResult]] = []
@@ -568,25 +568,31 @@ async def detect_(
             (config.project_root_path / "wake-detections.sarif").write_text(
                 to_json(log)
             )
-        elif export == "json":
+        elif export in {"json", "json-html"}:
+
             def process_detection(detection: Detection) -> Dict[str, Any]:
-                start_line, start_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[0])
-                end_line, end_col = detection.ir_node.source_unit.get_line_col_from_byte_offset(detection.ir_node.byte_location[1])
+                (
+                    start_line,
+                    start_col,
+                ) = detection.ir_node.source_unit.get_line_col_from_byte_offset(
+                    detection.ir_node.byte_location[0]
+                )
+                (
+                    end_line,
+                    end_col,
+                ) = detection.ir_node.source_unit.get_line_col_from_byte_offset(
+                    detection.ir_node.byte_location[1]
+                )
 
                 source_unit = detection.ir_node.source_unit
                 assert source_unit._lines_index is not None
                 start_line_index = max(0, start_line - 4)
                 end_line_index = min(len(source_unit._lines_index), start_line + 3)
 
-                source = ""
-                for i in range(start_line_index, end_line_index):
-                    source += source_unit._lines_index[i][0].decode("utf-8")
-
                 ret = {
-                    "message":  detection.message,
+                    "message": detection.message,
                     "location": {
                         "path": str(source_unit.file),
-                        "source": source.rstrip(),
                         "source_start_line": start_line_index + 1,
                         "source_unit_name": source_unit.source_unit_name,
                         "start_offset": detection.ir_node.byte_location[0],
@@ -595,24 +601,56 @@ async def detect_(
                         "start_col": start_col,
                         "end_line": end_line,
                         "end_col": end_col,
-                    }
+                    },
                 }
+                if export == "json":
+                    source = ""
+                    for i in range(start_line_index, end_line_index):
+                        source += source_unit._lines_index[i][0].decode("utf-8")
+
+                    ret["location"]["source"] = source.rstrip()
+
                 if detection.subdetections:
-                    ret["subdetections"] = [process_detection(d) for d in detection.subdetections]
+                    ret["subdetections"] = [
+                        process_detection(d) for d in detection.subdetections
+                    ]
 
                 return ret
 
             (config.project_root_path / ".wake").mkdir(parents=True, exist_ok=True)
 
+            if export == "json-html":
+                console.record = True
+
             data = []
-            for detector_name, detection in all_detections:
-                data.append({
+            for i, (detector_name, detection) in enumerate(all_detections):
+                info = {
                     "detector_name": detector_name,
                     "impact": detection.impact.value,
                     "confidence": detection.confidence.value,
                     "uri": detection.uri,
                     "detection": process_detection(detection.detection),
-                })
+                }
+
+                if export == "json-html":
+                    print_detection(
+                        detector_name,
+                        detection,
+                        config,
+                        console,
+                        "monokai",
+                        file_link=False,
+                    )
+                    (config.project_root_path / ".wake" / "detections").mkdir(
+                        parents=True, exist_ok=True
+                    )
+                    path = (
+                        config.project_root_path / ".wake" / "detections" / f"{i}.html"
+                    )
+                    console.save_html(str(path), theme=SVG_EXPORT_THEME)
+                    info["html_path"] = f"detections/{i}.html"
+
+                data.append(info)
 
             (config.project_root_path / ".wake" / "detections.json").write_text(
                 to_json(data)
@@ -628,11 +666,14 @@ async def detect_(
         modified_files: Dict[Path, bytes] = {}
         start = time.perf_counter()
         with console.status("[bold green]Searching for *.sol files...[/]"):
-            for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            for f in glob.iglob(
+                str(config.project_root_path / "**/*.sol"), recursive=True
+            ):
                 file = Path(f)
                 if (
                     not any(
-                        is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
+                        is_relative_to(file, p)
+                        for p in config.compiler.solc.exclude_paths
                     )
                     and file.is_file()
                 ):
@@ -646,7 +687,9 @@ async def detect_(
             loaded = json.load(f)
 
         if loaded["version"] != get_package_version("eth-wake"):
-            raise click.BadParameter(f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}")
+            raise click.BadParameter(
+                f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}"
+            )
 
         if loaded["system"] == "Windows":
             wake_contracts_path = PureWindowsPath(loaded["wake_contracts_path"])
@@ -655,18 +698,37 @@ async def detect_(
             wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
             original_project_root = PurePosixPath(loaded["project_root"])
 
-        config = WakeConfig.fromdict(loaded["config"], wake_contracts_path=wake_contracts_path, paths_mode=loaded["system"])
+        config = WakeConfig.fromdict(
+            loaded["config"],
+            wake_contracts_path=wake_contracts_path,
+            paths_mode=loaded["system"],
+        )
 
         # add project root as an include path (for solc to resolve imports correctly)
         if config.project_root_path != original_project_root:
-            config.update({"compiler": {"solc": {"include_paths": set(config.compiler.solc.include_paths) | {original_project_root}, }}}, [], paths_mode=loaded["system"])
+            config.update(
+                {
+                    "compiler": {
+                        "solc": {
+                            "include_paths": set(config.compiler.solc.include_paths)
+                            | {original_project_root},
+                        }
+                    }
+                },
+                [],
+                paths_mode=loaded["system"],
+            )
 
         modified_files = {
-            Path(path): source['content'].encode("utf-8") for path, source in loaded["sources"].items()
+            Path(path): source["content"].encode("utf-8")
+            for path, source in loaded["sources"].items()
         }
         sol_files = {
-            path for path in modified_files.keys()
-            if not any(is_relative_to(path, p) for p in config.compiler.solc.exclude_paths)
+            path
+            for path in modified_files.keys()
+            if not any(
+                is_relative_to(path, p) for p in config.compiler.solc.exclude_paths
+            )
         }
 
     compiler = SolidityCompiler(config)
@@ -751,7 +813,10 @@ async def detect_(
 )
 @click.option(
     "--export",
-    type=click.Choice(["svg", "html", "text", "ansi", "sarif", "json"], case_sensitive=False),
+    type=click.Choice(
+        ["svg", "html", "text", "ansi", "sarif", "json", "json-html"],
+        case_sensitive=False,
+    ),
     help="Export detections to file.",
 )
 @click.option(
