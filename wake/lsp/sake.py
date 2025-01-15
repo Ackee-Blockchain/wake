@@ -907,7 +907,7 @@ class SakeContext:
             logic_contract = get_logic_contract(contract)
             name, abi = info_from_address(str(logic_contract.address))
 
-            if contract != logic_contract:
+            if contract == logic_contract:
                 return SakeGetAbiWithProxyResult(
                     success=True,
                     name=name,
