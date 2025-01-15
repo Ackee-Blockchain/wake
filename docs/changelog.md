@@ -6,6 +6,29 @@ small.label {
 }
 </style>
 
+## 4.14.0 <small>(Jan 15, 2025)</small> { id="4.14.0" }
+
+Features & improvements:
+
+- [Sourcify](https://sourcify.dev/) is now used as alternative to Etherscan-like explorers as a source code provider <small class="label">[core]</small>
+- Wake now connects to any Ethereum node, assuming Geth-like interface <small class="label">[deployment framework]</small>
+- introduced Cookbook section in docs <small class="label">[docs]</small>
+- `link_format` is now used in all LSP printers and commands <small class="label">[language server]</small>
+- added new JSON-HTML detections export format <small class="label">[static analysis]</small>
+- improved bytes representation in call traces and deployment tx confirmations <small class="label">[testing & deployment framework]</small>
+- added events to call traces <small class="label">[testing & deployment framework]</small>
+- introduced experimental fuzz test crash shrinking feature <small class="label">[testing framework]</small>
+- added `mint_erc1155` cheatcode <small class="label">[testing framework]</small>
+
+Changes:
+
+- removed unmaintained `no-pytest` testing mode <small class="label">[testing framework]</small>
+
+Fixes:
+
+- fixed SIGINT behavior in single-process testing <small class="label">[testing framework]</small>
+
+
 ## 4.13.2 <small>(Nov 14, 2024)</small> { id="4.13.2" }
 
 Fixes:
