@@ -219,7 +219,9 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
             start = time.perf_counter()
             files = set()
             with ctx_manager:
-                for f in glob.iglob(str(self._config.project_root_path / "**/*.sol"), recursive=True):
+                for f in glob.iglob(
+                    str(self._config.project_root_path / "**/*.sol"), recursive=True
+                ):
                     file = Path(f)
                     if (
                         not any(
@@ -495,7 +497,9 @@ class SolidityCompiler:
         return graph, source_units
 
     @staticmethod
-    def build_compilation_units_maximize(graph: nx.DiGraph, logger: logging.Logger) -> List[CompilationUnit]:
+    def build_compilation_units_maximize(
+        graph: nx.DiGraph, logger: logging.Logger
+    ) -> List[CompilationUnit]:
         """
         Builds a list of compilation units from a graph. Number of compilation units is maximized.
         """
@@ -519,8 +523,13 @@ class SolidityCompiler:
                 versions &= graph.nodes[node]["versions"]
                 compiled_with[node].add(subproject)
 
-                if graph.nodes[node]["subproject"] not in {subproject, None} and not node.startswith("wake/"):
-                    logger.warning(f"Including file {node} belonging to subproject '{graph.nodes[node]['subproject'] or '<default>'}' into compilation of subproject '{subproject or '<default>'}'")
+                if graph.nodes[node]["subproject"] not in {
+                    subproject,
+                    None,
+                } and not node.startswith("wake/"):
+                    logger.warning(
+                        f"Including file {node} belonging to subproject '{graph.nodes[node]['subproject'] or '<default>'}' into compilation of subproject '{subproject or '<default>'}'"
+                    )
 
                 for in_edge in graph.in_edges(node):
                     _from, to = in_edge
@@ -659,17 +668,16 @@ class SolidityCompiler:
         settings: SolcInputSettings,
         modified_source_units: Iterable[str],
     ) -> SolcInputSettings:
-        if settings.output_selection is not None and "*" in settings.output_selection["*"]:
+        if (
+            settings.output_selection is not None
+            and "*" in settings.output_selection["*"]
+        ):
             new_selection = {}
             if "" in settings.output_selection["*"]:
-                new_selection["*"] = {
-                    "": settings.output_selection["*"][""]
-                }
+                new_selection["*"] = {"": settings.output_selection["*"][""]}
 
             for source_unit in modified_source_units:
-                new_selection[source_unit] = {
-                    "*": settings.output_selection["*"]["*"]
-                }
+                new_selection[source_unit] = {"*": settings.output_selection["*"]["*"]}
 
             ret = settings.model_copy()
             ret.output_selection = new_selection
@@ -1128,11 +1136,17 @@ class SolidityCompiler:
                     # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                     # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                     # we need to remove them from the build as well
-                    files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
-                        source_unit_name
-                        for source_unit_name in graph.nodes
-                        if graph.nodes[source_unit_name]["path"] == file
-                    ])}
+                    files = {
+                        source_units_to_paths[to]
+                        for (_, to) in nx.edge_bfs(
+                            graph,
+                            [
+                                source_unit_name
+                                for source_unit_name in graph.nodes
+                                if graph.nodes[source_unit_name]["path"] == file
+                            ],
+                        )
+                    }
                     files.add(file)
 
                     for file in files:
@@ -1272,11 +1286,17 @@ class SolidityCompiler:
                         # however, there may be other CUs compiling this file (for different subprojects) where compilation was successful
                         # to prevent the case where files from different subprojects depending on this file would be left orphaned,
                         # we need to remove them from the build as well
-                        files = {source_units_to_paths[to] for (_, to) in nx.edge_bfs(graph, [
-                            source_unit_name
-                            for source_unit_name in graph.nodes
-                            if graph.nodes[source_unit_name]["path"] == file
-                        ])}
+                        files = {
+                            source_units_to_paths[to]
+                            for (_, to) in nx.edge_bfs(
+                                graph,
+                                [
+                                    source_unit_name
+                                    for source_unit_name in graph.nodes
+                                    if graph.nodes[source_unit_name]["path"] == file
+                                ],
+                            )
+                        }
                         files.add(file)
 
                         for file in files:
@@ -1359,7 +1379,9 @@ class SolidityCompiler:
                         # file was already processed
                         # index AST + register (possibly new) source unit name
                         build.reference_resolver.index_nodes(ast, path, cu.hash)
-                        build._source_units[path]._source_unit_names.add(ast.absolute_path)
+                        build._source_units[path]._source_unit_names.add(
+                            ast.absolute_path
+                        )
                         continue
                     elif cu not in compilation_units_per_file[path]:
                         # file recompiled but canonical AST not indexed yet
@@ -1373,7 +1395,9 @@ class SolidityCompiler:
                     build.reference_resolver.index_nodes(ast, path, cu.hash)
 
                     for prev_ast, prev_cu_hash in ast_index[path]:
-                        build.reference_resolver.index_nodes(prev_ast, path, prev_cu_hash)
+                        build.reference_resolver.index_nodes(
+                            prev_ast, path, prev_cu_hash
+                        )
 
                     assert (
                         source_unit_name in graph.nodes
@@ -1390,9 +1414,7 @@ class SolidityCompiler:
                         if source_unit_name in solc_output.contracts
                         else None,
                     )
-                    build._reference_resolver.clear_registered_nodes(
-                        [path]
-                    )
+                    build._reference_resolver.clear_registered_nodes([path])
                     build._source_units[path] = SourceUnit(init, ast)
                     build._interval_trees[path] = interval_tree
 
@@ -1607,7 +1629,9 @@ class SolidityCompiler:
                 try:
                     sources[source_unit_name] = content.decode("utf-8")
                 except UnicodeDecodeError:
-                    logger.warning(f"Skipping source unit {source_unit_name} with non-utf-8 content")
+                    logger.warning(
+                        f"Skipping source unit {source_unit_name} with non-utf-8 content"
+                    )
 
         if len(sources) == 0 and len(files) == 0:
             return SolcOutput()
