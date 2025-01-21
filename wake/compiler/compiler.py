@@ -1150,7 +1150,16 @@ class SolidityCompiler:
         tasks = []
         for compilation_unit, target_version in zip(compilation_units, target_versions):
             if target_version >= "0.8.28":
-                settings = self.optimize_build_settings(build_settings[compilation_unit.subproject], compilation_unit.source_unit_names & source_units_to_compile)
+                modified_source_units = (
+                    compilation_unit.source_unit_names & source_units_to_compile
+                )
+                modified_source_units |= {
+                    e[1]
+                    for e in nx.edge_bfs(compilation_unit.graph, modified_source_units)
+                }
+                settings = self.optimize_build_settings(
+                    build_settings[compilation_unit.subproject], modified_source_units
+                )
             else:
                 settings = build_settings[compilation_unit.subproject]
 
