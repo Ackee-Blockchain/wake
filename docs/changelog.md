@@ -504,7 +504,7 @@ Fixes:
     - added link to InlineAssembly from all Yul nodes
 
 - updated control flow graph
-    - Yul is now fully supported; InlineAssembly blocks are now decomposed into Yul statemenets
+    - Yul is now fully supported; InlineAssembly blocks are now decomposed into Yul statements
     - successful execution and reverting execution is now distinguished in control flow graph
     - assert/require/revert function calls are now handled (including these calls in conditionals)
     - fixed missing edge for in try/catch statement
