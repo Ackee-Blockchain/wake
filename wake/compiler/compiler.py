@@ -396,11 +396,11 @@ class SolidityCompiler:
         # for every source file resolve a source unit name
         for file in files:
             try:
-                file = file.resolve(strict=True)
+                file = file.resolve()
+                if file not in modified_files:
+                    file = file.resolve(strict=True)
             except FileNotFoundError:
-                if file in modified_files:
-                    pass
-                elif ignore_errors:
+                if ignore_errors:
                     continue
                 else:
                     raise
