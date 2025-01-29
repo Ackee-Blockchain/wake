@@ -6,6 +6,15 @@ small.label {
 }
 </style>
 
+## 4.14.1 <small>(Jan 29, 2025)</small> { id="4.14.1" }
+
+Fixes:
+
+- fixed compilation contract info missing (often manifesting as `AssertionError`) when compiling Solidity >= 0.8.28 <small class="label">[core]</small>
+- fixed `PermissionError` when accessing "modified files" during compilation <small class="label">[core]</small>
+- fixed fetching ABI from explorers in call traces <small class="label">[testing & deployment framework]</small>
+- fixed ABI decoding in call traces with leftover bytes <small class="label">[testing & deployment framework]</small>
+
 ## 4.14.0 <small>(Jan 15, 2025)</small> { id="4.14.0" }
 
 Features & improvements:
