@@ -277,7 +277,7 @@ def _decode_args(
     ]
     args = list(
         _normalize(arg, type, chain)
-        for arg, type in zip(eth_abi.abi.decode(input_types, data), abi)
+        for arg, type in zip(eth_abi.abi.decode(input_types, data, strict=False), abi)
     )
     arg_names = [arg["name"] for arg in abi]
 
