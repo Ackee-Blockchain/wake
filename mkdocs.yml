@@ -225,6 +225,7 @@ nav:
     - Essential Fundamentals:
       - 'cookbook/essential-fundamentals/index.md'
       - Basic Fuzz Test Structure: 'cookbook/essential-fundamentals/basic-fuzz-test-structure.md'
+      - Config File Schema: 'cookbook/essential-fundamentals/config-file-schema.md'
       - Error Handling: 'cookbook/essential-fundamentals/error-handling.md'
       - Flows: 'cookbook/essential-fundamentals/flows.md'
     - Common Testing Patterns:
