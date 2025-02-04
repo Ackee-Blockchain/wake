@@ -202,7 +202,7 @@ Features & improvements:
 
 - implemented callback commands for LSP printers
     - go to locations, peek locations, open URI, copy to clipboard
-- Wake `console.log` is now tread as library (in respect to detectors)
+- Wake `console.log` is now thread, treat as library (in respect to detectors)
 - Wake `console.log` is now auto-completed in Solidity imports through LSP
 - random seeds used in testing are now printed in pytest summary
 - documented possible test reproducibility issues and their solutions
