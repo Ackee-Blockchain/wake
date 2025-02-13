@@ -108,8 +108,6 @@ async def open_address(
             )
             return
 
-    project_dir.mkdir(parents=True, exist_ok=True)
-
     with console.status(f"Fetching {address} from explorer..."):
         info, source = get_info_from_explorer(address, chain_id, config)
 
