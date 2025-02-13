@@ -1089,9 +1089,11 @@ class TypeGenerator:
             )
         return param_names, params
 
-    def generate_func_returns(self, fn: FunctionDefinition) -> List[Tuple[str, str]]:
+    def generate_func_returns(
+        self, fn: FunctionDefinition
+    ) -> List[Tuple[str, str, str]]:
         return [
-            (self.parse_type_and_import(par.type, True), par.type_string)
+            (self.parse_type_and_import(par.type, True), par.type_string, par.name)
             for par in fn.return_parameters.parameters
         ]
 
@@ -1102,11 +1104,12 @@ class TypeGenerator:
     def generate_getter_for_state_var(self, decl: VariableDeclaration):
         def get_struct_return_list(
             struct_type_name: UserDefinedTypeName,
-        ) -> List[Tuple[str, str]]:
+            var_name: str,
+        ) -> List[Tuple[str, str, str]]:
             struct = struct_type_name.type
             assert isinstance(struct, types.Struct)
             node = struct.ir_node
-            non_excluded: List[Tuple[str, str]] = []
+            non_excluded: List[Tuple[str, str, str]] = []
             for member in node.members:
                 if not isinstance(member.type, types.Mapping) and not isinstance(
                     member.type, types.Array
@@ -1115,6 +1118,7 @@ class TypeGenerator:
                         (
                             self.parse_type_and_import(member.type, True),
                             member.type_string,
+                            member.name,
                         )
                     )
             if len(node.members) == len(non_excluded):
@@ -1126,23 +1130,28 @@ class TypeGenerator:
                         (
                             f"{self.get_name(parent)}.{self.get_name(struct.ir_node)}",
                             struct_type_name.type_string,
+                            var_name,
                         )
                     ]
                 else:
                     self.__imports.generate_struct_import(struct)
                     return [
-                        (self.get_name(struct.ir_node), struct_type_name.type_string)
+                        (
+                            self.get_name(struct.ir_node),
+                            struct_type_name.type_string,
+                            var_name,
+                        )
                     ]
             else:
                 return non_excluded
 
-        returns: List[Tuple[str, str]] = []
+        returns: List[Tuple[str, str, str]] = []
         param_names: List[Tuple[str, str]] = []
         # if the type is compound we need to use the type as an index, for primitive types we use the
         # the type only for the return
         # TODO reorder the elif chain such that the most common types are on the top
         def generate_getter_helper(
-            var_type_name: TypeNameAbc, use_parse: bool, depth: int
+            var_type_name: TypeNameAbc, use_parse: bool, depth: int, var_name: str
         ) -> List[str]:
             nonlocal returns
             nonlocal param_names
@@ -1162,7 +1171,7 @@ class TypeGenerator:
                         self.__imports.generate_struct_import(var_type)
                         parsed.append(self.get_name(var_type.ir_node))
                 assert isinstance(var_type_name, UserDefinedTypeName)
-                returns = get_struct_return_list(var_type_name)
+                returns = get_struct_return_list(var_type_name, var_name)
             elif isinstance(var_type, types.Enum):
                 parent = var_type.ir_node.parent
                 if isinstance(parent, ContractDefinition):
@@ -1174,6 +1183,7 @@ class TypeGenerator:
                         (
                             f"{self.get_name(parent)}.{self.get_name(var_type.ir_node)}",
                             var_type_name.type_string,
+                            var_name,
                         )
                     ]
 
@@ -1181,7 +1191,11 @@ class TypeGenerator:
                     self.__imports.generate_enum_import(var_type)
                     parsed.append(self.get_name(var_type.ir_node))
                     returns = [
-                        (self.get_name(var_type.ir_node), var_type_name.type_string)
+                        (
+                            self.get_name(var_type.ir_node),
+                            var_type_name.type_string,
+                            var_name,
+                        )
                     ]
             elif isinstance(var_type, types.UserDefinedValueType):
                 underlying_type = var_type.ir_node.underlying_type.type
@@ -1191,17 +1205,26 @@ class TypeGenerator:
                         (
                             f"bytes{underlying_type.bytes_count}",
                             var_type_name.type_string,
+                            var_name,
                         )
                     ]
                 elif isinstance(underlying_type, types.Int):
                     parsed.append(f"int{underlying_type.bits_count}")
                     returns = [
-                        (f"int{underlying_type.bits_count}", var_type_name.type_string)
+                        (
+                            f"int{underlying_type.bits_count}",
+                            var_type_name.type_string,
+                            var_name,
+                        )
                     ]
                 elif isinstance(underlying_type, types.UInt):
                     parsed.append(f"uint{underlying_type.bits_count}")
                     returns = [
-                        (f"uint{underlying_type.bits_count}", var_type_name.type_string)
+                        (
+                            f"uint{underlying_type.bits_count}",
+                            var_type_name.type_string,
+                            var_name,
+                        )
                     ]
                 else:
                     parsed.append(
@@ -1213,6 +1236,7 @@ class TypeGenerator:
                                 1
                             ],
                             var_type_name.type_string,
+                            var_name,
                         )
                     ]
             elif isinstance(var_type, types.Array):
@@ -1222,12 +1246,14 @@ class TypeGenerator:
                 assert isinstance(var_type_name, ArrayTypeName)
                 if self.is_compound_type(var_type.base_type):
                     parsed.extend(
-                        generate_getter_helper(var_type_name.base_type, True, depth + 1)
+                        generate_getter_helper(
+                            var_type_name.base_type, True, depth + 1, ""
+                        )
                     )
                 else:
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
                     _ = generate_getter_helper(
-                        var_type_name.base_type, False, depth + 1
+                        var_type_name.base_type, False, depth + 1, ""
                     )
             elif isinstance(var_type, types.Mapping):
                 # parse key
@@ -1237,46 +1263,72 @@ class TypeGenerator:
                     ("key" + str(depth), var_type_name.key_type.type_string)
                 )
                 key_type = generate_getter_helper(
-                    var_type_name.key_type, True, depth + 1
+                    var_type_name.key_type,
+                    True,
+                    depth + 1,
+                    var_type_name.key_name or "",
                 )
                 assert len(key_type) == 1
                 parsed.append(f"key{depth}: {key_type[0]}")
                 if self.is_compound_type(var_type.value_type):
                     parsed.extend(
                         generate_getter_helper(
-                            var_type_name.value_type, True, depth + 1
+                            var_type_name.value_type,
+                            True,
+                            depth + 1,
+                            var_type_name.value_name or "",
                         )
                     )
                 else:
                     # ignores the parsed return, only called for the side-effect of changing the returns var to value_type
                     _ = generate_getter_helper(
-                        var_type_name.value_type, True, depth + 1
+                        var_type_name.value_type,
+                        True,
+                        depth + 1,
+                        var_type_name.value_name or "",
                     )
             elif isinstance(var_type, types.Contract):
                 self.__imports.generate_contract_import(var_type.ir_node)
                 parsed.append(self.get_name(var_type.ir_node))
-                returns = [(self.get_name(var_type.ir_node), var_type_name.type_string)]
+                returns = [
+                    (
+                        self.get_name(var_type.ir_node),
+                        var_type_name.type_string,
+                        var_name,
+                    )
+                ]
             elif isinstance(var_type, types.FixedBytes):
                 parsed.append(f"bytes{var_type.bytes_count}")
-                returns = [(f"bytes{var_type.bytes_count}", var_type_name.type_string)]
+                returns = [
+                    (
+                        f"bytes{var_type.bytes_count}",
+                        var_type_name.type_string,
+                        var_name,
+                    )
+                ]
             elif isinstance(var_type, types.Int):
                 parsed.append(f"int{var_type.bits_count}")
-                returns = [(f"int{var_type.bits_count}", var_type_name.type_string)]
+                returns = [
+                    (f"int{var_type.bits_count}", var_type_name.type_string, var_name)
+                ]
             elif isinstance(var_type, types.UInt):
                 parsed.append(f"uint{var_type.bits_count}")
-                returns = [(f"uint{var_type.bits_count}", var_type_name.type_string)]
+                returns = [
+                    (f"uint{var_type.bits_count}", var_type_name.type_string, var_name)
+                ]
             else:
                 parsed.append(self.__sol_to_py_lookup[var_type.__class__.__name__][0])
                 returns = [
                     (
                         self.__sol_to_py_lookup[var_type.__class__.__name__][1],
                         var_type_name.type_string,
+                        var_name,
                     )
                 ]
 
             return parsed if use_parse else []
 
-        generated_params = generate_getter_helper(decl.type_name, False, 0)
+        generated_params = generate_getter_helper(decl.type_name, False, 0, decl.name)
 
         if len(returns) == 0:
             returns_str = "None"
@@ -1337,7 +1389,7 @@ class TypeGenerator:
         declaration: Union[FunctionDefinition, VariableDeclaration],
         params: List[str],
         param_names: List[Tuple[str, str]],
-        returns: List[Tuple[str, str]],
+        returns: List[Tuple[str, str, str]],
     ):
         is_view_or_pure: bool = isinstance(
             declaration, VariableDeclaration
@@ -1371,12 +1423,13 @@ class TypeGenerator:
             self.add_str_to_types(2, "Args:", 1)
             for param_name, param_type in param_names:
                 self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
-        if len(returns) == 1:
+        if len(returns) > 0:
             self.add_str_to_types(2, "Returns:", 1)
-            self.add_str_to_types(3, f"{returns[0][1]}", 1)
-        elif len(returns) > 1:
-            self.add_str_to_types(2, "Returns:", 1)
-            self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
+            for _, return_type, return_name in returns:
+                if return_name:
+                    self.add_str_to_types(3, f"{return_name}: {return_type}", 1)
+                else:
+                    self.add_str_to_types(3, f"{return_type}", 1)
         self.add_str_to_types(2, '"""', 1)
 
         if len(returns) == 0:
@@ -1402,7 +1455,7 @@ class TypeGenerator:
         request_type: str,
         request_type_is_default: bool,
         param_names: List[Tuple[str, str]],
-        returns: List[Tuple[str, str]],
+        returns: List[Tuple[str, str, str]],
     ):
         params_str = "".join(param + ", " for param in params)
 
@@ -1425,12 +1478,13 @@ class TypeGenerator:
             self.add_str_to_types(2, "Args:", 1)
             for param_name, param_type in param_names:
                 self.add_str_to_types(3, f"{param_name}: {param_type}", 1)
-        if len(returns) == 1:
+        if len(returns) > 0:
             self.add_str_to_types(2, "Returns:", 1)
-            self.add_str_to_types(3, f"{returns[0][1]}", 1)
-        elif len(returns) > 1:
-            self.add_str_to_types(2, "Returns:", 1)
-            self.add_str_to_types(3, f'({", ".join(ret[1] for ret in returns)})', 1)
+            for _, return_type, return_name in returns:
+                if return_name:
+                    self.add_str_to_types(3, f"{return_name}: {return_type}", 1)
+                else:
+                    self.add_str_to_types(3, f"{return_type}", 1)
         self.add_str_to_types(2, '"""', 1)
         self.add_str_to_types(2, "...", 2)
 
