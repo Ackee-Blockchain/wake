@@ -35,13 +35,17 @@ contract ComplexFunction {
 ```python
 @flow()
 def flow_complex_transfer(self) -> None:
+    sender = random_account()
+    recipient = random_account()
+
     # Test invalid amount branch
     with must_revert(ComplexFunction.InvalidAmount) as e:
         self.complex.complexTransfer(
             sender,
             recipient,
             0,
-            b""
+            b"",
+            from_=sender
         )
 
     # Test insufficient balance branch
@@ -51,7 +55,8 @@ def flow_complex_transfer(self) -> None:
             sender,
             recipient,
             amount,
-            b""
+            b"",
+            from_=sender
         )
         self._balances[sender] -= amount
         self._balances[recipient] += amount
@@ -76,7 +81,7 @@ def flow_complex_transfer(self) -> None:
         recipient,
         amount,
         data,
-        from_=authorized
+        from_=sender
     )
 
     self._balances[sender] -= amount
@@ -90,7 +95,7 @@ def flow_complex_transfer(self) -> None:
         recipient,
         amount,
         b"",
-        from_=authorized
+        from_=sender
     )
 
     self._balances[sender] -= amount

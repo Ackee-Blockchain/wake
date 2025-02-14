@@ -5,6 +5,7 @@ Example of testing a contract that tracks multiple tokens and users.
 ```python
 class TokenAccounting:
     balances: dict[Address, dict[Address, int]]  # token -> user -> amount
+    tokens: dict[Address, TokenContract]
 
     def track_token(self, token: Address, user: Address, amount: int):
         if token not in self.balances:

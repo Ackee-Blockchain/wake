@@ -4,6 +4,8 @@ Example of testing a contract with a post-sequence cleanup function.
 
 ```python
 class CleanupTest(FuzzTest):
+    contract: TestedContract
+
     def post_sequence(self):
         # Clean up remaining balances
         for account in self.active_accounts:

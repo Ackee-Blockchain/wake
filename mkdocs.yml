@@ -7,318 +7,317 @@ site_description: Wake is a Python-based Solidity development and testing framew
 site_author: Ackee Blockchain
 
 theme:
-  name: "material"
-  language: en
-  favicon: images/wake-favicon.svg
-  logo: images/wake-logo.png
-  custom_dir: docs/overrides
-  font:
-    text: Space Grotesk
-  palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to dark mode
+    name: "material"
+    language: en
+    favicon: images/wake-favicon.svg
+    logo: images/wake-logo.png
+    custom_dir: docs/overrides
+    font:
+        text: Space Grotesk
+    palette:
+        - media: "(prefers-color-scheme: light)"
+          scheme: default
+          toggle:
+              icon: material/toggle-switch
+              name: Switch to dark mode
 
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to light mode
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          toggle:
+              icon: material/toggle-switch-off-outline
+              name: Switch to light mode
 
-  features:
-    - content.code.annotate
-    - content.code.copy
-    - content.tabs.link
-    - navigation.tracking
-    - navigation.sections
-    - navigation.indexes
-    - navigation.top
-    - navigation.tabs
+    features:
+        - content.code.annotate
+        - content.code.copy
+        - content.tabs.link
+        - navigation.tracking
+        - navigation.sections
+        - navigation.indexes
+        - navigation.top
+        - navigation.tabs
 
 nav:
-  - Basics:
-      - 'index.md'
-      - Installation: 'installation.md'
-      - Configuration: 'configuration.md'
-      - Compilation: 'compilation.md'
-      - Changelog: 'changelog.md'
-      - Contributing: 'contributing.md'
-  - Development and testing framework:
-      - Overview: 'testing-framework/overview.md'
-      - Basics:
-        - Getting started: 'testing-framework/getting-started.md'
-        - Interacting with contracts: 'testing-framework/interacting-with-contracts.md'
-        - Accounts and addresses: 'testing-framework/accounts-and-addresses.md'
-        - Chains and blocks: 'testing-framework/chains-and-blocks.md'
-        - Transaction objects: 'testing-framework/transaction-objects.md'
-        - Events and errors: 'testing-framework/events-and-errors.md'
-        - Helper functions: 'testing-framework/helper-functions.md'
-      - Fuzzing: 'testing-framework/fuzzing.md'
-      - Cross-chain testing: 'testing-framework/cross-chain-testing.md'
-      - Deployment: 'testing-framework/deployment.md'
-      - Debugging: 'testing-framework/debugging.md'
-      - Coverage analysis: 'testing-framework/coverage-analysis.md'
-      - Performance considerations: 'testing-framework/performance-considerations.md'
-      - Migrating from Ape & Brownie: 'testing-framework/migrating-from-ape-and-brownie.md'
-      - Migrating from Woke 2.x: 'testing-framework/migrating-from-woke-2.md'
-      - Migrating from Woke 3.x: 'testing-framework/migrating-from-woke-3.md'
-      - Troubleshooting: 'testing-framework/troubleshooting.md'
-  - Static analysis (detectors & printers):
-      - Using detectors: 'static-analysis/using-detectors.md'
-      - Using printers: 'static-analysis/using-printers.md'
-      - Built-in:
-        - Detectors:
-            - abi.encodeWithSignature: 'static-analysis/detectors/abi-encode-with-signature.md'
-            - Axelar proxy contractId: 'static-analysis/detectors/axelar-proxy-contract-id.md'
-            - Balance relied on: 'static-analysis/detectors/balance-relied-on.md'
-            - Calldata tuple reencoding head overflow bug: 'static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug.md'
-            - Call options not called: 'static-analysis/detectors/call-options-not-called.md'
-            - Complex struct getter: 'static-analysis/detectors/complex-struct-getter.md'
-            - Empty byte array copy bug: 'static-analysis/detectors/empty-byte-array-copy-bug.md'
-            - Incorrect interface: 'static-analysis/detectors/incorrect-interface.md'
-            - Missing return: 'static-analysis/detectors/missing-return.md'
-            - msg.value non-payable function: 'static-analysis/detectors/msg-value-nonpayable-function.md'
-            - Reentrancy: 'static-analysis/detectors/reentrancy.md'
-            - Struct mapping deletion: 'static-analysis/detectors/struct-mapping-deletion.md'
-            - tx.origin: 'static-analysis/detectors/tx-origin.md'
-            - Unchecked return value: 'static-analysis/detectors/unchecked-return-value.md'
-            - Unprotected selfdestruct: 'static-analysis/detectors/unprotected-selfdestruct.md'
-            - Unsafe ERC-20 call: 'static-analysis/detectors/unsafe-erc20-call.md'
-            - Unsafe delegatecall: 'static-analysis/detectors/unsafe-delegatecall.md'
-            - Unused contract: 'static-analysis/detectors/unused-contract.md'
-            - Unused function: 'static-analysis/detectors/unused-function.md'
-            - Unused import: 'static-analysis/detectors/unused-import.md'
-            - Unused modifier: 'static-analysis/detectors/unused-modifier.md'
-        - Printers:
-            - ABI: 'static-analysis/printers/abi.md'
-            - C3 linearization: 'static-analysis/printers/c3-linearization.md'
-            - Control flow graph: 'static-analysis/printers/control-flow-graph.md'
-            - Imports graph: 'static-analysis/printers/imports-graph.md'
-            - Inheritance graph: 'static-analysis/printers/inheritance-graph.md'
-            - Inheritance tree: 'static-analysis/printers/inheritance-tree.md'
-            - LSP control flow graph: 'static-analysis/printers/lsp-control-flow-graph.md'
-            - LSP inheritance graph: 'static-analysis/printers/lsp-inheritance-graph.md'
-            - LSP linearized inheritance graph: 'static-analysis/printers/lsp-linearized-inheritance-graph.md'
-            - LSP OpenZeppelin docs: 'static-analysis/printers/lsp-openzeppelin-docs.md'
-            - LSP references: 'static-analysis/printers/lsp-references.md'
-            - LSP selectors: 'static-analysis/printers/lsp-selectors.md'
-            - LSP Yul definitions: 'static-analysis/printers/lsp-yul-definitions.md'
-            - Modifiers: 'static-analysis/printers/modifiers.md'
-            - State changes: 'static-analysis/printers/state-changes.md'
-            - Storage layout: 'static-analysis/printers/storage-layout.md'
-            - Tokens: 'static-analysis/printers/tokens.md'
-      - Developer guide:
-        - Getting started: 'static-analysis/getting-started.md'
-        - Working with IR: 'static-analysis/working-with-ir.md'
-        - Command-line interface: 'static-analysis/command-line-interface.md'
+    - Basics:
+          - "index.md"
+          - Installation: "installation.md"
+          - Configuration: "configuration.md"
+          - Compilation: "compilation.md"
+          - Changelog: "changelog.md"
+          - Contributing: "contributing.md"
+    - Development and testing framework:
+          - Overview: "testing-framework/overview.md"
+          - Basics:
+                - Getting started: "testing-framework/getting-started.md"
+                - Interacting with contracts: "testing-framework/interacting-with-contracts.md"
+                - Accounts and addresses: "testing-framework/accounts-and-addresses.md"
+                - Chains and blocks: "testing-framework/chains-and-blocks.md"
+                - Transaction objects: "testing-framework/transaction-objects.md"
+                - Events and errors: "testing-framework/events-and-errors.md"
+                - Helper functions: "testing-framework/helper-functions.md"
+          - Fuzzing: "testing-framework/fuzzing.md"
+          - Cross-chain testing: "testing-framework/cross-chain-testing.md"
+          - Deployment: "testing-framework/deployment.md"
+          - Debugging: "testing-framework/debugging.md"
+          - Coverage analysis: "testing-framework/coverage-analysis.md"
+          - Performance considerations: "testing-framework/performance-considerations.md"
+          - Migrating from Ape & Brownie: "testing-framework/migrating-from-ape-and-brownie.md"
+          - Migrating from Woke 2.x: "testing-framework/migrating-from-woke-2.md"
+          - Migrating from Woke 3.x: "testing-framework/migrating-from-woke-3.md"
+          - Troubleshooting: "testing-framework/troubleshooting.md"
+    - Static analysis (detectors & printers):
+          - Using detectors: "static-analysis/using-detectors.md"
+          - Using printers: "static-analysis/using-printers.md"
+          - Built-in:
+                - Detectors:
+                      - abi.encodeWithSignature: "static-analysis/detectors/abi-encode-with-signature.md"
+                      - Axelar proxy contractId: "static-analysis/detectors/axelar-proxy-contract-id.md"
+                      - Balance relied on: "static-analysis/detectors/balance-relied-on.md"
+                      - Calldata tuple reencoding head overflow bug: "static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug.md"
+                      - Call options not called: "static-analysis/detectors/call-options-not-called.md"
+                      - Complex struct getter: "static-analysis/detectors/complex-struct-getter.md"
+                      - Empty byte array copy bug: "static-analysis/detectors/empty-byte-array-copy-bug.md"
+                      - Incorrect interface: "static-analysis/detectors/incorrect-interface.md"
+                      - Missing return: "static-analysis/detectors/missing-return.md"
+                      - msg.value non-payable function: "static-analysis/detectors/msg-value-nonpayable-function.md"
+                      - Reentrancy: "static-analysis/detectors/reentrancy.md"
+                      - Struct mapping deletion: "static-analysis/detectors/struct-mapping-deletion.md"
+                      - tx.origin: "static-analysis/detectors/tx-origin.md"
+                      - Unchecked return value: "static-analysis/detectors/unchecked-return-value.md"
+                      - Unprotected selfdestruct: "static-analysis/detectors/unprotected-selfdestruct.md"
+                      - Unsafe ERC-20 call: "static-analysis/detectors/unsafe-erc20-call.md"
+                      - Unsafe delegatecall: "static-analysis/detectors/unsafe-delegatecall.md"
+                      - Unused contract: "static-analysis/detectors/unused-contract.md"
+                      - Unused function: "static-analysis/detectors/unused-function.md"
+                      - Unused import: "static-analysis/detectors/unused-import.md"
+                      - Unused modifier: "static-analysis/detectors/unused-modifier.md"
+                - Printers:
+                      - ABI: "static-analysis/printers/abi.md"
+                      - C3 linearization: "static-analysis/printers/c3-linearization.md"
+                      - Control flow graph: "static-analysis/printers/control-flow-graph.md"
+                      - Imports graph: "static-analysis/printers/imports-graph.md"
+                      - Inheritance graph: "static-analysis/printers/inheritance-graph.md"
+                      - Inheritance tree: "static-analysis/printers/inheritance-tree.md"
+                      - LSP control flow graph: "static-analysis/printers/lsp-control-flow-graph.md"
+                      - LSP inheritance graph: "static-analysis/printers/lsp-inheritance-graph.md"
+                      - LSP linearized inheritance graph: "static-analysis/printers/lsp-linearized-inheritance-graph.md"
+                      - LSP OpenZeppelin docs: "static-analysis/printers/lsp-openzeppelin-docs.md"
+                      - LSP references: "static-analysis/printers/lsp-references.md"
+                      - LSP selectors: "static-analysis/printers/lsp-selectors.md"
+                      - LSP Yul definitions: "static-analysis/printers/lsp-yul-definitions.md"
+                      - Modifiers: "static-analysis/printers/modifiers.md"
+                      - State changes: "static-analysis/printers/state-changes.md"
+                      - Storage layout: "static-analysis/printers/storage-layout.md"
+                      - Tokens: "static-analysis/printers/tokens.md"
+          - Developer guide:
+                - Getting started: "static-analysis/getting-started.md"
+                - Working with IR: "static-analysis/working-with-ir.md"
+                - Command-line interface: "static-analysis/command-line-interface.md"
 
-  - LSP server: 'language-server.md'
-  - Solc Version Manager: 'solc-version-manager.md'
-  - API reference:
-      - wake.analysis:
-          - cfg: 'api-reference/analysis/cfg.md'
-          - utils: 'api-reference/analysis/utils.md'
-      - wake.config:
-          - data_model: 'api-reference/config/data-model.md'
-          - wake_config: 'api-reference/config/wake-config.md'
-      - wake.compiler:
-          - build_data_model: 'api-reference/compiler/build-data-model.md'
-      - wake.core:
-          - solidity_version: 'api-reference/core/solidity-version.md'
-          - visitor: 'api-reference/core/visitor.md'
-      - wake.detectors:
-          - api: 'api-reference/detectors/api.md'
-      - wake.ir:
-          - abc: 'api-reference/ir/abc.md'
-          - declarations:
-              - abc: 'api-reference/ir/declarations/abc.md'
-              - contract_definition: 'api-reference/ir/declarations/contract-definition.md'
-              - enum_definition: 'api-reference/ir/declarations/enum-definition.md'
-              - enum_value: 'api-reference/ir/declarations/enum-value.md'
-              - error_definition: 'api-reference/ir/declarations/error-definition.md'
-              - event_definition: 'api-reference/ir/declarations/event-definition.md'
-              - function_definition: 'api-reference/ir/declarations/function-definition.md'
-              - modifier_definition: 'api-reference/ir/declarations/modifier-definition.md'
-              - struct_definition: 'api-reference/ir/declarations/struct-definition.md'
-              - user_defined_value_type_definition: 'api-reference/ir/declarations/user-defined-value-type-definition.md'
-              - variable_declaration: 'api-reference/ir/declarations/variable-declaration.md'
-          - enums: 'api-reference/ir/enums.md'
-          - expressions:
-              - abc: 'api-reference/ir/expressions/abc.md'
-              - assignment: 'api-reference/ir/expressions/assignment.md'
-              - binary_operation: 'api-reference/ir/expressions/binary-operation.md'
-              - conditional: 'api-reference/ir/expressions/conditional.md'
-              - elementary_type_name_expression: 'api-reference/ir/expressions/elementary-type-name-expression.md'
-              - function_call: 'api-reference/ir/expressions/function-call.md'
-              - function_call_options: 'api-reference/ir/expressions/function-call-options.md'
-              - identifier: 'api-reference/ir/expressions/identifier.md'
-              - index_access: 'api-reference/ir/expressions/index-access.md'
-              - index_range_access: 'api-reference/ir/expressions/index-range-access.md'
-              - literal: 'api-reference/ir/expressions/literal.md'
-              - member_access: 'api-reference/ir/expressions/member-access.md'
-              - new_expression: 'api-reference/ir/expressions/new-expression.md'
-              - tuple_expression: 'api-reference/ir/expressions/tuple-expression.md'
-              - unary_operation: 'api-reference/ir/expressions/unary-operation.md'
-          - meta:
-              - identifier_path: 'api-reference/ir/meta/identifier-path.md'
-              - import_directive: 'api-reference/ir/meta/import-directive.md'
-              - inheritance_specifier: 'api-reference/ir/meta/inheritance-specifier.md'
-              - modifier_invocation: 'api-reference/ir/meta/modifier-invocation.md'
-              - override_specifier: 'api-reference/ir/meta/override-specifier.md'
-              - parameter_list: 'api-reference/ir/meta/parameter-list.md'
-              - pragma_directive: 'api-reference/ir/meta/pragma-directive.md'
-              - source_unit: 'api-reference/ir/meta/source-unit.md'
-              - structured_documentation: 'api-reference/ir/meta/structured-documentation.md'
-              - try_catch_clause: 'api-reference/ir/meta/try-catch-clause.md'
-              - using_for_directive: 'api-reference/ir/meta/using-for-directive.md'
-          - reference_resolver: 'api-reference/ir/reference-resolver.md'
-          - statements:
-              - abc: 'api-reference/ir/statements/abc.md'
-              - block: 'api-reference/ir/statements/block.md'
-              - break_statement: 'api-reference/ir/statements/break-statement.md'
-              - continue_statement: 'api-reference/ir/statements/continue-statement.md'
-              - do_while_statement: 'api-reference/ir/statements/do-while-statement.md'
-              - emit_statement: 'api-reference/ir/statements/emit-statement.md'
-              - expression_statement: 'api-reference/ir/statements/expression-statement.md'
-              - for_statement: 'api-reference/ir/statements/for-statement.md'
-              - if_statement: 'api-reference/ir/statements/if-statement.md'
-              - inline_assembly: 'api-reference/ir/statements/inline-assembly.md'
-              - placeholder_statement: 'api-reference/ir/statements/placeholder-statement.md'
-              - return_statement: 'api-reference/ir/statements/return-statement.md'
-              - revert_statement: 'api-reference/ir/statements/revert-statement.md'
-              - try_statement: 'api-reference/ir/statements/try-statement.md'
-              - unchecked_block: 'api-reference/ir/statements/unchecked-block.md'
-              - variable_declaration_statement: 'api-reference/ir/statements/variable-declaration-statement.md'
-              - while_statement: 'api-reference/ir/statements/while-statement.md'
-          - types: 'api-reference/ir/types.md'
-          - type_names:
-              - abc: 'api-reference/ir/type-names/abc.md'
-              - array_type_name: 'api-reference/ir/type-names/array-type-name.md'
-              - elementary_type_name: 'api-reference/ir/type-names/elementary-type-name.md'
-              - function_type_name: 'api-reference/ir/type-names/function-type-name.md'
-              - mapping: 'api-reference/ir/type-names/mapping.md'
-              - user_defined_type_name: 'api-reference/ir/type-names/user-defined-type-name.md'
-          - yul:
-              - abc: 'api-reference/ir/yul/abc.md'
-              - assignment: 'api-reference/ir/yul/assignment.md'
-              - block: 'api-reference/ir/yul/block.md'
-              - break_statement: 'api-reference/ir/yul/break-statement.md'
-              - case: 'api-reference/ir/yul/case.md'
-              - continue_statement: 'api-reference/ir/yul/continue-statement.md'
-              - expression_statement: 'api-reference/ir/yul/expression-statement.md'
-              - for_loop: 'api-reference/ir/yul/for-loop.md'
-              - function_call: 'api-reference/ir/yul/function-call.md'
-              - function_definition: 'api-reference/ir/yul/function-definition.md'
-              - identifier: 'api-reference/ir/yul/identifier.md'
-              - if_statement: 'api-reference/ir/yul/if-statement.md'
-              - leave: 'api-reference/ir/yul/leave.md'
-              - literal: 'api-reference/ir/yul/literal.md'
-              - switch: 'api-reference/ir/yul/switch.md'
-              - typed_name: 'api-reference/ir/yul/typed-name.md'
-              - variable_declaration: 'api-reference/ir/yul/variable-declaration.md'
-      - wake.printers:
-          - api: 'api-reference/printers/api.md'
-  - Cookbook:
-    - 'cookbook/index.md'
-    - Essential Fundamentals:
-      - 'cookbook/essential-fundamentals/index.md'
-      - Basic Fuzz Test Structure: 'cookbook/essential-fundamentals/basic-fuzz-test-structure.md'
-      - Config File Schema: 'cookbook/essential-fundamentals/config-file-schema.md'
-      - Error Handling: 'cookbook/essential-fundamentals/error-handling.md'
-      - Flows: 'cookbook/essential-fundamentals/flows.md'
-    - Common Testing Patterns:
-      - 'cookbook/common-testing-patterns/index.md'
-      - Account Balance Testing: 'cookbook/common-testing-patterns/account-balance-testing.md'
-      - Multi Token Interaction: 'cookbook/common-testing-patterns/multi-token-interaction.md'
-      - State Change Tracking: 'cookbook/common-testing-patterns/state-change-tracking.md'
-      - Test Flow Branching: 'cookbook/common-testing-patterns/test-flow-branching.md'
-    - Advanced Testing Features:
-      - 'cookbook/advanced-testing-features/index.md'
-      - Context Based Balance Tracking Pattern: 'cookbook/advanced-testing-features/context-based-balance-tracking-pattern.md'
-      - Differential Testing: 'cookbook/advanced-testing-features/differential-testing.md'
-      - Error Tolerance: 'cookbook/advanced-testing-features/error-tolerance.md'
-      - Time Based Testing: 'cookbook/advanced-testing-features/time-based-testing.md'
-      - Token Allowances with Multiple Branches: 'cookbook/advanced-testing-features/token-allowances-with-multiple-branches.md'
-    - Specialized Use Cases:
-      - 'cookbook/specialized-use-cases/index.md'
-      - Address Bytes Conversion with Random Data: 'cookbook/specialized-use-cases/address-bytes-conversion-with-random-data.md'
-      - Chainlink Data Updating: 'cookbook/specialized-use-cases/chainlink-data-updating.md'
-      - Cross Chain Message Passing: 'cookbook/specialized-use-cases/cross-chain-message-passing.md'
-      - Deploy with Proxy: 'cookbook/specialized-use-cases/deploy-with-proxy.md'
-      - Multi Chain Token Deployments: 'cookbook/specialized-use-cases/multi-chain-token-deployments.md'
-      - Multi Token Accounting: 'cookbook/specialized-use-cases/multi-token-accounting.md'
-      - Permit Functions with EIP712 Signatures: 'cookbook/specialized-use-cases/permit-functions-with-eip712-signatures.md'
-    - Testing Infrastructure:
-      - 'cookbook/testing-infrastructure/index.md'
-      - Initialization Strategies: 'cookbook/testing-infrastructure/initialization-strategies.md'
-      - Logging with Formatting: 'cookbook/testing-infrastructure/logging-with-formatting.md'
-      - Post Sequence Cleanup: 'cookbook/testing-infrastructure/post-sequence-cleanup.md'
-      - Results Collection: 'cookbook/testing-infrastructure/results-collection.md'
+    - LSP server: "language-server.md"
+    - Solc Version Manager: "solc-version-manager.md"
+    - API reference:
+          - wake.analysis:
+                - cfg: "api-reference/analysis/cfg.md"
+                - utils: "api-reference/analysis/utils.md"
+          - wake.config:
+                - data_model: "api-reference/config/data-model.md"
+                - wake_config: "api-reference/config/wake-config.md"
+          - wake.compiler:
+                - build_data_model: "api-reference/compiler/build-data-model.md"
+          - wake.core:
+                - solidity_version: "api-reference/core/solidity-version.md"
+                - visitor: "api-reference/core/visitor.md"
+          - wake.detectors:
+                - api: "api-reference/detectors/api.md"
+          - wake.ir:
+                - abc: "api-reference/ir/abc.md"
+                - declarations:
+                      - abc: "api-reference/ir/declarations/abc.md"
+                      - contract_definition: "api-reference/ir/declarations/contract-definition.md"
+                      - enum_definition: "api-reference/ir/declarations/enum-definition.md"
+                      - enum_value: "api-reference/ir/declarations/enum-value.md"
+                      - error_definition: "api-reference/ir/declarations/error-definition.md"
+                      - event_definition: "api-reference/ir/declarations/event-definition.md"
+                      - function_definition: "api-reference/ir/declarations/function-definition.md"
+                      - modifier_definition: "api-reference/ir/declarations/modifier-definition.md"
+                      - struct_definition: "api-reference/ir/declarations/struct-definition.md"
+                      - user_defined_value_type_definition: "api-reference/ir/declarations/user-defined-value-type-definition.md"
+                      - variable_declaration: "api-reference/ir/declarations/variable-declaration.md"
+                - enums: "api-reference/ir/enums.md"
+                - expressions:
+                      - abc: "api-reference/ir/expressions/abc.md"
+                      - assignment: "api-reference/ir/expressions/assignment.md"
+                      - binary_operation: "api-reference/ir/expressions/binary-operation.md"
+                      - conditional: "api-reference/ir/expressions/conditional.md"
+                      - elementary_type_name_expression: "api-reference/ir/expressions/elementary-type-name-expression.md"
+                      - function_call: "api-reference/ir/expressions/function-call.md"
+                      - function_call_options: "api-reference/ir/expressions/function-call-options.md"
+                      - identifier: "api-reference/ir/expressions/identifier.md"
+                      - index_access: "api-reference/ir/expressions/index-access.md"
+                      - index_range_access: "api-reference/ir/expressions/index-range-access.md"
+                      - literal: "api-reference/ir/expressions/literal.md"
+                      - member_access: "api-reference/ir/expressions/member-access.md"
+                      - new_expression: "api-reference/ir/expressions/new-expression.md"
+                      - tuple_expression: "api-reference/ir/expressions/tuple-expression.md"
+                      - unary_operation: "api-reference/ir/expressions/unary-operation.md"
+                - meta:
+                      - identifier_path: "api-reference/ir/meta/identifier-path.md"
+                      - import_directive: "api-reference/ir/meta/import-directive.md"
+                      - inheritance_specifier: "api-reference/ir/meta/inheritance-specifier.md"
+                      - modifier_invocation: "api-reference/ir/meta/modifier-invocation.md"
+                      - override_specifier: "api-reference/ir/meta/override-specifier.md"
+                      - parameter_list: "api-reference/ir/meta/parameter-list.md"
+                      - pragma_directive: "api-reference/ir/meta/pragma-directive.md"
+                      - source_unit: "api-reference/ir/meta/source-unit.md"
+                      - structured_documentation: "api-reference/ir/meta/structured-documentation.md"
+                      - try_catch_clause: "api-reference/ir/meta/try-catch-clause.md"
+                      - using_for_directive: "api-reference/ir/meta/using-for-directive.md"
+                - reference_resolver: "api-reference/ir/reference-resolver.md"
+                - statements:
+                      - abc: "api-reference/ir/statements/abc.md"
+                      - block: "api-reference/ir/statements/block.md"
+                      - break_statement: "api-reference/ir/statements/break-statement.md"
+                      - continue_statement: "api-reference/ir/statements/continue-statement.md"
+                      - do_while_statement: "api-reference/ir/statements/do-while-statement.md"
+                      - emit_statement: "api-reference/ir/statements/emit-statement.md"
+                      - expression_statement: "api-reference/ir/statements/expression-statement.md"
+                      - for_statement: "api-reference/ir/statements/for-statement.md"
+                      - if_statement: "api-reference/ir/statements/if-statement.md"
+                      - inline_assembly: "api-reference/ir/statements/inline-assembly.md"
+                      - placeholder_statement: "api-reference/ir/statements/placeholder-statement.md"
+                      - return_statement: "api-reference/ir/statements/return-statement.md"
+                      - revert_statement: "api-reference/ir/statements/revert-statement.md"
+                      - try_statement: "api-reference/ir/statements/try-statement.md"
+                      - unchecked_block: "api-reference/ir/statements/unchecked-block.md"
+                      - variable_declaration_statement: "api-reference/ir/statements/variable-declaration-statement.md"
+                      - while_statement: "api-reference/ir/statements/while-statement.md"
+                - types: "api-reference/ir/types.md"
+                - type_names:
+                      - abc: "api-reference/ir/type-names/abc.md"
+                      - array_type_name: "api-reference/ir/type-names/array-type-name.md"
+                      - elementary_type_name: "api-reference/ir/type-names/elementary-type-name.md"
+                      - function_type_name: "api-reference/ir/type-names/function-type-name.md"
+                      - mapping: "api-reference/ir/type-names/mapping.md"
+                      - user_defined_type_name: "api-reference/ir/type-names/user-defined-type-name.md"
+                - yul:
+                      - abc: "api-reference/ir/yul/abc.md"
+                      - assignment: "api-reference/ir/yul/assignment.md"
+                      - block: "api-reference/ir/yul/block.md"
+                      - break_statement: "api-reference/ir/yul/break-statement.md"
+                      - case: "api-reference/ir/yul/case.md"
+                      - continue_statement: "api-reference/ir/yul/continue-statement.md"
+                      - expression_statement: "api-reference/ir/yul/expression-statement.md"
+                      - for_loop: "api-reference/ir/yul/for-loop.md"
+                      - function_call: "api-reference/ir/yul/function-call.md"
+                      - function_definition: "api-reference/ir/yul/function-definition.md"
+                      - identifier: "api-reference/ir/yul/identifier.md"
+                      - if_statement: "api-reference/ir/yul/if-statement.md"
+                      - leave: "api-reference/ir/yul/leave.md"
+                      - literal: "api-reference/ir/yul/literal.md"
+                      - switch: "api-reference/ir/yul/switch.md"
+                      - typed_name: "api-reference/ir/yul/typed-name.md"
+                      - variable_declaration: "api-reference/ir/yul/variable-declaration.md"
+          - wake.printers:
+                - api: "api-reference/printers/api.md"
+    - Cookbook:
+          - "cookbook/index.md"
+          - Essential Fundamentals:
+                - "cookbook/essential-fundamentals/index.md"
+                - Basic Fuzz Test Structure: "cookbook/essential-fundamentals/basic-fuzz-test-structure.md"
+                - Config File Schema: "cookbook/essential-fundamentals/config-file-schema.md"
+                - Error Handling: "cookbook/essential-fundamentals/error-handling.md"
+                - Flows: "cookbook/essential-fundamentals/flows.md"
+          - Common Testing Patterns:
+                - "cookbook/common-testing-patterns/index.md"
+                - Account Balance Testing: "cookbook/common-testing-patterns/account-balance-testing.md"
+                - Multi Token Interaction: "cookbook/common-testing-patterns/multi-token-interaction.md"
+                - State Change Tracking: "cookbook/common-testing-patterns/state-change-tracking.md"
+                - Test Flow Branching: "cookbook/common-testing-patterns/test-flow-branching.md"
+          - Advanced Testing Features:
+                - "cookbook/advanced-testing-features/index.md"
+                - Context Based Balance Tracking Pattern: "cookbook/advanced-testing-features/context-based-balance-tracking-pattern.md"
+                - Differential Testing: "cookbook/advanced-testing-features/differential-testing.md"
+                - Error Tolerance: "cookbook/advanced-testing-features/error-tolerance.md"
+                - Time Based Testing: "cookbook/advanced-testing-features/time-based-testing.md"
+                - Token Allowances with Multiple Branches: "cookbook/advanced-testing-features/token-allowances-with-multiple-branches.md"
+          - Specialized Use Cases:
+                - "cookbook/specialized-use-cases/index.md"
+                - Address Bytes Conversion with Random Data: "cookbook/specialized-use-cases/address-bytes-conversion-with-random-data.md"
+                - Chainlink Data Updating: "cookbook/specialized-use-cases/chainlink-data-updating.md"
+                - Cross Chain Message Passing: "cookbook/specialized-use-cases/cross-chain-message-passing.md"
+                - Deploy with Proxy: "cookbook/specialized-use-cases/deploy-with-proxy.md"
+                - Multi Token Accounting: "cookbook/specialized-use-cases/multi-token-accounting.md"
+                - Permit Functions with EIP712 Signatures: "cookbook/specialized-use-cases/permit-functions-with-eip712-signatures.md"
+          - Testing Infrastructure:
+                - "cookbook/testing-infrastructure/index.md"
+                - Initialization Strategies: "cookbook/testing-infrastructure/initialization-strategies.md"
+                - Logging with Formatting: "cookbook/testing-infrastructure/logging-with-formatting.md"
+                - Post Sequence Cleanup: "cookbook/testing-infrastructure/post-sequence-cleanup.md"
+                - Results Collection: "cookbook/testing-infrastructure/results-collection.md"
 
 extra:
-  generator: false
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/Ackee-Blockchain/wake
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/WakeFramework
-    - icon: fontawesome/brands/discord
-      link: https://discord.gg/YE9hntHvAe
-  version:
-    provider: mike
-  analytics:
-    provider: google
-    property: G-73VRX8Q3DK
+    generator: false
+    social:
+        - icon: fontawesome/brands/github
+          link: https://github.com/Ackee-Blockchain/wake
+        - icon: fontawesome/brands/twitter
+          link: https://twitter.com/WakeFramework
+        - icon: fontawesome/brands/discord
+          link: https://discord.gg/YE9hntHvAe
+    version:
+        provider: mike
+    analytics:
+        provider: google
+        property: G-73VRX8Q3DK
 
 watch:
-  - wake
+    - wake
 
 plugins:
-- search
-- mkdocstrings:
-    custom_templates: docs/templates
-    handlers:
-      python:
-        import:
-          - https://docs.python.org/3/objects.inv
-          - https://networkx.org/documentation/stable/objects.inv
-        options:
-          heading_level: 1
-          show_root_heading: true
-- mike:
-    canonical_version: latest
-- social:
-    cards_layout_options:
-      background_color: "#0000FF"
-      color: "#FFFFFF"
+    - search
+    - mkdocstrings:
+          custom_templates: docs/templates
+          handlers:
+              python:
+                  import:
+                      - https://docs.python.org/3/objects.inv
+                      - https://networkx.org/documentation/stable/objects.inv
+                  options:
+                      heading_level: 1
+                      show_root_heading: true
+    - mike:
+          canonical_version: latest
+    - social:
+          cards_layout_options:
+              background_color: "#0000FF"
+              color: "#FFFFFF"
 
 markdown_extensions:
-  - attr_list
-  - def_list
-  - admonition
-  - toc:
-      permalink: "#"
-  - pymdownx.details
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.tabbed:
-      alternate_style: true
+    - attr_list
+    - def_list
+    - admonition
+    - toc:
+          permalink: "#"
+    - pymdownx.details
+    - pymdownx.tasklist:
+          custom_checkbox: true
+    - pymdownx.highlight:
+          anchor_linenums: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+    - pymdownx.arithmatex:
+          generic: true
+    - pymdownx.tabbed:
+          alternate_style: true
 
 extra_javascript:
-  - js/mathjax.js
-  - js/asciinema-player.min.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+    - js/mathjax.js
+    - js/asciinema-player.min.js
+    - https://polyfill.io/v3/polyfill.min.js?features=es6
+    - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 extra_css:
-  - stylesheets/extra.css
-  - stylesheets/asciinema-player.css
+    - stylesheets/extra.css
+    - stylesheets/asciinema-player.css

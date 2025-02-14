@@ -14,10 +14,12 @@ from pytypes.contracts.Token import Token
 class BasicFuzzTest(FuzzTest):
     token: Token  # Contract instance
     owner: Account
+    initial_supply: int
 
     def pre_sequence(self):
         self.owner = chain.accounts[0]
         self.token = Token.deploy("Name", "SYM", from_=self.owner)
+        self.initial_supply = 10 * 10**18
 
     @flow()
     def flow_transfer(self):

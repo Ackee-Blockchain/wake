@@ -5,6 +5,5 @@ Testing patterns designed for specific types of smart contract architectures lik
 - [Chainlink Data Updating](chainlink-data-updating.md)
 - [Cross Chain Message Passing](cross-chain-message-passing.md)
 - [Deploy with Proxy](deploy-with-proxy.md)
-- [Multi Chain Token Deployments](multi-chain-token-deployments.md)
 - [Multi Token Accounting](multi-token-accounting.md)
 - [Permit Functions with EIP712 Signatures](permit-functions-with-eip712-signatures.md)

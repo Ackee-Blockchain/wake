@@ -4,6 +4,7 @@ Example of testing a contract with time-based operations.
 
 ```python
 class TimeBasedTest(FuzzTest):
+    contract: TestedContract
     day: int = 0
 
     @flow(weight=lambda self: min(self.day * 0.1, 0.5))

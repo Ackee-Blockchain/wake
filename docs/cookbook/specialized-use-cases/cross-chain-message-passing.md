@@ -4,6 +4,11 @@ Example of testing cross-chain message passing between two chains.
 
 ```python
 class CrossChainFuzzTest(FuzzTest):
+    chain1: Chain
+    chain2: Chain
+    service1: Service
+    service2: Service
+
     def pre_sequence(self) -> None:
         self.chain1 = Chain()
         self.chain2 = Chain()

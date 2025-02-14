@@ -12,6 +12,7 @@ class TestResults:
         self.total_supply = contract.totalSupply()
         self.total_claimed = contract.totalClaimed()
 
+
 class ResultTrackingTest(FuzzTest):
     results: TestResults
 

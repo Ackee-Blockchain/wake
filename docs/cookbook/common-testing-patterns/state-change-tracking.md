@@ -5,7 +5,6 @@ Example of tracking complex state changes in a contract.
 ```python
 class StateTracker:
     claimed: int
-    total_reward: int
     balances: dict[Address, int]
 
     def track_claim(self, user: Address, amount: int):
