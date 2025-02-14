@@ -17,10 +17,15 @@ class BalanceTracker:
 
 class BalanceTest(FuzzTest):
     tracker: BalanceTracker
+    token: ERC20Token
 
     @flow()
     def flow_transfer(self):
-        with self.tracker.track_transfer(self.token, sender, receiver,
+        sender = random.choice(chain.accounts)
+        recipient = random.choice(chain.accounts)
+        amount = random_int(0, Wei.from_ether(10))
+
+        with self.tracker.track_transfer(self.token, sender, recipient,
                                        amount) as changes:
             self.token.transfer(receiver, amount, from_=sender)
 

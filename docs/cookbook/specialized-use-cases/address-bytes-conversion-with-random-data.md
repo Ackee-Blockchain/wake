@@ -3,8 +3,8 @@
 Conversion between addresses and bytes with random data, including validation of byte length and error handling.
 
 ```solidity
-library AddressBytesUtils {
-    function toAddress(bytes memory b) internal pure returns (address) {
+contract AddressBytesUtils {
+    function toAddress(bytes memory b) public pure returns (address) {
         if (b.length != 20) {
             revert("Invalid length");
         }
@@ -15,6 +15,8 @@ library AddressBytesUtils {
 
 ```python
 class AddressConversionFuzzTest(FuzzTest):
+    utils: AddressBytesUtils
+
     @flow()
     def flow_to_address(self) -> None:
         length = random_int(0, 20)

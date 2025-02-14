@@ -4,12 +4,14 @@ Example of logging with formatting in a fuzz test.
 
 ```python
 class FormattedLoggingTest(FuzzTest):
+    contract: TestedContract
+
     def amount_str(self, amount: int) -> str:
-        return str(amount / 10**18)  # Format with decimals
+        return str(amount // 10**18)  # Format with decimals
 
     @flow()
     def flow_with_logging(self):
-        amount = random_amount()
+        amount = random_int(0, 10 * 10**18)
         user = random_account()
 
         before = self.contract.balanceOf(user)

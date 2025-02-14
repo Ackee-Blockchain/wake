@@ -6,6 +6,7 @@ Example of testing a contract that interacts with multiple tokens.
 class MultiTokenTest(FuzzTest):
     token_a: Token
     token_b: Token
+    pool: Pool
 
     def random_amount(self) -> int:
         return random_int(1, 10) * 10**18  # Handle decimals

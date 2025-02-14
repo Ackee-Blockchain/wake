@@ -18,9 +18,13 @@ class ModelBasedTest(FuzzTest):
 
     @flow()
     def flow_action(self):
+        sender = random_account()
+        recipient = random_account()
+        amount = random_int(0, 1000)
+
         # Perform action on both contract and model
-        self.token.transfer(to, amount)
-        self.model.transfer(to, amount)
+        self.token.transfer(recipient, amount, from_=sender)
+        self.model.transfer(sender, recipient, amount)
 
     @invariant()
     def invariant_state(self):
