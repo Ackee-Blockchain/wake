@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../../images/wake-favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.4">
     
     
       
@@ -30,7 +30,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -144,7 +144,7 @@
   </a>
 
             </div>
-            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
           </aside>
         
       </div>
@@ -6031,8 +6031,6 @@
       
         
       
-        
-      
     
     
       
@@ -6158,28 +6156,6 @@
   
   <span class="md-ellipsis">
     Deploy with Proxy
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../specialized-use-cases/multi-chain-token-deployments/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Multi Chain Token Deployments
     
   </span>
   
@@ -6465,19 +6441,21 @@
 <h1 id="post-sequence-cleanup">Post-Sequence Cleanup<a class="headerlink" href="#post-sequence-cleanup" title="Permanent link">#</a></h1>
 <p>Example of testing a contract with a post-sequence cleanup function.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CleanupTest</span><span class="p">(</span><span class="n">FuzzTest</span><span class="p">):</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">post_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="c1"># Clean up remaining balances</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_accounts</span><span class="p">:</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">account</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                <span class="k">if</span> <span class="n">random_bool</span><span class="p">():</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">account</span><span class="p">))</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">claimable</span><span class="p">(</span><span class="n">account</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                <span class="k">if</span> <span class="n">random_bool</span><span class="p">():</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">claim</span><span class="p">(</span><span class="n">account</span><span class="p">)</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="c1"># Verify final state</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">verify_final_state</span><span class="p">()</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">contract</span><span class="p">:</span> <span class="n">TestedContract</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">post_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="c1"># Clean up remaining balances</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_accounts</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">account</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                <span class="k">if</span> <span class="n">random_bool</span><span class="p">():</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">withdraw</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">account</span><span class="p">))</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">claimable</span><span class="p">(</span><span class="n">account</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                <span class="k">if</span> <span class="n">random_bool</span><span class="p">():</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">claim</span><span class="p">(</span><span class="n">account</span><span class="p">)</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="c1"># Verify final state</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">verify_final_state</span><span class="p">()</span>
 </code></pre></div>
 
 
@@ -6572,7 +6550,7 @@
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5090c770.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.f1b6f286.min.js"></script>
       
         <script src="../../../js/mathjax.js"></script>
       
