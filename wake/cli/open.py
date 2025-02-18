@@ -109,7 +109,7 @@ async def open_address(
         col=0,
     )
 
-    if project_dir.exists() and not force:
+    if project_dir.exists() and any(project_dir.iterdir()) and not force:
         console.print(f"{address} already exists at [link={link}]{project_dir}[/link]")
         return
 
