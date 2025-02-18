@@ -49,6 +49,7 @@ def run_open(
     if force and path is not None:
         raise click.ClickException("Cannot use both --path and --force")
 
+    # ethereum address
     if all(char in "xabcdef0123456789" for char in uri.lower()):
         try:
             if uri.lower().startswith("0x") and len(uri) == 42:
@@ -58,15 +59,14 @@ def run_open(
                 uri = "0x" + uri
             else:
                 raise ValueError()
-
-            # ethereum address
-            asyncio.run(
-                open_address(
-                    uri, chain, None if path is None else Path(path).resolve(), force
-                )
-            )
         except ValueError:
             raise ValueError("Invalid ethereum address")
+
+        asyncio.run(
+            open_address(
+                uri, chain, None if path is None else Path(path).resolve(), force
+            )
+        )
 
     # github repository
     else:
