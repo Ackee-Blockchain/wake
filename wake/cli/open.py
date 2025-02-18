@@ -43,6 +43,12 @@ def run_open(
 ) -> None:
     """
     Fetch project from Github or Etherscan-like explorer.
+
+    For Etherscan explorer, API key is required:
+
+    - Create an API key for Etherscan  =>  https://docs.etherscan.io/getting-started/viewing-api-usage-statistics#creating-an-api-key
+
+    - Configure the API key in Wake    =>  https://ackee.xyz/wake/docs/latest/configuration
     """
     import asyncio
 
