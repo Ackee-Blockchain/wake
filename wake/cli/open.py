@@ -128,6 +128,9 @@ async def open_address(
         with urllib.request.urlopen(url) as response:
             parsed = json.loads(response.read())
 
+    if parsed["status"] == "0":
+        raise ValueError(f"API returned error: {parsed['result']}")
+
     version: str = parsed["result"][0]["CompilerVersion"]
     if version.startswith("vyper"):
         raise NotImplementedError("Vyper contracts are not supported")
