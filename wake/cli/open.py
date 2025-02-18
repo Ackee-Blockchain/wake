@@ -97,7 +97,7 @@ async def open_address(
         col=0,
     )
 
-    if project_dir.exists() and not force:
+    if project_dir.exists() and any(project_dir.iterdir()) and not force:
         existing_files = list(project_dir.iterdir())
         if len(existing_files) != 1 or existing_files[0].name not in {
             "sourcify.json",
