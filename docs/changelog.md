@@ -6,6 +6,14 @@ small.label {
 }
 </style>
 
+## 4.15.0 <small>(Feb 20, 2025)</small> { id="4.15.0" }
+
+Features:
+
+- added Sourcify support to `wake open` command & improved command UX <small class="label">[core]</small>
+- Sourcify & Etherscan responses are now cached <small class="label">[core]</small>
+- improved `Returns` section in pytypes docstrings <small class="label">[testing & deployment framework]</small>
+
 ## 4.14.1 <small>(Jan 29, 2025)</small> { id="4.14.1" }
 
 Fixes:
