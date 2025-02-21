@@ -186,6 +186,10 @@ class PytestWakePluginSingle:
         reset_exception_handled()
         set_current_test_id(item.nodeid)
 
+    def pytest_runtest_logstart(self, nodeid: str, location: Tuple[str, Optional[int], str]):
+        # ensure that the test path is terminated with a newline
+        print("")
+
     def pytest_exception_interact(
         self,
         node: Union[Item, Collector],
