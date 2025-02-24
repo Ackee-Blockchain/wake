@@ -47,7 +47,7 @@ async def test_basic_usage(run_cleanup, config):
     svm = SolcVersionManager(config)
 
     assert len(svm.list_installed()) == 0
-    assert "0.8.10" in svm.list_all()
+    assert "0.8.10" in svm.list_all(force=True)
     await svm.install("0.8.10")
     assert len(svm.list_installed()) == 1
     assert "0.8.10" in svm.list_installed()
@@ -97,8 +97,8 @@ async def test_two_wake_root_paths(run_cleanup, config, config2):
     svm1 = SolcVersionManager(config)
     svm2 = SolcVersionManager(config2)
 
-    assert "0.8.10" in svm1.list_all()
-    assert "0.8.9" in svm2.list_all()
+    assert "0.8.10" in svm1.list_all(force=True)
+    assert "0.8.9" in svm2.list_all(force=True)
     assert len(svm1.list_installed()) == 0
     assert len(svm2.list_installed()) == 0
     await svm1.install("0.8.10")
@@ -157,7 +157,7 @@ async def test_file_executable(run_cleanup, config):
     output = subprocess.check_output([str(svm.get_path("0.8.10")), "--version"])
     assert b"0.8.10" in output
 
-    oldest_version = svm.list_all()[0]
+    oldest_version = svm.list_all(force=True)[0]
     await svm.install(oldest_version)
     output = subprocess.check_output([str(svm.get_path(oldest_version)), "--version"])
     assert str(oldest_version).encode("utf-8") in output

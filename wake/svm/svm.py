@@ -10,7 +10,7 @@ from zipfile import ZipFile
 
 import aiohttp
 from Crypto.Hash import keccak
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from wake.config import UnsupportedPlatformError, WakeConfig
 from wake.core import get_logger
@@ -57,6 +57,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     __compilers_path: Path
     __solc_list_path: Path
     __solc_builds: Optional[SolcBuilds]
+    __list_force_loaded: bool
 
     def __init__(self, wake_config: WakeConfig):
         system = platform.system()
@@ -82,18 +83,19 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__compilers_path = wake_config.global_data_path / "compilers"
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
+        self.__list_force_loaded = False
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
     def installed(self, version: Union[SolidityVersion, str]) -> bool:
-        self.__fetch_list_file()
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
+
+        self.__fetch_list_file(version, force=False)
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse from '{self.__solc_list_urls}'."
             )
-
-        if isinstance(version, str):
-            version = SolidityVersion.fromstring(version)
 
         path = self.get_path(version)
         if not path.is_file():
@@ -110,16 +112,16 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         http_session: Optional[aiohttp.ClientSession] = None,
         progress: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> None:
-        self.__fetch_list_file()
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
+
+        self.__fetch_list_file(version, force=False)
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse from '{self.__solc_list_urls}'."
             )
 
-        if isinstance(version, str):
-            version = SolidityVersion.fromstring(version)
-
-        minimal_version = self.list_all()[0]
+        minimal_version = self.list_all(force=False)[0]
         if version < minimal_version:
             raise UnsupportedVersionError(
                 f"The minimal supported solc version for the current platform is `{minimal_version}`."
@@ -151,7 +153,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             logger.debug(f"Downloading solc {version} from {download_url}")
 
             if http_session is None:
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=600)) as session:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=600)
+                ) as session:
                     await self.__download_file(
                         download_url, local_path, session, progress
                     )
@@ -184,16 +188,16 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             )
 
     def get_path(self, version: Union[SolidityVersion, str]) -> Path:
-        self.__fetch_list_file()
+        if isinstance(version, str):
+            version = SolidityVersion.fromstring(version)
+
+        self.__fetch_list_file(version, force=False)
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse from '{self.__solc_list_urls}'."
             )
 
-        if isinstance(version, str):
-            version = SolidityVersion.fromstring(version)
-
-        minimal_version = self.list_all()[0]
+        minimal_version = self.list_all(force=False)[0]
         if version < minimal_version:
             raise UnsupportedVersionError(
                 f"The minimal supported solc version for the current platform is `{minimal_version}`."
@@ -210,8 +214,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             filename = filename[:-3] + "exe"
         return self.__compilers_path / dirname / filename
 
-    def list_all(self) -> Tuple[SolidityVersion, ...]:
-        self.__fetch_list_file()
+    def list_all(self, force: bool) -> Tuple[SolidityVersion, ...]:
+        self.__fetch_list_file(None, force)
         if self.__solc_builds is None:
             raise RuntimeError(
                 f"Unable to fetch or correctly parse from '{self.__solc_list_urls}'."
@@ -266,32 +270,58 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         zip_path.unlink()
         return solc_path
 
-    def __fetch_list_file(self) -> None:
+    def __fetch_list_file(
+        self, target_version: Optional[SolidityVersion], force: bool
+    ) -> None:
         """
         Download ``list.json`` file from `binaries.soliditylang.org <binaries.soliditylang.org>`_ for the current
         platform and save it as ``{global_data_path}/compilers/solc.json``. In case of network issues, try to
         use the locally downloaded solc builds file as a fallback.
         """
-        if self.__solc_builds is not None:
+
+        if self.__solc_builds is None and self.__solc_list_path.is_file() and not force:
+            try:
+                self.__solc_builds = SolcBuilds.model_validate_json(
+                    self.__solc_list_path.read_text()
+                )
+            except ValidationError:
+                pass
+
+        if self.__solc_builds is not None and (
+            target_version is not None
+            and target_version in self.__solc_builds.releases
+            or not force
+            or self.__list_force_loaded
+        ):
             return
 
         try:
             logger.debug(f"Downloading solc list from {self.__solc_list_urls[0]}")
-            with urllib.request.urlopen(self.__solc_list_urls[0], timeout=0.5) as response:
+            with urllib.request.urlopen(
+                self.__solc_list_urls[0], timeout=0.5
+            ) as response:
                 json = response.read()
                 self.__solc_builds = SolcBuilds.model_validate_json(json)
                 self.__solc_list_path.write_bytes(json)
+                self.__list_force_loaded = True
         except (urllib.error.URLError, OSError) as e:
-            logger.warning(f"Failed to download solc list from {self.__solc_list_urls[0]}: {e}")
+            logger.warning(
+                f"Failed to download solc list from {self.__solc_list_urls[0]}: {e}"
+            )
 
             try:
                 logger.debug(f"Downloading solc list from {self.__solc_list_urls[1]}")
-                with urllib.request.urlopen(self.__solc_list_urls[1], timeout=0.5) as response:
+                with urllib.request.urlopen(
+                    self.__solc_list_urls[1], timeout=0.5
+                ) as response:
                     json = response.read()
                     self.__solc_builds = SolcBuilds.model_validate_json(json)
                     self.__solc_list_path.write_bytes(json)
+                    self.__list_force_loaded = True
             except (urllib.error.URLError, OSError) as e:
-                logger.warning(f"Failed to download solc list from {self.__solc_list_urls[1]}: {e}")
+                logger.warning(
+                    f"Failed to download solc list from {self.__solc_list_urls[1]}: {e}"
+                )
 
                 # in case of networking issues try to use the locally downloaded solc builds file as a fallback
                 if self.__solc_list_path.is_file():

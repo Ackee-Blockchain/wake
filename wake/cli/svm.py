@@ -59,7 +59,9 @@ async def run_solc_install(
     svm: SolcVersionManager, version_expr: SolidityVersionExpr, force: bool, all: bool
 ) -> None:
     versions = (
-        version for version in reversed(svm.list_all()) if version in version_expr
+        version
+        for version in reversed(svm.list_all(force=True))
+        if version in version_expr
     )
     if not all:
         versions = [next(versions)]
@@ -120,10 +122,12 @@ def svm_use(ctx: Context, version_range: Tuple[str], force: bool) -> None:
     svm = SolcVersionManager(config)
     version_expr = SolidityVersionExpr(" ".join(version_range))
     version = next(
-        version for version in reversed(svm.list_all()) if version in version_expr
+        version
+        for version in reversed(svm.list_all(force=True))
+        if version in version_expr
     )
 
-    if not svm.installed(version):
+    if not svm.installed(version) or force:
         asyncio.run(
             run_solc_install(svm, SolidityVersionExpr(str(version)), force, False)
         )
@@ -147,7 +151,7 @@ def svm_list(ctx: Context, all: bool) -> None:
         installed = set(svm.list_installed())
         output = "\n".join(
             f"- {version} {'([green]installed[/green])' if version in installed else ''}"
-            for version in svm.list_all()
+            for version in svm.list_all(force=True)
         )
     else:
         output = "\n".join(f"- {version}" for version in svm.list_installed())
