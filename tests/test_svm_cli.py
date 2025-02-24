@@ -30,7 +30,7 @@ def test_svm_install(wake_root_path):
     svm = SolcVersionManager(config)
     cli_runner = CliRunner()
 
-    latest_version = next(reversed(svm.list_all()))
+    latest_version = next(reversed(svm.list_all(force=True)))
     cli_result = cli_runner.invoke(
         main,
         ["svm", "install", "*"],
