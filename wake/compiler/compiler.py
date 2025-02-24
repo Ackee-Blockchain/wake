@@ -713,7 +713,7 @@ class SolidityCompiler:
                 # use the latest matching version
                 matching_versions = [
                     version
-                    for version in reversed(self.__svm.list_all())
+                    for version in reversed(self.__svm.list_all(force=True))
                     if version in compilation_unit.versions
                 ]
                 if len(matching_versions) == 0:

@@ -43,7 +43,7 @@ class CompilerVersionManagerAbc(ABC):
         """
 
     @abstractmethod
-    def list_all(self) -> Tuple[VersionAbc]:
+    def list_all(self, force: bool) -> Tuple[VersionAbc]:
         """
         Return a set of all supported compiler versions.
         :return set of all supported compiler versions
@@ -54,4 +54,6 @@ class CompilerVersionManagerAbc(ABC):
         Return a set of installed compiler versions.
         :return: set of installed compiler versions
         """
-        return tuple(version for version in self.list_all() if self.installed(version))
+        return tuple(
+            version for version in self.list_all(force=False) if self.installed(version)
+        )
