@@ -9,7 +9,7 @@ import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import pytest
 from pathvalidate import sanitize_filename
@@ -43,6 +43,7 @@ from wake.development.globals import (
 )
 from wake.testing.coverage import CoverageHandler
 from wake.testing.custom_pdb import CustomPdb
+from wake.testing.native_coverage import NativeCoverageHandler
 from wake.utils.tee import StderrTee, StdoutTee
 
 
@@ -50,7 +51,7 @@ class PytestWakePluginMultiprocess:
     _index: int
     _conn: multiprocessing.connection.Connection
     _config: WakeConfig
-    _coverage: Optional[CoverageHandler]
+    _coverage: Optional[Union[CoverageHandler, NativeCoverageHandler]]
     _log_file: Path
     _crash_log_file: Path
     _random_seed: bytes
@@ -68,7 +69,7 @@ class PytestWakePluginMultiprocess:
         conn: multiprocessing.connection.Connection,
         queue: multiprocessing.Queue,
         config: WakeConfig,
-        coverage: Optional[CoverageHandler],
+        coverage: Optional[Union[CoverageHandler, NativeCoverageHandler]],
         log_dir: Path,
         crash_log_dir: Path,
         random_seed: bytes,
@@ -242,25 +243,6 @@ class PytestWakePluginMultiprocess:
         if session.config.option.collectonly:
             return True
 
-        last_coverage_sync = time.perf_counter()
-
-        def coverage_callback() -> None:
-            nonlocal last_coverage_sync
-            t = time.perf_counter()
-            if self._coverage is not None and t - last_coverage_sync > 5:
-                try:
-                    self._queue.put(
-                        (
-                            "coverage",
-                            self._index,
-                            self._coverage.get_contract_ide_coverage(),
-                        ),
-                        timeout=0.125,
-                    )
-                    last_coverage_sync = t
-                except queue.Full:
-                    pass
-
         def custom_debugger():
             self._cleanup_stdio()
             import inspect
@@ -325,9 +307,52 @@ class PytestWakePluginMultiprocess:
 
         if self._debug:
             set_exception_handler(self._exception_handler)
+
         if self._coverage is not None:
-            set_coverage_handler(self._coverage)
-            self._coverage.set_callback(coverage_callback)
+            if isinstance(self._coverage, CoverageHandler):
+                last_coverage_sync = time.perf_counter()
+
+                def coverage_callback() -> None:
+                    nonlocal last_coverage_sync
+                    t = time.perf_counter()
+                    if (
+                        t - last_coverage_sync
+                        > self._config.testing.coverage_sync_timeout
+                    ):
+                        try:
+                            self._queue.put(
+                                (
+                                    "coverage",
+                                    self._index,
+                                    self._coverage.get_contract_ide_coverage(),
+                                ),
+                                timeout=0.125,
+                            )
+                            last_coverage_sync = t
+                        except queue.Full:
+                            pass
+
+                set_coverage_handler(self._coverage)
+                self._coverage.set_callback(coverage_callback)
+            else:
+                from wake_rs import set_coverage_callback
+
+                def coverage_callback(
+                    coverage: Dict[str, Dict[Tuple[int, int], int]]
+                ) -> None:
+                    try:
+                        self._queue.put(
+                            (
+                                "coverage",
+                                self._index,
+                                coverage,
+                            ),
+                            timeout=0.125,
+                        )
+                    except queue.Full:
+                        pass
+
+                set_coverage_callback(coverage_callback)
 
         try:
             indexes = self._conn.recv()
@@ -347,8 +372,8 @@ class PytestWakePluginMultiprocess:
                 if session.shouldstop:
                     raise session.Interrupted(session.shouldstop)
 
-            if self._coverage is not None:
-                # final coverage sync
+            # final coverage sync
+            if isinstance(self._coverage, CoverageHandler):
                 self._queue.put(
                     (
                         "coverage",
@@ -356,6 +381,11 @@ class PytestWakePluginMultiprocess:
                         self._coverage.get_contract_ide_coverage(),
                     )
                 )
+            elif isinstance(self._coverage, NativeCoverageHandler):
+                from wake_rs import sync_coverage
+
+                sync_coverage()
+
         finally:
             chain_interfaces_manager.close_all()
             self._queue.put(("fuzz_test_stats", get_fuzz_test_stats()))
