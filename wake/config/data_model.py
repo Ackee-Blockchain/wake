@@ -400,6 +400,10 @@ class HardhatConfig(WakeConfigModel):
 
 
 class TestingConfig(WakeConfigModel):
+    coverage_sync_timeout: float = 5
+    """
+    Timeout for syncing coverage data.
+    """
     cmd: str = "anvil"
     """
     Which development chain to use for testing. Should be one of `anvil`, `ganache` or `hardhat`.

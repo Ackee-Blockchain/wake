@@ -9,6 +9,7 @@ import time
 from collections import ChainMap, defaultdict
 from dataclasses import asdict, dataclass, field
 from itertools import chain
+from pathlib import Path
 from typing import Any, Callable, DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
@@ -32,6 +33,7 @@ from wake.ir import (
     ForStatement,
     FunctionDefinition,
     IfStatement,
+    InlineAssembly,
     IrAbc,
     ModifierDefinition,
     SourceUnit,
@@ -49,6 +51,105 @@ from wake.ir import (
 from wake.ir.reference_resolver import ReferenceResolver
 
 logger = get_logger(__name__, logging.ERROR)
+
+
+def export_coverage(
+    build: ProjectBuild,
+    total_statements: Dict[Path, int],
+    source_unit_name_to_path: Dict[str, Path],
+    coverage: Dict[str, Dict[Tuple[int, int], int]],
+):
+    data = {}
+    for source_unit_name, info in coverage.items():
+        path = source_unit_name_to_path[source_unit_name]
+
+        covered = []
+        for (start, end), count in info.items():
+            start_line, start_column = build.source_units[
+                path
+            ].get_line_col_from_byte_offset(start)
+            end_line, end_column = build.source_units[
+                path
+            ].get_line_col_from_byte_offset(end)
+            covered.append(
+                {
+                    "startLine": start_line,
+                    "startColumn": start_column,
+                    "endLine": end_line,
+                    "endColumn": end_column,
+                    "count": count,
+                }
+            )
+
+        data[str(path)] = {
+            "declarations": {},
+            "statements": {
+                "total": total_statements[path],
+                "covered": covered,
+            },
+        }
+
+    info = {
+        "version": "2.0",
+        "data": data,
+    }
+
+    with open("wake-coverage.cov", "w") as f:
+        json.dump(info, f)
+
+
+def _count_statements(
+    declaration: Union[FunctionDefinition, ModifierDefinition]
+) -> int:
+    assert declaration.body is not None
+    count = 0
+
+    for node in declaration.body:
+        if isinstance(node, StatementAbc):
+            if not isinstance(node, (Block, UncheckedBlock, InlineAssembly)):
+                count += 1
+        elif isinstance(node, YulStatementAbc):
+            if not isinstance(node, (YulBlock, YulFunctionDefinition)):
+                count += 1
+
+    return count
+
+
+def prepare_info(
+    build: ProjectBuild,
+) -> Tuple[Dict[Path, int], Dict[Path, int], Dict[str, Path]]:
+    source_unit_name_to_path = {}
+    total_declarations = {}
+    total_statements = {}
+
+    for source_unit in build.source_units.values():
+        total_declarations[source_unit.file] = 0
+        total_statements[source_unit.file] = 0
+        source_unit_name_to_path[source_unit.source_unit_name] = source_unit.file
+
+        for function in source_unit.functions:
+            if function.body is None:
+                continue
+
+            total_declarations[source_unit.file] += 1
+            total_statements[source_unit.file] += _count_statements(function)
+
+        for contract in source_unit.contracts:
+            for modifier in contract.modifiers:
+                if modifier.body is None:
+                    continue
+
+                total_declarations[source_unit.file] += 1
+                total_statements[source_unit.file] += _count_statements(modifier)
+
+            for function in contract.functions:
+                if function.body is None:
+                    continue
+
+                total_declarations[source_unit.file] += 1
+                total_statements[source_unit.file] += _count_statements(function)
+
+    return total_declarations, total_statements, source_unit_name_to_path
 
 
 @dataclass
@@ -74,15 +175,6 @@ class IdePosition:
         yield self.start_column
         yield self.end_line
         yield self.end_column
-
-
-def _get_line_col_from_offset(
-    byte_offset: int, line_index: List[Tuple[bytes, int]]
-) -> Tuple[int, int]:
-    line_num = _binary_search(line_index, byte_offset)
-    line_data, prefix_sum = line_index[line_num]
-    line_offset = byte_offset - prefix_sum
-    return line_num, line_offset
 
 
 @dataclass
@@ -316,20 +408,6 @@ def export_merged_ide_coverage(
     return exported_coverage
 
 
-@dataclass
-class CoverageFileData:
-    version: str = "1.0"
-    data: Dict[str, List[Dict[str, List]]] = field(default_factory=dict)
-
-
-def write_coverage(
-    coverage: Dict[str, List[Dict[str, List]]], coverage_file: pathlib.Path
-):
-    data = CoverageFileData(data=coverage)
-    with open(coverage_file, "w") as f:
-        json.dump(asdict(data), f, indent=4)
-
-
 def returning_none():
     return None
 
@@ -453,65 +531,35 @@ class CoverageHandler:
 
     def get_contract_ide_coverage(
         self,
-    ) -> Dict[pathlib.Path, Dict[IdePosition, IdeFunctionCoverageRecord]]:
+    ) -> Dict[str, Dict[Tuple[int, int], int]]:
         """
         Returns coverage data for IDE usage
         """
         cov_data = {}
-        for func, func_count in chain(
-            self._function_coverage.items(), self._modifier_coverage.items()
-        ):
-            if func.source_unit.file not in cov_data:
-                cov_data[func.source_unit.file] = {}
 
-            func_ide_pos = IdePosition(
-                *_get_line_col_from_offset(
-                    func.name_location[0], self._lines_index[func.source_unit.file]
-                ),
-                *_get_line_col_from_offset(
-                    func.name_location[1], self._lines_index[func.source_unit.file]
-                ),
-            )
-
-            branch_records = {}
-
-            for statement, count in self._statement_coverage.items():
-                if statement.source_unit.file != func.source_unit.file:
+        for statement, count in self._statement_coverage.items():
+            if isinstance(
+                statement, (DoWhileStatement, ForStatement, IfStatement, WhileStatement)
+            ):
+                if statement.condition is None:
                     continue
-                if isinstance(
-                    statement,
-                    (DoWhileStatement, ForStatement, IfStatement, WhileStatement),
-                ):
-                    if statement.condition is None:
-                        continue
-                    start, end = statement.condition.byte_location
-                elif isinstance(statement, TryStatement):
-                    start, end = statement.external_call.byte_location
-                elif isinstance(statement, (YulForLoop, YulIf)):
-                    start, end = statement.condition.byte_location
-                elif isinstance(statement, YulSwitch):
-                    start, end = statement.expression.byte_location
-                else:
-                    start, end = statement.byte_location
+                start, end = statement.condition.byte_location
+            elif isinstance(statement, TryStatement):
+                start, end = statement.external_call.byte_location
+            elif isinstance(statement, (YulForLoop, YulIf)):
+                start, end = statement.condition.byte_location
+            elif isinstance(statement, YulSwitch):
+                start, end = statement.expression.byte_location
+            else:
+                start, end = statement.byte_location
 
-                if start >= func.byte_location[0] and end <= func.byte_location[1]:
-                    ide_pos = IdePosition(
-                        *_get_line_col_from_offset(
-                            start, self._lines_index[func.source_unit.file]
-                        ),
-                        *_get_line_col_from_offset(
-                            end, self._lines_index[func.source_unit.file]
-                        ),
-                    )
-                    branch_records[ide_pos] = IdeCoverageRecord(ide_pos, count)
+            if statement.source_unit.source_unit_name not in cov_data:
+                cov_data[statement.source_unit.source_unit_name] = {}
 
-            cov_data[func.source_unit.file][func_ide_pos] = IdeFunctionCoverageRecord(
-                name=func.name,
-                ide_pos=func_ide_pos,
-                coverage_hits=func_count,
-                mod_records={},
-                branch_records=branch_records,
-            )
+            if (start, end) not in cov_data[statement.source_unit.source_unit_name]:
+                cov_data[statement.source_unit.source_unit_name][(start, end)] = count
+            else:
+                cov_data[statement.source_unit.source_unit_name][(start, end)] += count
 
         return cov_data
 
