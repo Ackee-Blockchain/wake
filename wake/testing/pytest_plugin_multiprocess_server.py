@@ -13,18 +13,31 @@ import rich.progress
 import rich.traceback
 
 from wake.cli.console import console
+from wake.compiler.build_data_model import ProjectBuild
 from wake.config import WakeConfig
 from wake.development.globals import add_fuzz_test_stats, get_fuzz_test_stats
-from wake.testing.coverage import (
-    CoverageHandler,
-    IdeFunctionCoverageRecord,
-    IdePosition,
-    export_merged_ide_coverage,
-    write_coverage,
-)
+from wake.testing.coverage import CoverageHandler, export_coverage, prepare_info
+from wake.testing.native_coverage import NativeCoverageHandler
 from wake.testing.utils import print_fuzzing_stats
 
 from .pytest_plugin_multiprocess import PytestWakePluginMultiprocess
+
+
+def merge_coverages(
+    coverages: List[Dict[str, Dict[Tuple[int, int], int]]]
+) -> Dict[str, Dict[Tuple[int, int], int]]:
+    merged = {}
+    for coverage in coverages:
+        for source_unit_name, data in coverage.items():
+            if source_unit_name not in merged:
+                merged[source_unit_name] = {}
+
+            for location, count in data.items():
+                if location not in merged[source_unit_name]:
+                    merged[source_unit_name][location] = count
+                else:
+                    merged[source_unit_name][location] += count
+    return merged
 
 
 class PytestWakePluginMultiprocessServer:
@@ -39,10 +52,12 @@ class PytestWakePluginMultiprocessServer:
     _debug: bool
     _pytest_args: List[str]
     _queue: multiprocessing.Queue
-    _exported_coverages: Dict[
-        int, Dict[Path, Dict[IdePosition, IdeFunctionCoverageRecord]]
-    ]
+    _exported_coverages: Dict[int, Dict[str, Dict[Tuple[int, int], int]]]
     _crash_log_meta_data: List[Tuple[str, int, str]]
+
+    _build: ProjectBuild
+    _total_statements: Dict[Path, int]
+    _source_unit_name_to_path: Dict[str, Path]
 
     def __init__(
         self,
@@ -70,11 +85,24 @@ class PytestWakePluginMultiprocessServer:
 
     def pytest_sessionstart(self, session: pytest.Session):
         if self._coverage != 0:
-            empty_coverage = CoverageHandler(self._config)
+            if self._config.testing.cmd != "revm":
+                empty_coverage = CoverageHandler(self._config)
+            else:
+                empty_coverage = NativeCoverageHandler(self._config)
+
+            self._build = empty_coverage.latest_build
+            _, self._total_statements, self._source_unit_name_to_path = prepare_info(
+                self._build
+            )
+
             # clear coverage file
-            write_coverage({}, self._config.project_root_path / "wake-coverage.cov")
+            export_coverage(
+                self._build, self._total_statements, self._source_unit_name_to_path, {}
+            )
         else:
             empty_coverage = None
+            self._total_statements = {}
+            self._source_unit_name_to_path = {}
 
         logs_dir = self._config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
@@ -129,8 +157,12 @@ class PytestWakePluginMultiprocessServer:
         self._queue.close()
 
         # flush coverage
-        res = export_merged_ide_coverage(list(self._exported_coverages.values()))
-        write_coverage(res, self._config.project_root_path / "wake-coverage.cov")
+        export_coverage(
+            self._build,
+            self._total_statements,
+            self._source_unit_name_to_path,
+            merge_coverages(list(self._exported_coverages.values())),
+        )
 
     def pytest_report_teststatus(
         self,
@@ -220,11 +252,11 @@ class PytestWakePluginMultiprocessServer:
                             )
                     elif msg[0] == "coverage":
                         self._exported_coverages[index] = msg[2]
-                        res = export_merged_ide_coverage(
-                            list(self._exported_coverages.values())
-                        )
-                        write_coverage(
-                            res, self._config.project_root_path / "wake-coverage.cov"
+                        export_coverage(
+                            self._build,
+                            self._total_statements,
+                            self._source_unit_name_to_path,
+                            merge_coverages(list(self._exported_coverages.values())),
                         )
                     elif msg[0] == "exception":
                         exception_info = pickle.loads(msg[2])
