@@ -1,49 +1,59 @@
-from functools import partial
 import json
 import os
+import time
+from functools import partial
+from pathlib import Path
+from queue import SimpleQueue
+from threading import Thread
 from typing import Iterable, List, Optional, Tuple, Union
 
+import pytest
 from pytest import (
-    Session,
-    Item,
-    Config,
     CallInfo,
     Collector,
     CollectReport,
+    Config,
+    Item,
+    Session,
     TestReport,
     UsageError,
 )
 
-from pathlib import Path
-
-import pytest
-
 from wake.cli.console import console
+from wake.compiler.build_data_model import ProjectBuild
 from wake.config import WakeConfig
 from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
     get_coverage_handler,
+    get_executing_flow_num,
+    get_executing_sequence_num,
+    get_fuzz_mode,
+    get_is_fuzzing,
+    get_sequence_initial_internal_state,
     random,
     reset_exception_handled,
     set_coverage_handler,
-    set_exception_handler,
-    get_sequence_initial_internal_state,
-    get_executing_flow_num,
-    get_executing_sequence_num,
-    set_shrank_path,
-    set_executing_flow_num,
-    set_sequence_initial_internal_state,
     set_current_test_id,
+    set_exception_handler,
+    set_executing_flow_num,
     set_fuzz_mode,
-    get_fuzz_mode,
-    get_is_fuzzing,
+    set_sequence_initial_internal_state,
+    set_shrank_path,
 )
-from wake.testing.coverage import (
-    CoverageHandler,
-    export_merged_ide_coverage,
-    write_coverage,
-)
+from wake.testing.coverage import CoverageHandler, export_coverage, prepare_info
+from wake.testing.native_coverage import NativeCoverageHandler
+
+
+def export_thread(queue: SimpleQueue, build: ProjectBuild):
+    _, total_statements, source_unit_name_to_path = prepare_info(build)
+
+    while True:
+        item = queue.get()
+        if item is None:
+            break
+
+        export_coverage(build, total_statements, source_unit_name_to_path, item)
 
 
 class PytestWakePluginSingle:
@@ -186,7 +196,9 @@ class PytestWakePluginSingle:
         reset_exception_handled()
         set_current_test_id(item.nodeid)
 
-    def pytest_runtest_logstart(self, nodeid: str, location: Tuple[str, Optional[int], str]):
+    def pytest_runtest_logstart(
+        self, nodeid: str, location: Tuple[str, Optional[int], str]
+    ):
         # ensure that the test path is terminated with a newline
         print("")
 
@@ -197,8 +209,8 @@ class PytestWakePluginSingle:
         report: Union[CollectReport, TestReport],
     ):
         import json
-        from datetime import datetime
         import os
+        from datetime import datetime
 
         if self._debug:
             attach_debugger(
@@ -268,8 +280,38 @@ class PytestWakePluginSingle:
 
         if self._debug:
             set_exception_handler(partial(attach_debugger, seed=self._random_seeds[0]))
+
         if coverage:
-            set_coverage_handler(CoverageHandler(self._config))
+            queue = SimpleQueue()
+
+            if self._config.testing.cmd != "revm":
+                last_coverage_sync = time.perf_counter()
+                handler = CoverageHandler(self._config)
+                set_coverage_handler(handler)
+
+                def coverage_callback():
+                    nonlocal last_coverage_sync
+                    t = time.perf_counter()
+                    if (
+                        t - last_coverage_sync
+                        >= self._config.testing.coverage_sync_timeout
+                    ):
+                        queue.put(handler.get_contract_ide_coverage())
+
+                handler.set_callback(coverage_callback)
+            else:
+                from wake_rs import set_coverage_callback
+
+                handler = NativeCoverageHandler(self._config)
+                set_coverage_callback(lambda coverage: queue.put(coverage))
+
+            # clear coverage file
+            export_coverage(handler.latest_build, {}, {}, {})
+
+            thread = Thread(target=export_thread, args=(queue, handler.latest_build))
+            thread.start()
+        else:
+            handler = None
 
         try:
             for i, item in enumerate(session.items):
@@ -280,14 +322,14 @@ class PytestWakePluginSingle:
                 if session.shouldstop:
                     raise session.Interrupted(session.shouldstop)
         finally:
-            if coverage:
-                coverage_handler = get_coverage_handler()
-                assert coverage_handler is not None
+            if isinstance(handler, CoverageHandler):
+                queue.put(handler.get_contract_ide_coverage())
+                queue.put(None)
+            elif isinstance(handler, NativeCoverageHandler):
+                from wake_rs import sync_coverage
 
-                c = export_merged_ide_coverage(
-                    [coverage_handler.get_contract_ide_coverage()]
-                )
-                write_coverage(c, self._config.project_root_path / "wake-coverage.cov")
+                sync_coverage()
+                queue.put(None)
 
             chain_interfaces_manager.close_all()
 
