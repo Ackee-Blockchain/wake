@@ -854,6 +854,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> bytes:
         ...
 
@@ -878,6 +879,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> Contract:
         ...
 
@@ -902,6 +904,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> int:
         ...
 
@@ -926,6 +929,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> Tuple[Dict[Address, List[int]], int]:
         ...
 
@@ -950,6 +954,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> TransactionAbc[Contract]:
         ...
 
@@ -973,6 +978,7 @@ class Chain(ABC):
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
         confirmations: Optional[int] = None,
+        revert_on_failure: bool = True,
     ) -> Union[
         bytes,
         Contract,
@@ -998,6 +1004,7 @@ class Chain(ABC):
             type,
             block,
             confirmations,
+            revert_on_failure,
         )
 
     def _update_nonce(self, address: Address, nonce: int) -> None:
