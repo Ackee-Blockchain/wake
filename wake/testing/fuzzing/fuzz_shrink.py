@@ -10,13 +10,14 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, DefaultDict, List, Optional, Tuple
+from typing import Any, Callable, DefaultDict, Dict, List, Optional, Tuple
 
 from typing_extensions import get_type_hints
 
 from wake.cli.console import console
 from wake.development.core import Chain
 from wake.development.globals import (
+    add_fuzz_test_stats,
     get_config,
     get_current_test_id,
     get_executing_flow_num,
@@ -894,83 +895,122 @@ def single_fuzz_test(
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     dry_run = False
 
-    for i in range(sequences_count):
-        flows_counter: DefaultDict[Callable, int] = defaultdict(int)
-        invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+    flow_stats: Dict[str, Dict[Optional[str], int]] = {
+        f.__name__: defaultdict(int) for f in flows
+    }
 
-        # Snapshot all connected chains
-        snapshots = [chain.snapshot() for chain in chains]
+    try:
+        for i in range(sequences_count):
+            flows_counter: DefaultDict[Callable, int] = defaultdict(int)
+            invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(
+                int
+            )
 
-        state = serialize_random_state(random.getstate())
-        set_sequence_initial_internal_state(state)
+            # Snapshot all connected chains
+            snapshots = [chain.snapshot() for chain in chains]
 
-        test_instance._flow_num = 0
-        set_executing_flow_num(0)
-        set_executing_sequence_num(i)
-        test_instance._sequence_num = i
-        test_instance.pre_sequence()
+            state = serialize_random_state(random.getstate())
+            set_sequence_initial_internal_state(state)
 
-        for j in range(flows_count):
-            valid_flows = [
-                f
-                for f in flows
-                if (
-                    not hasattr(f, "max_times")
-                    or flows_counter[f] < getattr(f, "max_times")
-                )
-                and (
-                    not hasattr(f, "precondition")
-                    or getattr(f, "precondition")(test_instance)
-                )
-            ]
-            weights = [getattr(f, "weight") for f in valid_flows]
-            if len(valid_flows) == 0:
-                max_times_flows = [
+            test_instance._flow_num = 0
+            set_executing_flow_num(0)
+            set_executing_sequence_num(i)
+            test_instance._sequence_num = i
+            test_instance.pre_sequence()
+
+            for j in range(flows_count):
+                valid_flows = [
                     f
                     for f in flows
-                    if hasattr(f, "max_times")
-                    and flows_counter[f] >= getattr(f, "max_times")
+                    if (
+                        not hasattr(f, "max_times")
+                        or flows_counter[f] < getattr(f, "max_times")
+                    )
+                    and (
+                        not hasattr(f, "precondition")
+                        or getattr(f, "precondition")(test_instance)
+                    )
                 ]
-                precondition_flows = [
-                    f
-                    for f in flows
-                    if hasattr(f, "precondition")
-                    and not getattr(f, "precondition")(test_instance)
-                ]
-                raise Exception(
-                    f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
-                )
+                weights = [getattr(f, "weight") for f in valid_flows]
 
-            # Pick a flow and generate the parameters
-            flow = random.choices(valid_flows, weights=weights)[0]
-            flow_params = [
-                generate(v)
-                for k, v in get_type_hints(flow, include_extras=True).items()
-                if k != "return"
-            ]
+                test_instance._flow_num = j
+                set_executing_flow_num(j)
+                flow_exit_reasons = {}
 
-            test_instance._flow_num = j
-            set_executing_flow_num(j)
-            test_instance.pre_flow(flow)
-            flow(test_instance, *flow_params)  # Execute the selected flow
-            flows_counter[flow] += 1
-            test_instance.post_flow(flow)
+                while True:
+                    if len(valid_flows) == 0:
+                        max_times_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "max_times")
+                            and flows_counter[f] >= getattr(f, "max_times")
+                        ]
+                        precondition_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "precondition")
+                            and not getattr(f, "precondition")(test_instance)
+                        ]
+                        raise Exception(
+                            f"Could not find a valid flow to run.\n"
+                            f"Flows that have reached their max_times: {max_times_flows}\n"
+                            f"Flows that do not satisfy their precondition: {precondition_flows}\n"
+                            f"Flows that terminated with failure: {flow_exit_reasons}"
+                        )
 
-            if not dry_run:
-                test_instance.pre_invariants()
-                for inv in invariants:
-                    if invariant_periods[inv] == 0:
-                        test_instance.pre_invariant(inv)
-                        inv(test_instance)
-                        test_instance.post_invariant(inv)
+                    # Pick a flow and generate the parameters
+                    flow = random.choices(valid_flows, weights=weights)[0]
+                    flow_params = [
+                        generate(v)
+                        for k, v in get_type_hints(flow, include_extras=True).items()
+                        if k != "return"
+                    ]
 
-                    invariant_periods[inv] += 1
-                    if invariant_periods[inv] == getattr(inv, "period"):
-                        invariant_periods[inv] = 0
-                test_instance.post_invariants()
+                    test_instance.pre_flow(flow)
+                    ret = flow(test_instance, *flow_params)  # Execute the selected flow
+                    test_instance.post_flow(flow)
 
-        test_instance.post_sequence()
+                    if isinstance(ret, tuple):
+                        assert (
+                            len(ret) == 2
+                        ), "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
+                        flow_stats[flow.__name__][ret[0]] += 1
+                        if ret[1]:
+                            flows_counter[flow] += 1
+                            break
+                        else:
+                            index = valid_flows.index(flow)
+                            valid_flows.pop(index)
+                            weights.pop(index)
+                            flow_exit_reasons[flow] = ret[0]
+                    elif isinstance(ret, str):
+                        flow_stats[flow.__name__][ret] += 1
+                        index = valid_flows.index(flow)
+                        valid_flows.pop(index)
+                        weights.pop(index)
+                        flow_exit_reasons[flow] = ret
+                    else:
+                        flow_stats[flow.__name__][None] += 1
+                        flows_counter[flow] += 1
+                        break
 
-        # Revert all chains back to their initial snapshot
-        for snapshot, chain in zip(snapshots, chains):
-            chain.revert(snapshot)
+                if not dry_run:
+                    test_instance.pre_invariants()
+                    for inv in invariants:
+                        if invariant_periods[inv] == 0:
+                            test_instance.pre_invariant(inv)
+                            inv(test_instance)
+                            test_instance.post_invariant(inv)
+
+                        invariant_periods[inv] += 1
+                        if invariant_periods[inv] == getattr(inv, "period"):
+                            invariant_periods[inv] = 0
+                    test_instance.post_invariants()
+
+            test_instance.post_sequence()
+
+            # Revert all chains back to their initial snapshot
+            for snapshot, chain in zip(snapshots, chains):
+                chain.revert(snapshot)
+    finally:
+        add_fuzz_test_stats(test_class.__name__, flow_stats)
