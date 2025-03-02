@@ -28,7 +28,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Account, Address, Chain, UnknownTransactionRevertedError
+from wake.testing import Account, Address, Chain, UnknownRevertError
 from wake.utils.file_utils import is_relative_to
 
 
@@ -656,7 +656,7 @@ class SakeContext:
                 events=call_trace.event_strings,
                 raw_error=(
                     tx.raw_error.data.hex()
-                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    if isinstance(tx.raw_error, UnknownRevertError)
                     else None
                 ),
                 contract_address=str(tx.return_value.address) if success else None,
@@ -705,7 +705,7 @@ class SakeContext:
                 assert tx.raw_error is not None
                 return_value = (
                     tx.raw_error.data.hex()
-                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    if isinstance(tx.raw_error, UnknownRevertError)
                     else None
                 )
 
@@ -830,7 +830,7 @@ class SakeContext:
         try:
             try:
                 name, abi = get_name_abi_from_explorer(params.address, params.chain_id)
-                return SakeGetAbiResult(success=True, name=name, abi=abi)
+                return SakeGetAbiResult(success=True, name=name, abi=list(abi.values()))
             except AbiNotFound as e:
                 if e.api_key_name is not None:
                     raise LspError(
@@ -868,6 +868,7 @@ class SakeContext:
                     name, abi = get_name_abi_from_explorer(
                         address, chain._forked_chain_id
                     )
+                    abi = list(abi.values())
                 except AbiNotFound as e:
                     if e.api_key_name is not None:
                         raise LspError(

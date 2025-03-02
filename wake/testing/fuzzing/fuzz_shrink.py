@@ -81,7 +81,7 @@ def compare_exceptions(e1: Exception, e2: Exception):
     # "type(e1) is Error" would be more strict, but we accept all Error subclasses.
     # still no class are defined in wake. might be change in the future.
     if type(e1) == Error and type(e2) == Error:
-        # If it was the Error(TransactionRevertedError), compare message content.
+        # If it was the Error(RevertError), compare message content.
         if e1.message != e2.message:
             return False
 

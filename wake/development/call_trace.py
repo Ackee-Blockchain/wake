@@ -44,7 +44,7 @@ from .core import (
 )
 from .globals import get_config, get_verbosity
 from .internal import read_from_memory
-from .utils import get_name_abi_from_explorer
+from .utils import get_name_abi_from_explorer_cached
 
 if TYPE_CHECKING:
     from wake.config import WakeConfig
@@ -179,27 +179,6 @@ def get_precompiled_info(
         )
     else:
         raise ValueError(f"Unknown precompiled contract address: {addr}")
-
-
-def _get_info_from_explorer(addr: Address, chain_id: int) -> Optional[Tuple[str, Dict]]:
-    try:
-        name, abi = get_name_abi_from_explorer(str(addr), chain_id)
-    except Exception:
-        return None
-
-    abi_dict = {}
-    # TODO library ABI is different and has to be fixed to compute the correct selector
-    # however, it is not possible to detect if a contract is a library or not without parsing the source code
-    for abi_item in abi:
-        if abi_item["type"] in {"constructor", "fallback", "receive"}:
-            abi_dict[abi_item["type"]] = abi_item
-        elif abi_item["type"] == "function":
-            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
-        elif abi_item["type"] == "error":
-            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
-        elif abi_item["type"] == "event":
-            abi_dict[eth_utils.abi.event_abi_to_log_topic(abi_item)] = abi_item
-    return name, abi_dict
 
 
 def _decode_precompiled(
@@ -1065,8 +1044,8 @@ class CallTrace:
                     to.address, b"" if "data" not in tx_params else tx_params["data"]
                 )
             elif chain.forked_chain_id is not None:
-                explorer_info = _get_info_from_explorer(
-                    to.address,
+                explorer_info = get_name_abi_from_explorer_cached(
+                    str(to.address),
                     chain.forked_chain_id
                     if chain.forked_chain_id is not None
                     else chain.chain_id,
@@ -1315,7 +1294,7 @@ class CallTrace:
                     assert current_trace is not None
                     assert current_trace.depth >= log["depth"]
                     while current_trace.depth > log["depth"]:
-                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_name = "UnknownRevertError"
                         current_trace._error_arguments = [b""]
                         current_trace._error_names = [None]
                         current_trace._revert_data = b""
@@ -1366,8 +1345,8 @@ class CallTrace:
                     if Address(0) < addr <= Address(9):
                         precompiled_info = get_precompiled_info(addr, data)
                     elif chain.forked_chain_id is not None:
-                        explorer_info = _get_info_from_explorer(
-                            addr,
+                        explorer_info = get_name_abi_from_explorer_cached(
+                            str(addr),
                             chain.forked_chain_id
                             if chain.forked_chain_id is not None
                             else chain.chain_id,
@@ -1543,7 +1522,7 @@ class CallTrace:
                     assert current_trace is not None
 
                 if log["op"] == "INVALID":
-                    current_trace._error_name = "UnknownTransactionRevertedError"
+                    current_trace._error_name = "UnknownRevertError"
                     current_trace._error_arguments = [b""]
                     current_trace._error_names = [None]
                     current_trace._all_events.clear()
@@ -1595,7 +1574,7 @@ class CallTrace:
                         current_trace._error_arguments = subtrace._error_arguments
                         current_trace._error_names = subtrace._error_names
                     elif len(data) < 4 or data[:4] not in current_trace._abi:
-                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_name = "UnknownRevertError"
                         current_trace._error_arguments = [data]
                         current_trace._error_names = [None]
                     else:
@@ -1617,9 +1596,7 @@ class CallTrace:
                             current_trace._error_arguments = error_args
                             current_trace._error_names = error_names
                         except Exception:
-                            current_trace._error_name = (
-                                "UnknownTransactionRevertedError"
-                            )
+                            current_trace._error_name = "UnknownRevertError"
                             current_trace._error_arguments = [data]
                             current_trace._error_names = [None]
                 else:  # STOP, SELFDESTRUCT

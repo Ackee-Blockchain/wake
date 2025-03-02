@@ -880,7 +880,7 @@ class TypeGenerator:
             self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(
                 indent,
-                f"class {self.get_name(error)}(TransactionRevertedError):",
+                f"class {self.get_name(error)}(RevertError):",
                 1,
             )
 
@@ -2125,7 +2125,7 @@ class NameSanitizer:
             "Account",
             "Chain",
             "RequestType",
-            "TransactionRevertedError",
+            "RevertError",
             "TransactionAbc",
             "LegacyTransaction",
             "Eip2930Transaction",
