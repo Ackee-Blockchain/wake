@@ -1294,7 +1294,7 @@ class CallTrace:
                     assert current_trace is not None
                     assert current_trace.depth >= log["depth"]
                     while current_trace.depth > log["depth"]:
-                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_name = "UnknownRevertError"
                         current_trace._error_arguments = [b""]
                         current_trace._error_names = [None]
                         current_trace._revert_data = b""
@@ -1522,7 +1522,7 @@ class CallTrace:
                     assert current_trace is not None
 
                 if log["op"] == "INVALID":
-                    current_trace._error_name = "UnknownTransactionRevertedError"
+                    current_trace._error_name = "UnknownRevertError"
                     current_trace._error_arguments = [b""]
                     current_trace._error_names = [None]
                     current_trace._all_events.clear()
@@ -1574,7 +1574,7 @@ class CallTrace:
                         current_trace._error_arguments = subtrace._error_arguments
                         current_trace._error_names = subtrace._error_names
                     elif len(data) < 4 or data[:4] not in current_trace._abi:
-                        current_trace._error_name = "UnknownTransactionRevertedError"
+                        current_trace._error_name = "UnknownRevertError"
                         current_trace._error_arguments = [data]
                         current_trace._error_names = [None]
                     else:
@@ -1596,9 +1596,7 @@ class CallTrace:
                             current_trace._error_arguments = error_args
                             current_trace._error_names = error_names
                         except Exception:
-                            current_trace._error_name = (
-                                "UnknownTransactionRevertedError"
-                            )
+                            current_trace._error_name = "UnknownRevertError"
                             current_trace._error_arguments = [data]
                             current_trace._error_names = [None]
                 else:  # STOP, SELFDESTRUCT

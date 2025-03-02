@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## `UnknownTransactionRevertedError(data=b'')`
+## `UnknownRevertError(data=b'')`
 
 In many different cases, a development chain or compiler auto-generated code does not provide any useful information about the revert reason.
 This section describes the most common cases and how to debug them.
@@ -26,7 +26,7 @@ from wake.testing import *
 from pytypes.contracts.Reverting import Reverting
 
 
-def revert_handler(e: TransactionRevertedError):
+def revert_handler(e: RevertError):
     if e.tx is not None:
         print(e.tx.call_trace)
 
@@ -44,7 +44,7 @@ def test_reverting():
 ### Contract code size limit
 
 The Spurious Dragon hard fork introduced a limit on the size of a contract. The limit is 24,576 bytes of bytecode.
-Due to the limit, a deployment transaction may fail with the `UnknownTransactionRevertedError` error without any reason data.
+Due to the limit, a deployment transaction may fail with the `UnknownRevertError` error without any reason data.
 In this case, the transaction call trace **does not contain any red cross**, but the transaction itself still fails.
 
 To debug this error, compile the project and search for a warning message similar to the following:

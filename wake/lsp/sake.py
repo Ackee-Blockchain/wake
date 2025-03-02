@@ -28,7 +28,7 @@ from wake.lsp.context import LspContext
 from wake.lsp.exceptions import LspError
 from wake.lsp.lsp_data_model import LspModel
 from wake.lsp.protocol_structures import ErrorCodes
-from wake.testing import Account, Address, Chain, UnknownTransactionRevertedError
+from wake.testing import Account, Address, Chain, UnknownRevertError
 from wake.utils.file_utils import is_relative_to
 
 
@@ -656,7 +656,7 @@ class SakeContext:
                 events=call_trace.event_strings,
                 raw_error=(
                     tx.raw_error.data.hex()
-                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    if isinstance(tx.raw_error, UnknownRevertError)
                     else None
                 ),
                 contract_address=str(tx.return_value.address) if success else None,
@@ -705,7 +705,7 @@ class SakeContext:
                 assert tx.raw_error is not None
                 return_value = (
                     tx.raw_error.data.hex()
-                    if isinstance(tx.raw_error, UnknownTransactionRevertedError)
+                    if isinstance(tx.raw_error, UnknownRevertError)
                     else None
                 )
 

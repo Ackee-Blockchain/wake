@@ -89,8 +89,8 @@ def test_events():
 
 ## Errors
 
-Solidity user-defined errors are translated into Python dataclasses and inherit from `TransactionRevertedError` which inherits from `Exception`.
-`TransactionRevertedError` also has a `tx` field that contains a transaction object for the transaction that caused the error.
+Solidity user-defined errors are translated into Python dataclasses and inherit from `RevertError` which inherits from `Exception`.
+`RevertError` also has a `tx` field that contains a transaction object for the transaction that caused the error.
 The `tx` field is set to `None` if the reverted request was not a transaction.
 
 `pytypes` for unused errors are not generated.
@@ -104,7 +104,7 @@ error NotEnoughFunds(
 
 ```python
 @dataclasses.dataclass
-class NotEnoughFunds(TransactionRevertedError):
+class NotEnoughFunds(RevertError):
     """
     Attributes:
         requested (uint256): uint256
@@ -140,7 +140,7 @@ def test_errors():
             from_=chain.accounts[1],
         )
         assert False, "Should have reverted"
-    except TransactionRevertedError as e:
+    except RevertError as e:
         assert e == Counter.NotOwner()
         tx = e.tx
 ```
@@ -165,7 +165,7 @@ def test_errors():
     try:
         counter.decrement()
         assert False, "Should have reverted"
-    except TransactionRevertedError as e:
+    except RevertError as e:
         assert e == Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)
         tx = e.tx
 ```
@@ -200,7 +200,7 @@ class PanicCodeEnum(IntEnum):
 
 Wake offers two helper functions (context managers) to handle errors - `must_revert` and `may_revert`. Both functions can accept:
 
-- no arguments - any `TransactionRevertedError` is handled,
+- no arguments - any `RevertError` is handled,
 - a single error type - either `Error`, `Panic` or a user-defined type from `pytypes`,
 - a single error instance - an instance of `Error`, `Panic` or a user-defined type from `pytypes`, e.g. `Error("some error")` or `Panic(PanicCodeEnum.UNDERFLOW_OVERFLOW)`,
     - the error raised by the tested contract must exactly match the provided error instance,
