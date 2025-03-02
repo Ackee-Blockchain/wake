@@ -33,6 +33,7 @@ from wake.development.globals import (
     get_executing_flow_num,
     get_executing_sequence_num,
     get_fuzz_mode,
+    get_fuzz_test_stats,
     get_is_fuzzing,
     get_sequence_initial_internal_state,
     random,
@@ -387,6 +388,7 @@ class PytestWakePluginMultiprocess:
 
         finally:
             chain_interfaces_manager.close_all()
+            self._queue.put(("fuzz_test_stats", get_fuzz_test_stats()))
             self._queue.put(("closing", self._index))
             return True
 
