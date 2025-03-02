@@ -771,6 +771,76 @@ class UnknownRevertError(RevertError):
     data: bytes
 
 
+class ExternalError(RevertError):
+    _error_name: str
+    _error_full_name: str
+
+    def __init__(self, _error_full_name, **kwargs):
+        self._error_full_name = _error_full_name
+
+        if "." in self._error_full_name:
+            self._error_name = self._error_full_name.split(".")[-1]
+        else:
+            self._error_name = self._error_full_name
+
+        self.tx = None
+
+        self._extra_attrs = {}
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+            self._extra_attrs[key] = value
+
+    def __repr__(self):
+        cls_name = self.__class__.__qualname__
+        base_repr = f"{cls_name}(_error_full_name='{self._error_full_name}'"
+
+        for key, value in self._extra_attrs.items():
+            if isinstance(value, str):
+                base_repr += f", {key}='{value}'"
+            else:
+                base_repr += f", {key}={value}"
+
+        base_repr += ")"
+        return base_repr
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __eq__(self, other):
+        if not isinstance(other, ExternalError):
+            return False
+
+        if self._error_full_name != other._error_full_name:
+            return False
+
+        for key, value in self._extra_attrs.items():
+            if not hasattr(other, key) or getattr(other, key) != value:
+                return False
+
+        for key in getattr(other, "_extra_attrs", {}):
+            if key not in self._extra_attrs:
+                return False
+
+        return True
+
+    def __hash__(self):
+        # Create a tuple of (_error_full_name, (key1, value1), (key2, value2), ...)
+        # and hash that tuple
+        try:
+            items = [(key, value) for key, value in sorted(self._extra_attrs.items())]
+            return hash((self._error_full_name, tuple(items)))
+        except TypeError as e:
+            # Provide a more informative error message
+            for key, value in self._extra_attrs.items():
+                try:
+                    hash(value)
+                except TypeError:
+                    raise TypeError(
+                        f"ExternalError unhashable: attribute '{key}' with value {value!r} is not hashable"
+                    ) from e
+            raise
+
+
 @dataclass
 class Error(RevertError):
     _abi = {
