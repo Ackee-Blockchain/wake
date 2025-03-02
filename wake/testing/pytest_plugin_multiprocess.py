@@ -9,17 +9,17 @@ import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Type, Union, Tuple
+from typing import List, Optional, Tuple, Type, Union
 
 import pytest
 from pathvalidate import sanitize_filename
 from pytest import (
-    Session,
-    Item,
-    Config,
     CallInfo,
     Collector,
     CollectReport,
+    Config,
+    Item,
+    Session,
     TestReport,
     UsageError,
 )
@@ -30,21 +30,20 @@ from wake.config.wake_config import WakeConfig
 from wake.development.globals import (
     attach_debugger,
     chain_interfaces_manager,
+    get_executing_flow_num,
+    get_executing_sequence_num,
+    get_fuzz_mode,
+    get_fuzz_test_stats,
+    get_is_fuzzing,
+    get_sequence_initial_internal_state,
     random,
     reset_exception_handled,
     set_coverage_handler,
     set_exception_handler,
-    get_sequence_initial_internal_state,
-    get_executing_flow_num,
-    get_executing_sequence_num,
-    get_fuzz_mode,
-    get_is_fuzzing,
 )
-
 from wake.testing.coverage import CoverageHandler
-from wake.utils.tee import StderrTee, StdoutTee
-
 from wake.testing.custom_pdb import CustomPdb
+from wake.utils.tee import StderrTee, StdoutTee
 
 
 class PytestWakePluginMultiprocess:
@@ -288,13 +287,13 @@ class PytestWakePluginMultiprocess:
 
             for idx, line in enumerate(source_lines_subset):
                 if start_line + idx == relative_lineno:
-                    source_lines_subset[idx] = (
-                        f"--> {starting_line_no + start_line + idx:>{line_number_width}} {line}"  # Add '>>>' marker
-                    )
+                    source_lines_subset[
+                        idx
+                    ] = f"--> {starting_line_no + start_line + idx:>{line_number_width}} {line}"  # Add '>>>' marker
                 else:
-                    source_lines_subset[idx] = (
-                        f"    {starting_line_no + start_line + idx:>{line_number_width}} {line}"
-                    )
+                    source_lines_subset[
+                        idx
+                    ] = f"    {starting_line_no + start_line + idx:>{line_number_width}} {line}"
 
             source_code = "".join(source_lines_subset)
 
@@ -359,6 +358,7 @@ class PytestWakePluginMultiprocess:
                 )
         finally:
             chain_interfaces_manager.close_all()
+            self._queue.put(("fuzz_test_stats", get_fuzz_test_stats()))
             self._queue.put(("closing", self._index))
             return True
 
