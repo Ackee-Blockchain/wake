@@ -30,6 +30,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from Crypto.Hash import keccak
+import eth_utils
 from pydantic import TypeAdapter, ValidationError
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -1547,7 +1548,17 @@ def _try_change_erc1155_total_supply(
         raise ValueError("Total supply change failed")
 
 
-def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
+@functools.lru_cache(maxsize=1024)
+def get_name_abi_from_explorer_cached(
+    addr: str, chain_id: int
+) -> Optional[Tuple[str, Dict]]:
+    try:
+        return get_name_abi_from_explorer(addr, chain_id)
+    except AbiNotFound:
+        return None
+
+
+def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, Dict]:
     config = get_config()
     info, source = get_info_from_explorer(addr, chain_id, config)
 
@@ -1557,7 +1568,6 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
         )
         name = next(iter(metadata["settings"]["compilationTarget"].values()))
         abi = metadata["output"]["abi"]
-        return name, abi
     else:
         # etherscan-like
         name = info["ContractName"]
@@ -1565,7 +1575,20 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, List]:
             abi = json.loads(info["ABI"])
         except JSONDecodeError:
             raise AbiNotFound(method="etherscan")
-        return name, abi
+
+    # TODO library ABI is different and has to be fixed to compute the correct selector
+    # however, it is not possible to detect if a contract is a library or not without parsing the source code
+    abi_dict = {}
+    for abi_item in abi:
+        if abi_item["type"] in {"constructor", "fallback", "receive"}:
+            abi_dict[abi_item["type"]] = abi_item
+        elif abi_item["type"] == "function":
+            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
+        elif abi_item["type"] == "error":
+            abi_dict[eth_utils.abi.function_abi_to_4byte_selector(abi_item)] = abi_item
+        elif abi_item["type"] == "event":
+            abi_dict[eth_utils.abi.event_abi_to_log_topic(abi_item)] = abi_item
+    return name, abi_dict
 
 
 def get_info_from_explorer(

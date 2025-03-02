@@ -833,7 +833,7 @@ class SakeContext:
         try:
             try:
                 name, abi = get_name_abi_from_explorer(params.address, params.chain_id)
-                return SakeGetAbiResult(success=True, name=name, abi=abi)
+                return SakeGetAbiResult(success=True, name=name, abi=list(abi.values()))
             except AbiNotFound as e:
                 if e.api_key_name is not None:
                     raise LspError(
@@ -871,6 +871,7 @@ class SakeContext:
                     name, abi = get_name_abi_from_explorer(
                         address, chain._forked_chain_id
                     )
+                    abi = list(abi.values())
                 except AbiNotFound as e:
                     if e.api_key_name is not None:
                         raise LspError(
