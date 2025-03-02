@@ -84,11 +84,7 @@ from .primitive_types import (
 )
 
 if TYPE_CHECKING:
-    from .transactions import (
-        ChainTransactions,
-        TransactionAbc,
-        TransactionRevertedError,
-    )
+    from .transactions import ChainTransactions, RevertError, TransactionAbc
 
 
 # selector => (contract_fqn => pytypes_object)
@@ -1129,12 +1125,12 @@ class Chain(ABC):
         self,
         tx: Optional[TransactionAbc],
         revert_data: bytes,
-    ) -> TransactionRevertedError:
-        from .transactions import UnknownTransactionRevertedError
+    ) -> RevertError:
+        from .transactions import UnknownRevertError
 
         selector = revert_data[0:4]
         if selector not in errors:
-            e = UnknownTransactionRevertedError(revert_data)
+            e = UnknownRevertError(revert_data)
             e.tx = tx
             raise e from None
 
@@ -1143,7 +1139,7 @@ class Chain(ABC):
             and not self.optimistic_pytypes_resolving
         ):
             if tx is None:
-                e = UnknownTransactionRevertedError(revert_data)
+                e = UnknownRevertError(revert_data)
                 e.tx = tx
                 raise e from None
 
@@ -1166,7 +1162,7 @@ class Chain(ABC):
                     fqn_overrides,
                 )
             except ValueError:
-                e = UnknownTransactionRevertedError(revert_data)
+                e = UnknownRevertError(revert_data)
                 e.tx = tx
                 raise e from None
         else:
@@ -1420,7 +1416,7 @@ class Chain(ABC):
 
         return bytes.fromhex(revert_data)
 
-    def _process_call_revert(self, e: JsonRpcError) -> TransactionRevertedError:
+    def _process_call_revert(self, e: JsonRpcError) -> RevertError:
 
         return self._process_revert_data(None, self._process_call_revert_data(e))
 

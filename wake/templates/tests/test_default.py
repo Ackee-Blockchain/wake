@@ -1,7 +1,7 @@
 from wake.testing import *
 
 # Print failing tx call trace
-# def revert_handler(e: TransactionRevertedError):
+# def revert_handler(e: RevertError):
 #     if e.tx is not None:
 #         print(e.tx.call_trace)
 
