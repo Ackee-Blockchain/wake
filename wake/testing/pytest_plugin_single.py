@@ -29,6 +29,7 @@ from wake.development.globals import (
     get_executing_flow_num,
     get_executing_sequence_num,
     get_fuzz_mode,
+    get_fuzz_test_stats,
     get_is_fuzzing,
     get_sequence_initial_internal_state,
     random,
@@ -337,6 +338,18 @@ class PytestWakePluginSingle:
 
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
+
+        for name, stats in sorted(get_fuzz_test_stats().items(), key=lambda x: x[0]):
+            terminalreporter.write_line(f"Fuzz test '{name}':")
+
+            for flow, rets in sorted(stats.items(), key=lambda x: x[0]):
+                terminalreporter.write_line(f"  {flow}:")
+                terminalreporter.write_line(f"    Success: {rets.pop(None, 0)}")
+                for ret, count in sorted(rets.items(), key=lambda x: x[0] or ""):
+                    terminalreporter.write_line(f"    {ret}: {count}")
+
+            terminalreporter.write_line("")
+
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
         if get_is_fuzzing():
             terminalreporter.write_line(

@@ -9,6 +9,7 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     DefaultDict,
+    Dict,
     List,
     Optional,
     Set,
@@ -71,26 +72,35 @@ _shrink_exact_exception: bool = False
 _shrink_target_invariants_only: bool = False
 _is_fuzzing: bool = False
 
+_fuzz_test_stats: Dict[str, Dict[str, Dict[Optional[str], int]]] = {}
+
+
 def set_is_fuzzing(is_fuzzing: bool):
     global _is_fuzzing
     _is_fuzzing = is_fuzzing
 
+
 def get_is_fuzzing() -> bool:
     return _is_fuzzing
+
 
 def set_shrank_path(path: Path):
     global _shrank_path
     _shrank_path = path
 
+
 def get_shrank_path() -> Optional[Path]:
     return _shrank_path
+
 
 def set_current_test_id(test_id: str):
     global _current_test_id
     _current_test_id = test_id
 
+
 def get_current_test_id() -> Optional[str]:
     return _current_test_id
+
 
 def attach_debugger(
     e_type: Optional[Type[BaseException]],
@@ -140,22 +150,28 @@ def attach_debugger(
     p.reset()
     p.interaction(None, tb)
 
+
 def get_fuzz_mode() -> int:
     return _fuzz_mode
+
 
 def set_fuzz_mode(fuzz_mode: int):
     global _fuzz_mode
     _fuzz_mode = fuzz_mode
 
+
 def get_executing_sequence_num() -> int:
     return _executing_sequence_num
+
 
 def set_executing_sequence_num(sequence_num: int):
     global _executing_sequence_num
     _executing_sequence_num = sequence_num
 
+
 def get_executing_flow_num() -> int:
     return _executing_flow_num
+
 
 def set_executing_flow_num(error_flow_num: int):
     global _executing_flow_num
@@ -188,12 +204,15 @@ def set_exception_handler(
     global _exception_handler
     _exception_handler = handler
 
+
 def set_sequence_initial_internal_state(intenral_state: dict):
     global _initial_internal_state
     _initial_internal_state = intenral_state
 
+
 def get_sequence_initial_internal_state() -> dict:
     return _initial_internal_state
+
 
 def reset_exception_handled():
     global _exception_handled
@@ -222,6 +241,7 @@ def set_shrink_exact_flow(exact_flow: bool):
     global _shrink_exact_flow
     _shrink_exact_flow = exact_flow
 
+
 def get_shrink_exact_flow() -> bool:
     return _shrink_exact_flow
 
@@ -230,6 +250,7 @@ def set_shrink_exact_exception(exact_exception: bool):
     global _shrink_exact_exception
     _shrink_exact_exception = exact_exception
 
+
 def get_shrink_exact_exception() -> bool:
     return _shrink_exact_exception
 
@@ -237,6 +258,7 @@ def get_shrink_exact_exception() -> bool:
 def set_shrink_target_invariants_only(target_invariants_only: bool):
     global _shrink_target_invariants_only
     _shrink_target_invariants_only = target_invariants_only
+
 
 def get_shrink_target_invariants_only() -> bool:
     return _shrink_target_invariants_only
@@ -258,6 +280,27 @@ def set_verbosity(verbosity: int):
 
 def get_verbosity() -> int:
     return _verbosity
+
+
+def add_fuzz_test_stats(name: str, stats: Dict[str, Dict[Optional[str], int]]):
+    global _fuzz_test_stats
+
+    if name not in _fuzz_test_stats:
+        _fuzz_test_stats[name] = stats
+    else:
+        for flow_name, flow_stats in stats.items():
+            if flow_name not in _fuzz_test_stats[name]:
+                _fuzz_test_stats[name][flow_name] = flow_stats
+            else:
+                for ret, count in flow_stats.items():
+                    if ret not in _fuzz_test_stats[name][flow_name]:
+                        _fuzz_test_stats[name][flow_name][ret] = count
+                    else:
+                        _fuzz_test_stats[name][flow_name][ret] += count
+
+
+def get_fuzz_test_stats() -> Dict[str, Dict[str, Dict[Optional[str], int]]]:
+    return _fuzz_test_stats
 
 
 class ChainInterfaceManager:
