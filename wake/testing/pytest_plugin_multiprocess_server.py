@@ -101,8 +101,6 @@ class PytestWakePluginMultiprocessServer:
             )
         else:
             empty_coverage = None
-            self._total_statements = {}
-            self._source_unit_name_to_path = {}
 
         logs_dir = self._config.project_root_path / ".wake" / "logs" / "testing"
         shutil.rmtree(logs_dir, ignore_errors=True)
@@ -157,12 +155,13 @@ class PytestWakePluginMultiprocessServer:
         self._queue.close()
 
         # flush coverage
-        export_coverage(
-            self._build,
-            self._total_statements,
-            self._source_unit_name_to_path,
-            merge_coverages(list(self._exported_coverages.values())),
-        )
+        if self._coverage != 0:
+            export_coverage(
+                self._build,
+                self._total_statements,
+                self._source_unit_name_to_path,
+                merge_coverages(list(self._exported_coverages.values())),
+            )
 
     def pytest_report_teststatus(
         self,
