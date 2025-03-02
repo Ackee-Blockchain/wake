@@ -201,8 +201,8 @@ class TransactionAbc(ABC, Generic[T]):
     _tx_receipt: Optional[Dict[str, Any]]
     _trace_transaction: Optional[List[Dict[str, Any]]]
     _debug_trace_transaction = Optional[Dict[str, Any]]
-    _error: Optional[TransactionRevertedError]
-    _raw_error: Optional[UnknownTransactionRevertedError]
+    _error: Optional[Union[RevertError, Halt]]
+    _raw_error: Optional[UnknownRevertError]
     _events: Optional[List]
 
     def __init__(
@@ -440,7 +440,7 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_receipt
-    def error(self) -> Optional[TransactionRevertedError]:
+    def error(self) -> Optional[Union[RevertError, Halt]]:
         if self.status == TransactionStatusEnum.SUCCESS:
             return None
 
@@ -459,7 +459,7 @@ class TransactionAbc(ABC, Generic[T]):
 
     @property
     @_fetch_tx_receipt
-    def raw_error(self) -> Optional[Union[UnknownTransactionRevertedError, Halt]]:
+    def raw_error(self) -> Optional[Union[UnknownRevertError, Halt]]:
         if self.status == TransactionStatusEnum.SUCCESS:
             return None
 
@@ -525,7 +525,7 @@ class TransactionAbc(ABC, Generic[T]):
         else:
             raise NotImplementedError
 
-        self._raw_error = UnknownTransactionRevertedError(revert_data)
+        self._raw_error = UnknownRevertError(revert_data)
         self._raw_error.tx = self
         return self._raw_error
 
@@ -754,7 +754,7 @@ class Eip1559Transaction(TransactionAbc[T]):
 
 
 @dataclass
-class TransactionRevertedError(Exception):
+class RevertError(Exception):
     tx: Optional[TransactionAbc] = field(
         init=False, compare=False, default=None, repr=False
     )
@@ -767,12 +767,12 @@ class TransactionRevertedError(Exception):
 
 
 @dataclass
-class UnknownTransactionRevertedError(TransactionRevertedError):
+class UnknownRevertError(RevertError):
     data: bytes
 
 
 @dataclass
-class Error(TransactionRevertedError):
+class Error(RevertError):
     _abi = {
         "name": "Error",
         "type": "error",
@@ -783,8 +783,17 @@ class Error(TransactionRevertedError):
 
 
 @dataclass
-class Halt(TransactionRevertedError):
+class Halt(Exception):
+    tx: Optional[TransactionAbc] = field(
+        init=False, compare=False, default=None, repr=False
+    )
     message: str
+
+    def __str__(self):
+        s = ", ".join(
+            [f"{f.name}={getattr(self, f.name)!r}" for f in fields(self) if f.init]
+        )
+        return f"{self.__class__.__qualname__}({s})"
 
 
 class PanicCodeEnum(IntEnum):
@@ -811,7 +820,7 @@ class PanicCodeEnum(IntEnum):
 
 
 @dataclass
-class Panic(TransactionRevertedError):
+class Panic(RevertError):
     _abi = {
         "name": "Panic",
         "type": "error",
@@ -833,7 +842,7 @@ def must_revert(
         Exception,
         Type[Exception],
         Tuple[Union[str, int, Exception, Type[Exception]], ...],
-    ] = TransactionRevertedError,
+    ] = RevertError,
 ) -> Iterator[ExceptionWrapper]:
     if isinstance(exceptions, str):
         exceptions = Error(exceptions)
@@ -883,7 +892,7 @@ def may_revert(
         Exception,
         Type[Exception],
         Tuple[Union[str, int, Exception, Type[Exception]], ...],
-    ] = TransactionRevertedError,
+    ] = RevertError,
 ) -> Iterator[ExceptionWrapper]:
     if isinstance(exceptions, str):
         exceptions = Error(exceptions)
@@ -924,13 +933,13 @@ def may_revert(
                     raise
 
 
-def on_revert(callback: Callable[[TransactionRevertedError], None]):
+def on_revert(callback: Callable[[RevertError], None]):
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             try:
                 return f(*args, **kwargs)
-            except TransactionRevertedError as e:
+            except RevertError as e:
                 callback(e)
                 raise
 

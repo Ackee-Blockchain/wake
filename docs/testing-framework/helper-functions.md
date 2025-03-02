@@ -50,7 +50,7 @@ Abi.encode_with_signature("setCount(uint256)", ['uint256'], [0xff])
 !!! warning
     The signature string must conform to the [ABI specification](https://docs.soliditylang.org/en/latest/abi-spec.html#function-selector).
     The common mistakes are:
-    
+
     - `uint` or `int` used instead of `uint256` or `int256`,
     - return type specified,
     - spaces in the signature string.
@@ -197,7 +197,7 @@ assert usdc_proxy.balanceOf(Account(1)) == 1000
 from wake.testing import *
 
 
-def revert_handler(e: TransactionRevertedError):
+def revert_handler(e: RevertError):
     if e.tx is not None:
         print(e.tx.call_trace)
         print(e.tx.console_logs)
