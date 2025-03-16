@@ -4,7 +4,17 @@ import re
 import weakref
 from bisect import bisect
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, FrozenSet, Iterator, List, Optional, Set, Tuple, Union, Iterable
+from typing import (
+    TYPE_CHECKING,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from wake.utils.decorators import weak_self_lru_cache
 
@@ -47,6 +57,7 @@ from wake.ir.declarations.user_defined_value_type_definition import (
 )
 from wake.ir.declarations.variable_declaration import VariableDeclaration
 from wake.ir.enums import ContractKind
+from wake.ir.meta.storage_layout_specifier import StorageLayoutSpecifier
 from wake.ir.meta.structured_documentation import StructuredDocumentation
 from wake.ir.utils import IrInitTuple
 
@@ -100,6 +111,7 @@ class ContractDefinition(DeclarationAbc):
     _user_defined_value_types: List[UserDefinedValueTypeDefinition]
     _using_for_directives: List[UsingForDirective]
     _declared_variables: List[VariableDeclaration]
+    _storage_layout: Optional[StorageLayoutSpecifier]
 
     _used_event_ids: List[AstNodeId]
     _used_events: Set[weakref.ReferenceType[EventDefinition]]
@@ -135,6 +147,14 @@ class ContractDefinition(DeclarationAbc):
             raise TypeError(
                 f"Unknown type of documentation: {type(contract.documentation)}"
             )
+
+        if contract.storage_layout is not None:
+            self._storage_layout = StorageLayoutSpecifier(
+                init, contract.storage_layout, self
+            )
+        else:
+            self._storage_layout = None
+
         if init.contracts_info is not None and self.name in init.contracts_info:
             self._compilation_info = init.contracts_info[self.name]
         else:
@@ -188,6 +208,8 @@ class ContractDefinition(DeclarationAbc):
             yield from base_contract
         if isinstance(self._documentation, StructuredDocumentation):
             yield from self._documentation
+        if self._storage_layout is not None:
+            yield from self._storage_layout
         for enum in self._enums:
             yield from enum
         for error in self._errors:
@@ -242,7 +264,8 @@ class ContractDefinition(DeclarationAbc):
             self._used_events.add(weakref.ref(event))
 
         self._reference_resolver.register_destroy_callback(
-            self.source_unit.file, partial(self._destroy, base_contracts, self.used_errors)
+            self.source_unit.file,
+            partial(self._destroy, base_contracts, self.used_errors),
         )
 
     def _post_process_events(self, callback_params: CallbackParams):
@@ -266,10 +289,15 @@ class ContractDefinition(DeclarationAbc):
         self._used_event_ids = used_event_ids
 
         self._reference_resolver.register_destroy_callback(
-            self.source_unit.file, partial(self._destroy_events, self.used_events),
+            self.source_unit.file,
+            partial(self._destroy_events, self.used_events),
         )
 
-    def _destroy(self, base_contracts: List[ContractDefinition], used_errors: Iterable[ErrorDefinition]) -> None:
+    def _destroy(
+        self,
+        base_contracts: List[ContractDefinition],
+        used_errors: Iterable[ErrorDefinition],
+    ) -> None:
         for base_contract in base_contracts:
             ref = next(c for c in base_contract._child_contracts if c() is self)
             base_contract._child_contracts.remove(ref)
@@ -342,6 +370,7 @@ class ContractDefinition(DeclarationAbc):
         Union[
             InheritanceSpecifier,
             StructuredDocumentation,
+            StorageLayoutSpecifier,
             EnumDefinition,
             ErrorDefinition,
             EventDefinition,
@@ -360,6 +389,8 @@ class ContractDefinition(DeclarationAbc):
         yield from self._base_contracts
         if isinstance(self._documentation, StructuredDocumentation):
             yield self._documentation
+        if self._storage_layout is not None:
+            yield self._storage_layout
         yield from self._enums
         yield from self._errors
         yield from self._events
@@ -507,6 +538,14 @@ class ContractDefinition(DeclarationAbc):
             [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation of this contract, if any.
         """
         return self._documentation
+
+    @property
+    def storage_layout(self) -> Optional[StorageLayoutSpecifier]:
+        """
+        Returns:
+            Storage layout specifier of this contract, if any.
+        """
+        return self._storage_layout
 
     @property
     def compilation_info(self) -> Optional[SolcOutputContractInfo]:
