@@ -502,6 +502,12 @@ class SolcUserDefinedValueTypeDefinition(SolidityNode):
     ] = None  # should be present but because of a bug it is exported in >=0.8.9
 
 
+class SolcStorageLayoutSpecifier(SolidityNode):
+    node_type: Literal["StorageLayoutSpecifier"] = Field(alias="nodeType")
+    # required
+    base_slot_expression: SolcExpressionUnion
+
+
 class SolcContractDefinition(SolidityNode):
     # override alias
     node_type: Literal["ContractDefinition"] = Field(alias="nodeType")
@@ -528,6 +534,7 @@ class SolcContractDefinition(SolidityNode):
     internal_function_ids: Optional[Dict[int, StrictInt]] = Field(
         None, alias="internalFunctionIDs"
     )
+    storage_layout: Optional[SolcStorageLayoutSpecifier] = None  # new in 0.8.29
 
 
 class SolcEventDefinition(SolidityNode):
