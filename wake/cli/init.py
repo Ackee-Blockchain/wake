@@ -22,9 +22,11 @@ def paths_to_str(paths: Iterable[PurePath], config: WakeConfig) -> str:
     from wake.utils import is_relative_to
 
     return ", ".join(
-        f'"{p.relative_to(config.local_config_path.parent)}"'
-        if is_relative_to(p, config.local_config_path.parent)
-        else f'"{p}"'
+        (
+            f'"{p.relative_to(config.local_config_path.parent)}"'
+            if is_relative_to(p, config.local_config_path.parent)
+            else f'"{p}"'
+        )
         for p in paths
     )
 
@@ -66,9 +68,106 @@ def write_config(config: WakeConfig) -> None:
         f.write("\n")
 
         f.write("[compiler.solc.optimizer]\n")
-        f.write(f"enabled = {str(config.compiler.solc.optimizer.enabled).lower()}\n")
+        if config.compiler.solc.optimizer.enabled is not None:
+            f.write(
+                f"enabled = {str(config.compiler.solc.optimizer.enabled).lower()}\n"
+            )
         f.write(f"runs = {config.compiler.solc.optimizer.runs}\n")
         f.write("\n")
+
+        if (
+            config.compiler.solc.metadata.append_CBOR is not None
+            or config.compiler.solc.metadata.use_literal_content is not None
+            or config.compiler.solc.metadata.bytecode_hash is not None
+        ):
+            f.write("[compiler.solc.metadata]\n")
+            if config.compiler.solc.metadata.append_CBOR is not None:
+                f.write(
+                    f"append_CBOR = {str(config.compiler.solc.metadata.append_CBOR).lower()}\n"
+                )
+            if config.compiler.solc.metadata.use_literal_content is not None:
+                f.write(
+                    f"use_literal_content = {str(config.compiler.solc.metadata.use_literal_content).lower()}\n"
+                )
+            if config.compiler.solc.metadata.bytecode_hash is not None:
+                f.write(
+                    f'bytecode_hash = "{config.compiler.solc.metadata.bytecode_hash}"\n'
+                )
+            f.write("\n")
+
+        if any(
+            v is not None
+            for v in (
+                config.compiler.solc.optimizer.details.peephole,
+                config.compiler.solc.optimizer.details.inliner,
+                config.compiler.solc.optimizer.details.jumpdest_remover,
+                config.compiler.solc.optimizer.details.order_literals,
+                config.compiler.solc.optimizer.details.deduplicate,
+                config.compiler.solc.optimizer.details.cse,
+                config.compiler.solc.optimizer.details.constant_optimizer,
+                config.compiler.solc.optimizer.details.simple_counter_for_loop_unchecked_increment,
+            )
+        ):
+            f.write("[compiler.solc.optimizer.details]\n")
+            if config.compiler.solc.optimizer.details.peephole is not None:
+                f.write(
+                    f"peephole = {str(config.compiler.solc.optimizer.details.peephole).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.inliner is not None:
+                f.write(
+                    f"inliner = {str(config.compiler.solc.optimizer.details.inliner).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.jumpdest_remover is not None:
+                f.write(
+                    f"jumpdest_remover = {str(config.compiler.solc.optimizer.details.jumpdest_remover).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.order_literals is not None:
+                f.write(
+                    f"order_literals = {str(config.compiler.solc.optimizer.details.order_literals).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.deduplicate is not None:
+                f.write(
+                    f"deduplicate = {str(config.compiler.solc.optimizer.details.deduplicate).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.cse is not None:
+                f.write(
+                    f"cse = {str(config.compiler.solc.optimizer.details.cse).lower()}\n"
+                )
+            if config.compiler.solc.optimizer.details.constant_optimizer is not None:
+                f.write(
+                    f"constant_optimizer = {str(config.compiler.solc.optimizer.details.constant_optimizer).lower()}\n"
+                )
+            if (
+                config.compiler.solc.optimizer.details.simple_counter_for_loop_unchecked_increment
+                is not None
+            ):
+                f.write(
+                    f"simple_counter_for_loop_unchecked_increment = {str(config.compiler.solc.optimizer.details.simple_counter_for_loop_unchecked_increment).lower()}\n"
+                )
+            f.write("\n")
+
+        if (
+            config.compiler.solc.optimizer.details.yul_details.stack_allocation
+            is not None
+            or config.compiler.solc.optimizer.details.yul_details.optimizer_steps
+            is not None
+        ):
+            f.write("[compiler.solc.optimizer.details.yul_details]\n")
+            if (
+                config.compiler.solc.optimizer.details.yul_details.stack_allocation
+                is not None
+            ):
+                f.write(
+                    f"stack_allocation = {str(config.compiler.solc.optimizer.details.yul_details.stack_allocation).lower()}\n"
+                )
+            if (
+                config.compiler.solc.optimizer.details.yul_details.optimizer_steps
+                is not None
+            ):
+                f.write(
+                    f'optimizer_steps = "{config.compiler.solc.optimizer.details.yul_details.optimizer_steps}"\n'
+                )
+            f.write("\n")
 
         f.write("[detectors]\n")
         f.write("exclude = []\n")
@@ -143,6 +242,172 @@ def import_foundry_profile(
 
     if "solc" in c:
         config.update({"compiler": {"solc": {"target_version": c["solc"]}}}, [])
+
+    if "bytecode_hash" in c:
+        config.update(
+            {"compiler": {"solc": {"metadata": {"bytecode_hash": c["bytecode_hash"]}}}},
+            [],
+        )
+
+    if "use_literal_content" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "metadata": {"use_literal_content": c["use_literal_content"]}
+                    }
+                }
+            },
+            [],
+        )
+
+    if "cbor_metadata" in c:
+        config.update(
+            {"compiler": {"solc": {"metadata": {"append_CBOR": c["cbor_metadata"]}}}},
+            [],
+        )
+
+    if "optimizer_details" not in c:
+        return
+
+    c = c["optimizer_details"]
+
+    if "peephole" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {"optimizer": {"details": {"peephole": c["peephole"]}}}
+                },
+            },
+            [],
+        )
+
+    if "inliner" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {"optimizer": {"details": {"inliner": c["inliner"]}}}
+                },
+            },
+            [],
+        )
+
+    if "jumpdestRemover" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {
+                            "details": {"jumpdest_remover": c["jumpdestRemover"]}
+                        }
+                    }
+                },
+            },
+            [],
+        )
+
+    if "orderLiterals" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {"details": {"order_literals": c["orderLiterals"]}}
+                    }
+                },
+            },
+            [],
+        )
+
+    if "deduplicate" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {"details": {"deduplicate": c["deduplicate"]}}
+                    }
+                },
+            },
+            [],
+        )
+
+    if "cse" in c:
+        config.update(
+            {
+                "compiler": {"solc": {"optimizer": {"details": {"cse": c["cse"]}}}},
+            },
+            [],
+        )
+
+    if "constantOptimizer" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {
+                            "details": {"constant_optimizer": c["constantOptimizer"]}
+                        }
+                    }
+                },
+            },
+            [],
+        )
+
+    if "simpleCounterForLoopUncheckedIncrement" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {
+                            "details": {
+                                "simple_counter_for_loop_unchecked_increment": c[
+                                    "simpleCounterForLoopUncheckedIncrement"
+                                ]
+                            }
+                        }
+                    }
+                },
+            },
+            [],
+        )
+
+    if "yulDetails" not in c:
+        return
+
+    c = c["yulDetails"]
+
+    if "stackAllocation" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {
+                            "details": {
+                                "yul_details": {
+                                    "stack_allocation": c["stackAllocation"]
+                                }
+                            }
+                        }
+                    }
+                },
+            },
+            [],
+        )
+
+    if "optimizerSteps" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "optimizer": {
+                            "details": {
+                                "yul_details": {"optimizer_steps": c["optimizerSteps"]}
+                            }
+                        }
+                    }
+                },
+            },
+            [],
+        )
 
 
 def update_gitignore(file: Path) -> None:
