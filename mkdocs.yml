@@ -170,6 +170,7 @@ nav:
                       - parameter_list: "api-reference/ir/meta/parameter-list.md"
                       - pragma_directive: "api-reference/ir/meta/pragma-directive.md"
                       - source_unit: "api-reference/ir/meta/source-unit.md"
+                      - storage_layout_specifier: "api-reference/ir/meta/storage-layout-specifier.md"
                       - structured_documentation: "api-reference/ir/meta/structured-documentation.md"
                       - try_catch_clause: "api-reference/ir/meta/try-catch-clause.md"
                       - using_for_directive: "api-reference/ir/meta/using-for-directive.md"
