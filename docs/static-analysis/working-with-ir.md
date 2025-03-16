@@ -22,6 +22,8 @@ The IR tree can have a very complex structure. However, there are a few rules th
 - there are only a few cases when expressions may be used without a parental statement (i.e. outside of a function/modifier body):
     - in an [InheritanceSpecifier][wake.ir.meta.inheritance_specifier.InheritanceSpecifier] argument list,
         - e.g. `:::solidity contract A is B(1, 2) {}`,
+    - in a [StorageLayoutSpecifier][wake.ir.meta.storage_layout_specifier.StorageLayoutSpecifier] base slot expression,
+        - e.g. `:::solidity contract C layout at (10 + 20) {}`,
     - in a [ModifierInvocation][wake.ir.meta.modifier_invocation.ModifierInvocation] argument list,
         - e.g. `:::solidity function foo() public onlyOwner(1, 2) {}`,
     - in a [VariableDeclaration][wake.ir.declarations.variable_declaration.VariableDeclaration] initial value,

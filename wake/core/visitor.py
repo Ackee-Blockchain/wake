@@ -50,6 +50,7 @@ group_map: Dict[str, List[str]] = {
     "ParameterList": ["SolidityAbc"],
     "PragmaDirective": ["SolidityAbc"],
     "SourceUnit": ["SolidityAbc"],
+    "StorageLayoutSpecifier": ["SolidityAbc"],
     "StructuredDocumentation": ["SolidityAbc"],
     "TryCatchClause": ["SolidityAbc"],
     "UsingForDirective": ["SolidityAbc"],
@@ -140,6 +141,9 @@ visit_map: Dict[str, Callable] = {
     "ParameterList": lambda self, node: self.visit_parameter_list(node),
     "PragmaDirective": lambda self, node: self.visit_pragma_directive(node),
     "SourceUnit": lambda self, node: self.visit_source_unit(node),
+    "StorageLayoutSpecifier": lambda self, node: self.visit_storage_layout_specifier(
+        node
+    ),
     "StructuredDocumentation": lambda self, node: self.visit_structured_documentation(
         node
     ),
@@ -425,6 +429,11 @@ class Visitor:
     def visit_source_unit(self, node: ir.SourceUnit):
         """
         Visit [SourceUnit][wake.ir.meta.source_unit.SourceUnit] node.
+        """
+
+    def visit_storage_layout_specifier(self, node: ir.StorageLayoutSpecifier):
+        """
+        Visit [StorageLayoutSpecifier][wake.ir.meta.storage_layout_specifier.StorageLayoutSpecifier] node.
         """
 
     def visit_structured_documentation(self, node: ir.StructuredDocumentation):

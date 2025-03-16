@@ -36,6 +36,7 @@ from .meta.override_specifier import OverrideSpecifier
 from .meta.parameter_list import ParameterList
 from .meta.pragma_directive import PragmaDirective
 from .meta.source_unit import SourceUnit
+from .meta.storage_layout_specifier import StorageLayoutSpecifier
 from .meta.structured_documentation import StructuredDocumentation
 from .meta.try_catch_clause import TryCatchClause
 from .meta.using_for_directive import UsingForDirective

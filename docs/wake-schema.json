@@ -36,7 +36,7 @@
             "evm_version": {
               "type": "string",
               "description": "Version of the EVM to compile for",
-              "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague"]
+              "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka"]
             },
             "exclude_paths": {
               "type": "array",
@@ -461,7 +461,7 @@
           "evm_version": {
             "type": "string",
             "description": "Version of the EVM to compile for",
-            "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague"]
+            "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka"]
           },
           "optimizer": {
             "type": "object",
