@@ -16,6 +16,8 @@ from typing_extensions import get_type_hints
 
 from wake.cli.console import console
 from wake.development.core import Chain
+# from wake_rs import Chain
+import wake_rs
 from wake.development.globals import (
     add_fuzz_test_stats,
     get_config,
@@ -126,7 +128,7 @@ def compare_exceptions(e1: Exception, e2: Exception):
     return True
 
 
-def serialize_random_state(state: tuple[int, tuple[int, ...], float | None]) -> dict:
+def serialize_random_state(state: Tuple[int, Tuple[int, ...], float | None]) -> dict:
     """Convert random state to JSON-serializable format"""
     version, state_tuple, gauss = state
     return {
@@ -138,7 +140,7 @@ def serialize_random_state(state: tuple[int, tuple[int, ...], float | None]) -> 
 
 def deserialize_random_state(
     state_dict: dict,
-) -> tuple[int, tuple[int, ...], float | None]:
+) -> Tuple[int, Tuple[int, ...], float | None]:
     """Convert JSON format back to random state tuple"""
     return (
         state_dict["version"],
@@ -188,6 +190,7 @@ class StateSnapShot:
         self.flow_number = python_instance._flow_num
         self._python_state = copy.deepcopy(python_instance)
         self.chain_states = [chain.snapshot() for chain in chains]
+        assert isinstance(global_default_chain, Chain) #
         self.default_chain = global_default_chain
         self.random_state = random_state
 
@@ -223,7 +226,9 @@ class OverRunException(Exception):
 
 @dataclass
 class ReproducibleFlowState:
-    random_state: tuple[int, tuple[int, ...], float | None]
+    random_state: Tuple[int, Tuple[int, ...], float | None]
+    # If only wake_rs.Chain is used, this field will be `Tuple[Tuple[int, int, int, int], ...]`
+    chain_random_states: Tuple[Tuple[int, int, int, int] | None, ...]
     flow_num: int
     flow_name: str
     flow_params: List[Any]
@@ -231,6 +236,12 @@ class ReproducibleFlowState:
     def to_dict(self):
         return {
             "random_state": serialize_random_state(self.random_state),
+
+            # JSON serialization automatically converts tuples to lists. to be consistent, we convert to list here.
+            "chain_random_state": [
+                list(state) if state is not None else None
+                for state in self.chain_random_states
+            ],
             "flow_num": self.flow_num,
             "flow_name": self.flow_name,
             "flow_params": self.flow_params,
@@ -240,6 +251,11 @@ class ReproducibleFlowState:
     def from_dict(cls, data):
         return cls(
             random_state=deserialize_random_state(data["random_state"]),
+            # JSON deserialization automatically converts tuple to list. to be consistent, we use list when in dict.
+            chain_random_states=tuple(
+                tuple(state) if state is not None else None
+                for state in data["chain_random_state"]
+            ),
             flow_num=data["flow_num"],
             flow_name=data["flow_name"],
             flow_params=data["flow_params"],
@@ -318,6 +334,7 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
     flows: List[Callable] = __get_methods(test_instance, "flow")
     invariants: List[Callable] = __get_methods(test_instance, "invariant")
     shrank_path = get_shrank_path()
+    chains = get_connected_chains()
     if shrank_path is None:
         raise Exception("Shrunken data file path not found")
     # read shrank json file
@@ -351,6 +368,10 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
             test_instance
         ):
             random.setstate(store_data.required_flows[j].random_state)
+            for chain, chain_random_state in zip(chains, store_data.required_flows[j].chain_random_states):
+                if chain_random_state is not None:
+                    assert isinstance(chain, wake_rs.Chain)
+                    chain.rng = chain_random_state
             test_instance.pre_flow(flow)
             flow(test_instance, *flow_params)
             test_instance.post_flow(flow)
@@ -395,6 +416,7 @@ def shrink_collecting_phase(
         test_instance._flow_num = 0
         test_instance.pre_sequence()
         exception_content = None
+
         try:
             for j in range(flows_count):
 
@@ -448,6 +470,26 @@ def shrink_collecting_phase(
                     ]
                     random_state = random.getstate()
 
+                    # This redundancy caused by wake_rs Chain class and core.Chain class existance.
+                    chain_random_states = ()
+                    for chain in chains:
+                        if isinstance(chain, wake_rs.Chain):
+                            chain_random_states += (chain.rng,)
+                        else:
+                            chain_random_states += (None,)
+
+                    flow_states.append(
+                        FlowState(
+                            random_state=random_state,
+                            chain_random_states=chain_random_states,
+                            flow_name=flow.__name__,
+                            flow_params=flow_params,
+                            flow_num=j,
+                            flow=flow,
+                        )
+                    )
+
+
                     test_instance.pre_flow(flow)
                     ret = flow(test_instance, *flow_params)  # Execute the selected flow
                     test_instance.post_flow(flow)
@@ -465,26 +507,18 @@ def shrink_collecting_phase(
                             valid_flows.pop(index)
                             weights.pop(index)
                             flow_exit_reasons[flow] = ret[0]
+                            flow_states.pop()
                     elif isinstance(ret, str):
                         flow_stats[flow.__name__][ret] += 1
                         index = valid_flows.index(flow)
                         valid_flows.pop(index)
                         weights.pop(index)
                         flow_exit_reasons[flow] = ret
+                        flow_states.pop()
                     else:
                         flow_stats[flow.__name__][None] += 1
                         flows_counter[flow] += 1
                         break
-
-                flow_states.append(
-                    FlowState(
-                        random_state=random_state,
-                        flow_name=flow.__name__,
-                        flow_params=flow_params,
-                        flow_num=j,
-                        flow=flow,
-                    )
-                )
 
                 test_instance.pre_invariants()
                 for inv in invariants:
@@ -503,15 +537,6 @@ def shrink_collecting_phase(
             exception = "Unfailing"
             raise Exception(exception)
         except Exception as e:
-            flow_states.append(
-                FlowState(
-                    random_state=random_state,
-                    flow_name=flow.__name__,
-                    flow_params=flow_params,
-                    flow_num=j,
-                    flow=flow,
-                )
-            )
             exception_content = e
             print("Exception: ", e)
             print("test_instance._flow_num: ", test_instance._flow_num)
@@ -547,7 +572,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(
         "Fuzz test shrink start! First of all, collect random/flow information!!! >_<"
     )
-    initial_state: tuple[int, tuple[int, ...], float | None] = deserialize_random_state(
+    initial_state: Tuple[int, Tuple[int, ...], float | None] = deserialize_random_state(
         get_sequence_initial_internal_state()
     )
 
@@ -659,6 +684,13 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
                     curr_flow_state = flow_states[j]
                     random.setstate(curr_flow_state.random_state)
+
+                    # This redundancy caused by wake_rs Chain class and core.Chain class existance.
+                    for chain, chain_random_state in zip(chains, curr_flow_state.chain_random_states):
+                        if chain_random_state is not None:
+                            assert isinstance(chain, wake_rs.Chain)
+                            chain.rng = chain_random_state
+
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
                     test_instance._flow_num = j
@@ -795,6 +827,12 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
                     curr_flow_state = flow_states[j]
                     random.setstate(curr_flow_state.random_state)
+
+                    # This redundancy caused by wake_rs Chain class and core.Chain class existance.
+                    for chain, chain_random_state in zip(chains, curr_flow_state.chain_random_states):
+                        if chain_random_state is not None:
+                            assert isinstance(chain, wake_rs.Chain)
+                            chain.rng = chain_random_state
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
