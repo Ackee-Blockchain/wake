@@ -167,6 +167,7 @@ class StateSnapShot:
         overwrite: bool,
         random_state: Any | None = None,
     ):
+        print("take snapshot")
         if not overwrite:
             assert self._python_state is None, "Python state already exists"
             assert self.chain_states == [], "Chain state already exists"
@@ -182,10 +183,10 @@ class StateSnapShot:
             )
             assert self.default_chain is not None, "Default chain is missing"
         # assert self._python_state is None, "Python state already exists"
-        self._python_state = new_instance
+        # self._python_state = new_instance
 
         self.flow_number = python_instance._flow_num
-        self._python_state.__dict__.update(copy.deepcopy(python_instance.__dict__))
+        self._python_state = copy.deepcopy(python_instance)
         self.chain_states = [chain.snapshot() for chain in chains]
         self.default_chain = global_default_chain
         self.random_state = random_state
@@ -196,6 +197,7 @@ class StateSnapShot:
         chains: Tuple[Chain, ...],
         with_random_state: bool = False,
     ):
+        print("revert")
         global global_default_chain
         assert self.chain_states != [], "Chain snapshot is missing"
         assert self._python_state is not None, "Python state snapshot is missing "
@@ -384,7 +386,12 @@ def shrink_collecting_phase(
     # Snapshot all connected chains
     initial_chain_state_snapshots = [chain.snapshot() for chain in chains]
     random.setstate(initial_state)
-    with print_ignore():
+    exception = None
+
+    flow_stats: Dict[str, Dict[Optional[str], int]] = {
+        f.__name__: defaultdict(int) for f in flows
+    }
+    with print_ignore(debug=False):
         test_instance._flow_num = 0
         test_instance.pre_sequence()
         exception_content = None
@@ -406,32 +413,69 @@ def shrink_collecting_phase(
                     )
                 ]
                 weights = [getattr(f, "weight") for f in valid_flows]
-                if len(valid_flows) == 0:
-                    max_times_flows = [
-                        f
-                        for f in flows
-                        if hasattr(f, "max_times")
-                        and flows_counter[f] >= getattr(f, "max_times")
-                    ]
-                    precondition_flows = [
-                        f
-                        for f in flows
-                        if hasattr(f, "precondition")
-                        and not getattr(f, "precondition")(test_instance)
-                    ]
-                    raise Exception(
-                        f"Could not find a valid flow to run.\nFlows that have reached their max_times: {max_times_flows}\nFlows that do not satisfy their precondition: {precondition_flows}"
-                    )
 
-                # Pick a flow and generate the parameters
-                flow = random.choices(valid_flows, weights=weights)[0]
-                flow_params = [
-                    generate(v)
-                    for k, v in get_type_hints(flow, include_extras=True).items()
-                    if k != "return"
-                ]
+                test_instance._flow_num = j
+                flow_exit_reasons = {}
 
-                random_state = random.getstate()
+                while True:
+                    if len(valid_flows) == 0:
+                        max_times_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "max_times")
+                            and flows_counter[f] >= getattr(f, "max_times")
+                        ]
+                        precondition_flows = [
+                            f
+                            for f in flows
+                            if hasattr(f, "precondition")
+                            and not getattr(f, "precondition")(test_instance)
+                        ]
+                        print("oh nonnnn")
+                        raise Exception(
+                            f"Could not find a valid flow to run.\n"
+                            f"Flows that have reached their max_times: {max_times_flows}\n"
+                            f"Flows that do not satisfy their precondition: {precondition_flows}\n"
+                            f"Flows that terminated with failure: {flow_exit_reasons}"
+                        )
+
+                    # Pick a flow and generate the parameters
+                    flow = random.choices(valid_flows, weights=weights)[0]
+                    flow_params = [
+                        generate(v)
+                        for k, v in get_type_hints(flow, include_extras=True).items()
+                        if k != "return"
+                    ]
+                    random_state = random.getstate()
+
+                    test_instance.pre_flow(flow)
+                    ret = flow(test_instance, *flow_params)  # Execute the selected flow
+                    test_instance.post_flow(flow)
+
+                    if isinstance(ret, tuple):
+                        assert (
+                            len(ret) == 2
+                        ), "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
+                        flow_stats[flow.__name__][ret[0]] += 1
+                        if ret[1]:
+                            flows_counter[flow] += 1
+                            break
+                        else:
+                            index = valid_flows.index(flow)
+                            valid_flows.pop(index)
+                            weights.pop(index)
+                            flow_exit_reasons[flow] = ret[0]
+                    elif isinstance(ret, str):
+                        flow_stats[flow.__name__][ret] += 1
+                        index = valid_flows.index(flow)
+                        valid_flows.pop(index)
+                        weights.pop(index)
+                        flow_exit_reasons[flow] = ret
+                    else:
+                        flow_stats[flow.__name__][None] += 1
+                        flows_counter[flow] += 1
+                        break
+
                 flow_states.append(
                     FlowState(
                         random_state=random_state,
@@ -441,12 +485,6 @@ def shrink_collecting_phase(
                         flow=flow,
                     )
                 )
-
-                test_instance._flow_num = j
-                test_instance.pre_flow(flow)
-                flow(test_instance, *flow_params)  # Execute the selected flow
-                flows_counter[flow] += 1
-                test_instance.post_flow(flow)
 
                 test_instance.pre_invariants()
                 for inv in invariants:
@@ -459,17 +497,37 @@ def shrink_collecting_phase(
                     if invariant_periods[inv] == getattr(inv, "period"):
                         invariant_periods[inv] = 0
                 test_instance.post_invariants()
+
             test_instance.post_sequence()
         except OverRunException:
-            raise AssertionError("Unexpected un-failing flow")
+            exception = "Unfailing"
+            raise Exception(exception)
         except Exception as e:
+            flow_states.append(
+                FlowState(
+                    random_state=random_state,
+                    flow_name=flow.__name__,
+                    flow_params=flow_params,
+                    flow_num=j,
+                    flow=flow,
+                )
+            )
             exception_content = e
-            assert test_instance._flow_num == error_flow_num, "Unexpected failing flow"
+            print("Exception: ", e)
+            print("test_instance._flow_num: ", test_instance._flow_num)
+            print("error_flow_num: ", error_flow_num)
+            if test_instance._flow_num != error_flow_num: #Unexpected failing flow
+                exception = "Failing"
+                raise Exception(exception)
+
         finally:
+            print("finally")
             for snapshot, chain in zip(initial_chain_state_snapshots, chains):
                 chain.revert(snapshot)
             initial_chain_state_snapshots = []
 
+    if exception is not None:
+        raise Exception(exception)
     # calculate time spent
     second_time = datetime.now()
     time_spent = second_time - data_time
@@ -505,6 +563,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     if error_flow_num < 1:
         raise Exception("Flow number is less than 1, not supported for shrinking")
 
+    print("error_flow_num: ", error_flow_num)
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
         test_instance,
         flows,
@@ -524,7 +583,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
     random.setstate(initial_state)
     # ignore print for pre_sequence logging
-    with print_ignore():
+    with print_ignore(debug=False):
         test_instance._flow_num = 0
         test_instance._sequence_num = 0
         test_instance.pre_sequence()
@@ -726,6 +785,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     # Execute untill curr flow.(curr flow is not executed yet) and take snapshot, since we still do not know if it is required or not.
                     # curr == 0 state is already taken.
                     if j == curr and curr != 0:
+                        print("snapshot diring brute force")
+
                         states.take_snapshot(
                             test_instance, test_class(), chains, overwrite=True
                         )
@@ -746,10 +807,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
 
-                    test_instance.pre_invariants()
+
                     if (not ONLY_TARGET_INVARIANTS and flow_states[j].required) or (
                         ONLY_TARGET_INVARIANTS and j == error_flow_num
                     ):
+                        test_instance.pre_invariants()
                         for inv in invariants:
                             if invariant_periods[inv] == 0:
                                 test_instance.pre_invariant(inv)
@@ -759,7 +821,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             invariant_periods[inv] += 1
                             if invariant_periods[inv] == getattr(inv, "period"):
                                 invariant_periods[inv] = 0
-                    test_instance.post_invariants()
+                        test_instance.post_invariants()
                 test_instance.post_sequence()
             except OverRunException:
                 flow_states[curr].required = True
