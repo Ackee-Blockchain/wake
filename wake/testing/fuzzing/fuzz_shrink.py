@@ -200,7 +200,6 @@ class StateSnapShot:
         chains: Tuple[Chain, ...],
         with_random_state: bool = False,
     ):
-        print("revert")
         global global_default_chain
         assert self.chain_states != [], "Chain snapshot is missing"
         assert self._python_state is not None, "Python state snapshot is missing "
@@ -218,10 +217,21 @@ class StateSnapShot:
             random.setstate(self.random_state)
         global_default_chain = self.default_chain
 
-
+# Exception to detect if the flow is over run.
 class OverRunException(Exception):
     def __init__(self):
         super().__init__("Overrun")
+
+
+# Exception to detect Exception in shrinking process. not in the test
+class ShrinkingTestException(Exception):  # Change to inherit from BaseException instead
+    def __init__(self, message: str):
+        super().__init__(f"CRITICAL SHRINKING ERROR: {message}")
+
+@dataclass
+class BlockTimeInfo:
+    block_number: int
+    block_timestamp: int
 
 
 @dataclass
@@ -232,6 +242,7 @@ class ReproducibleFlowState:
     flow_num: int
     flow_name: str
     flow_params: List[Any]
+    chain_block_time_infos: dict[int, BlockTimeInfo] # chain_id -> block_number
 
     def to_dict(self):
         return {
@@ -245,6 +256,7 @@ class ReproducibleFlowState:
             "flow_num": self.flow_num,
             "flow_name": self.flow_name,
             "flow_params": self.flow_params,
+            "chain_block_time_infos": self.chain_block_time_infos,
         }
 
     @classmethod
@@ -259,6 +271,7 @@ class ReproducibleFlowState:
             flow_num=data["flow_num"],
             flow_name=data["flow_name"],
             flow_params=data["flow_params"],
+            chain_block_time_infos=data["chain_block_time_infos"],
         )
 
 
@@ -454,7 +467,7 @@ def shrink_collecting_phase(
                             and not getattr(f, "precondition")(test_instance)
                         ]
                         print("oh nonnnn")
-                        raise Exception(
+                        raise ShrinkingTestException(
                             f"Could not find a valid flow to run.\n"
                             f"Flows that have reached their max_times: {max_times_flows}\n"
                             f"Flows that do not satisfy their precondition: {precondition_flows}\n"
@@ -477,6 +490,12 @@ def shrink_collecting_phase(
                             chain_random_states += (chain.rng,)
                         else:
                             chain_random_states += (None,)
+                    chain_block_time_infos = {}
+                    for chain in chains:
+                        chain_block_time_infos[chain.chain_id] = BlockTimeInfo(
+                            block_number=chain.blocks["latest"].number,
+                            block_timestamp=chain.blocks["latest"].timestamp
+                        )
 
                     flow_states.append(
                         FlowState(
@@ -486,6 +505,7 @@ def shrink_collecting_phase(
                             flow_params=flow_params,
                             flow_num=j,
                             flow=flow,
+                            chain_block_time_infos=chain_block_time_infos,
                         )
                     )
 
@@ -495,9 +515,8 @@ def shrink_collecting_phase(
                     test_instance.post_flow(flow)
 
                     if isinstance(ret, tuple):
-                        assert (
-                            len(ret) == 2
-                        ), "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
+                        if not len(ret) == 2:
+                            raise ShrinkingTestException("Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)")
                         flow_stats[flow.__name__][ret[0]] += 1
                         if ret[1]:
                             flows_counter[flow] += 1
@@ -537,13 +556,15 @@ def shrink_collecting_phase(
             exception = "Unfailing"
             raise Exception(exception)
         except Exception as e:
+            if isinstance(e, ShrinkingTestException):
+                raise
             exception_content = e
             print("Exception: ", e)
             print("test_instance._flow_num: ", test_instance._flow_num)
             print("error_flow_num: ", error_flow_num)
             if test_instance._flow_num != error_flow_num: #Unexpected failing flow
                 exception = "Failing"
-                raise Exception(exception)
+                raise
 
         finally:
             print("finally")
@@ -551,6 +572,7 @@ def shrink_collecting_phase(
                 chain.revert(snapshot)
             initial_chain_state_snapshots = []
 
+    # VERYFYING but remove later
     if exception is not None:
         raise Exception(exception)
     # calculate time spent
@@ -564,7 +586,6 @@ def shrink_collecting_phase(
 
 
 def shrink_test(test_class: type[FuzzTest], flows_count: int):
-    import inspect
     import json
 
     error_flow_num = get_executing_flow_num()  # argument
@@ -586,7 +607,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print("Shrinking flow length: ", error_flow_num)
 
     if error_flow_num < 1:
-        raise Exception("Flow number is less than 1, not supported for shrinking")
+        raise ShrinkingTestException("Flow number is less than 1, not supported for shrinking")
 
     print("error_flow_num: ", error_flow_num)
     exception_content, time_spent_for_one_fuzz = shrink_collecting_phase(
@@ -632,7 +653,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     sorted_flows = sorted(
         flows, key=lambda x: (-flow_states_map[x.__name__], x.__name__)
     )
-    assert len(sorted_flows) == len(flows)
+    if not len(sorted_flows) == len(flows):
+        raise ShrinkingTestException(f"sorted_flows length must be equal to flows length: {len(sorted_flows)} == {len(flows)}")
+
+
+
     number_of_multiple_flows = 0
     for flow_state in flow_states:
         if flow_states_map[flow_state.flow_name] > 1:
@@ -673,7 +698,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         shortcut = False
         j: int = 0
         reason: str = ""
-        with print_ignore(debug=False):
+        test_exception: ShrinkingTestException | None = None
+        with print_ignore(debug=True):
             try:
                 for j in range(flows_count):
                     if j == -1:  # this condition applies only curr == 0
@@ -688,19 +714,41 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     # This redundancy caused by wake_rs Chain class and core.Chain class existance.
                     for chain, chain_random_state in zip(chains, curr_flow_state.chain_random_states):
                         if chain_random_state is not None:
-                            assert isinstance(chain, wake_rs.Chain)
+                            if not isinstance(chain, wake_rs.Chain):
+                                raise ShrinkingTestException("chain must be wake_rs.Chain")
+
                             chain.rng = chain_random_state
+
+                        chain_block_time_info = curr_flow_state.chain_block_time_infos[chain.chain_id]
+                        print("timestamp from: ", chain.blocks["latest"].timestamp)
+                        # assert chain.blocks["latest"].number <= chain_block_time_info.block_number, "block number must be smaller" # shrink remove flows, so it must be less than current block number
+                        if not chain.blocks["latest"].timestamp <= chain_block_time_info.block_timestamp:
+                            raise ShrinkingTestException(f"block timestamp must be smaller: {chain.blocks['latest'].timestamp} < {chain_block_time_info.block_timestamp} at {j} th flow") # shrink remove flows, so it must be less than current block timestamp
+                        # chain.mine_many(chain_block_time_info.block_number - chain.blocks["latest"].number, chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
+                        print("timestamp difference: ", chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
+
+                        if chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp > 0:
+                            chain.mine(lambda _: chain_block_time_info.block_timestamp)
+
+                        # assert chain.blocks["latest"].number == chain_block_time_info.block_number, "block number must be equal"
+                        print("timestamp: ", chain.blocks["latest"].timestamp)
+                        if not chain.blocks["latest"].timestamp == chain_block_time_info.block_timestamp:
+                            raise ShrinkingTestException(f"block timestamp must be equal: {chain.blocks['latest'].timestamp} == {chain_block_time_info.block_timestamp} at {j} th flow")
 
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
+
                     test_instance._flow_num = j
                     if flow_states[j].required and flow != curr_removing_flow:
                         if not hasattr(flow, "precondition") or getattr(
                             flow, "precondition"
                         )(test_instance):
                             test_instance.pre_flow(flow)
+                            print(f"{j} th flow: {flow.__name__}")
+
                             flow(test_instance, *flow_params)
                             test_instance.post_flow(flow)
+                            print("flow done")
 
                     test_instance.pre_invariants()
                     if (
@@ -724,8 +772,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
             except OverRunException:
                 print("overrun!")
                 reason = "Over run (did not reproduce error)"
-
+            except ShrinkingTestException as e:
+                test_exception = e
             except Exception as e:
+                # This developper of shrinking fault. stop shrinking.
                 reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the test file.
                 if (
@@ -733,7 +783,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 ) and compare_exceptions(e, exception_content):
                     if test_instance._flow_num != error_flow_num:
                         shortcut = True
-                        assert test_instance._flow_num == j
+                        if not test_instance._flow_num == j:
+                            test_exception = ShrinkingTestException(f"test_instance._flow_num must be equal to j: {test_instance._flow_num} == {j}")
 
                     # The removed flow is not necessary to reproduce the same error.  Try to remove next flow
                     for flow_state_ in flow_states[:j]:  # 0 to until index j
@@ -749,12 +800,17 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     success = False
             finally:
                 # Revert to the snapshot state which has data until the "curr".
+
                 states.revert(test_instance, chains)
                 states.take_snapshot(
                     test_instance, test_class(), chains, overwrite=False
                 )
 
-        clear_previous_lines(4)
+
+        if test_exception is not None:
+            raise test_exception
+
+        # clear_previous_lines(4)
         if success:
             print("Remove result: ", curr_removing_flow.__name__, " ✅", end="")
             if shortcut:
@@ -786,7 +842,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         curr += 1
     # remove flow by brute force
     while curr <= error_flow_num:
-        assert flow_states[curr].required == True
+        if not flow_states[curr].required:
+            raise ShrinkingTestException(f"flow_states[curr].required must be True: {flow_states[curr].required} == True")
         flow_states[curr].required = False
         invariant_periods: DefaultDict[Callable[[None], None], int] = defaultdict(int)
         print("")
@@ -829,10 +886,21 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     random.setstate(curr_flow_state.random_state)
 
                     # This redundancy caused by wake_rs Chain class and core.Chain class existance.
-                    for chain, chain_random_state in zip(chains, curr_flow_state.chain_random_states):
-                        if chain_random_state is not None:
-                            assert isinstance(chain, wake_rs.Chain)
-                            chain.rng = chain_random_state
+                    for chain in chains:
+                        chain_block_time_info = curr_flow_state.chain_block_time_infos[chain.chain_id]
+                        if not isinstance(chain, wake_rs.Chain):
+                            raise ShrinkingTestException("chain must be wake_rs.Chain")
+                        # assert chain.blocks["latest"].number < chain_block_time_info.block_number, f"block number must be smaller: {chain.blocks['latest'].number} < {chain_block_time_info.block_number}" # shrink remove flows, so it must be less than current block number
+                        if not chain.blocks["latest"].timestamp <= chain_block_time_info.block_timestamp:
+                            raise ShrinkingTestException(f"block timestamp must be smaller: {chain.blocks['latest'].timestamp} < {chain_block_time_info.block_timestamp}") # shrink remove flows, so it must be less than current block timestamp
+                        # chain.mine_many(chain_block_time_info.block_number - chain.blocks["latest"].number, chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
+
+                        chain.mine(lambda _: chain_block_time_info.block_timestamp)
+
+
+                        # assert chain.blocks["latest"].number == chain_block_time_info.block_number, f"block number must be equal: {chain.blocks['latest'].number} == {chain_block_time_info.block_number}"
+                        if not chain.blocks["latest"].timestamp == chain_block_time_info.block_timestamp:
+                            raise ShrinkingTestException(f"block timestamp must be equal: {chain.blocks['latest'].timestamp} == {chain_block_time_info.block_timestamp}")
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
@@ -865,7 +933,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                 flow_states[curr].required = True
                 success = False
                 reason = "Over run (Did not reproduce error)"
+            except ShrinkingTestException as e:
+                raise
             except Exception as e:
+                if isinstance(e, ShrinkingTestException):
+                    raise
                 reason = "at " + str(j) + " with " + str(e)
                 # Check exception type and exception lines in the test file.
                 if (
@@ -958,7 +1030,8 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         flow_states[i] for i in range(len(flow_states)) if flow_states[i].required
     ]
     current_test_id = get_current_test_id()
-    assert current_test_id is not None
+    if current_test_id is None:
+        raise ShrinkingTestException("current_test_id must not be None")
     store_data: ShrankInfoFile = ShrankInfoFile(
         target_fuzz_node=current_test_id,
         initial_state=get_sequence_initial_internal_state(),
