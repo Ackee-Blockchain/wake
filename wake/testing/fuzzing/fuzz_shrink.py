@@ -155,12 +155,13 @@ class StateSnapShot:
     flow_number: int | None  # Current flow number
     random_state: Any | None
     default_chain: Chain | None
+    chain_random_states: Tuple[Tuple[int, int, int, int]] | None # if user only use wake rs, this field will be `Tuple[Tuple[int, int, int, int], ...]`
 
     def __init__(self):
         self._python_state = None
         self.chain_states = []
         self.flow_number = None
-
+        self.chain_random_states = None
     def take_snapshot(
         self,
         python_instance: FuzzTest,
@@ -169,7 +170,6 @@ class StateSnapShot:
         overwrite: bool,
         random_state: Any | None = None,
     ):
-        print("take snapshot")
         if not overwrite:
             assert self._python_state is None, "Python state already exists"
             assert self.chain_states == [], "Chain state already exists"
@@ -177,12 +177,6 @@ class StateSnapShot:
             assert self._python_state is not None, "Python state (snapshot) is missing"
             assert self.chain_states != [], "Chain state is missing"
             assert self.flow_number is not None, "Flow number is missing"
-            print(
-                "Overwriting state ",
-                self.flow_number,
-                " to ",
-                python_instance._flow_num,
-            )
             assert self.default_chain is not None, "Default chain is missing"
         # assert self._python_state is None, "Python state already exists"
         # self._python_state = new_instance
@@ -192,6 +186,14 @@ class StateSnapShot:
         self.chain_states = [chain.snapshot() for chain in chains]
         assert isinstance(global_default_chain, Chain) #
         self.default_chain = global_default_chain
+
+        chain_random_states_list = []
+        for chain in chains:
+            if isinstance(chain, wake_rs.Chain):
+                chain_random_states_list.append(chain.rng)
+            else:
+                chain_random_states_list.append(None)
+        self.chain_random_states = tuple(chain_random_states_list)
         self.random_state = random_state
 
     def revert(
@@ -215,6 +217,12 @@ class StateSnapShot:
         if with_random_state:
             assert self.random_state is not None, "Random state is missing"
             random.setstate(self.random_state)
+
+            assert self.chain_random_states is not None, "Chain random states are missing"
+            for chain, chain_random_state in zip(chains, self.chain_random_states):
+                if chain_random_state is not None:
+                    assert isinstance(chain, wake_rs.Chain)
+                    chain.rng = chain_random_state
         global_default_chain = self.default_chain
 
 # Exception to detect if the flow is over run.
@@ -232,6 +240,20 @@ class ShrinkingTestException(Exception):  # Change to inherit from BaseException
 class BlockTimeInfo:
     block_number: int
     block_timestamp: int
+
+
+    def to_dict(self):
+        return {
+            "block_number": self.block_number,
+            "block_timestamp": self.block_timestamp,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            block_number=data["block_number"],
+            block_timestamp=data["block_timestamp"],
+        )
 
 
 @dataclass
@@ -256,7 +278,10 @@ class ReproducibleFlowState:
             "flow_num": self.flow_num,
             "flow_name": self.flow_name,
             "flow_params": self.flow_params,
-            "chain_block_time_infos": self.chain_block_time_infos,
+            "chain_block_time_infos": {
+                str(chain_id): block_time_info.to_dict()  # Convert BlockTimeInfo to dict
+                for chain_id, block_time_info in self.chain_block_time_infos.items()
+            },
         }
 
     @classmethod
@@ -271,9 +296,11 @@ class ReproducibleFlowState:
             flow_num=data["flow_num"],
             flow_name=data["flow_name"],
             flow_params=data["flow_params"],
-            chain_block_time_infos=data["chain_block_time_infos"],
+            chain_block_time_infos={
+                int(chain_id): BlockTimeInfo.from_dict(block_time_info_dict)  # Convert dict back to BlockTimeInfo
+                for chain_id, block_time_info_dict in data["chain_block_time_infos"].items()
+            },
         )
-
 
 @dataclass
 class FlowState(ReproducibleFlowState):
@@ -656,8 +683,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     if not len(sorted_flows) == len(flows):
         raise ShrinkingTestException(f"sorted_flows length must be equal to flows length: {len(sorted_flows)} == {len(flows)}")
 
-
-
     number_of_multiple_flows = 0
     for flow_state in flow_states:
         if flow_states_map[flow_state.flow_name] > 1:
@@ -699,7 +724,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         j: int = 0
         reason: str = ""
         test_exception: ShrinkingTestException | None = None
-        with print_ignore(debug=True):
+        with print_ignore(debug=False):
             try:
                 for j in range(flows_count):
                     if j == -1:  # this condition applies only curr == 0
@@ -707,6 +732,10 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
                     if j > error_flow_num:
                         raise OverRunException()
+
+                    previous_flow_state = None
+                    if j > 0:
+                        previous_flow_state = flow_states[j-1]
 
                     curr_flow_state = flow_states[j]
                     random.setstate(curr_flow_state.random_state)
@@ -718,22 +747,16 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                                 raise ShrinkingTestException("chain must be wake_rs.Chain")
 
                             chain.rng = chain_random_state
+                        # If previous flow is not executed, we add timestamp for execution to make execution of current flow timestamp the same. (or potencially more future)
+                        relative_timestamp = 0
+                        if previous_flow_state is not None and not previous_flow_state.required: # not required means not executed
 
-                        chain_block_time_info = curr_flow_state.chain_block_time_infos[chain.chain_id]
-                        print("timestamp from: ", chain.blocks["latest"].timestamp)
-                        # assert chain.blocks["latest"].number <= chain_block_time_info.block_number, "block number must be smaller" # shrink remove flows, so it must be less than current block number
-                        if not chain.blocks["latest"].timestamp <= chain_block_time_info.block_timestamp:
-                            raise ShrinkingTestException(f"block timestamp must be smaller: {chain.blocks['latest'].timestamp} < {chain_block_time_info.block_timestamp} at {j} th flow") # shrink remove flows, so it must be less than current block timestamp
-                        # chain.mine_many(chain_block_time_info.block_number - chain.blocks["latest"].number, chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
-                        print("timestamp difference: ", chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
+                            relative_timestamp = curr_flow_state.chain_block_time_infos[chain.chain_id].block_timestamp - previous_flow_state.chain_block_time_infos[chain.chain_id].block_timestamp
+                        if curr_flow_state.chain_block_time_infos[chain.chain_id].block_timestamp > chain.blocks["latest"].timestamp:
+                            relative_timestamp = curr_flow_state.chain_block_time_infos[chain.chain_id].block_timestamp - chain.blocks["latest"].timestamp
 
-                        if chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp > 0:
-                            chain.mine(lambda _: chain_block_time_info.block_timestamp)
-
-                        # assert chain.blocks["latest"].number == chain_block_time_info.block_number, "block number must be equal"
-                        print("timestamp: ", chain.blocks["latest"].timestamp)
-                        if not chain.blocks["latest"].timestamp == chain_block_time_info.block_timestamp:
-                            raise ShrinkingTestException(f"block timestamp must be equal: {chain.blocks['latest'].timestamp} == {chain_block_time_info.block_timestamp} at {j} th flow")
+                        if relative_timestamp > 0:
+                            chain.mine(lambda x : x + relative_timestamp)
 
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
@@ -750,7 +773,6 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             test_instance.post_flow(flow)
                             print("flow done")
 
-                    test_instance.pre_invariants()
                     if (
                         not ONLY_TARGET_INVARIANTS
                         and flow_states[j].required
@@ -758,6 +780,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     ) or (
                         ONLY_TARGET_INVARIANTS and j == error_flow_num
                     ):  # this would be changed
+                        test_instance.pre_invariants()
                         for inv in invariants:
                             if invariant_periods[inv] == 0:
                                 test_instance.pre_invariant(inv)
@@ -767,7 +790,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                             invariant_periods[inv] += 1
                             if invariant_periods[inv] == getattr(inv, "period"):
                                 invariant_periods[inv] = 0
-                    test_instance.post_invariants()
+                        test_instance.post_invariants()
                 test_instance.post_sequence()
             except OverRunException:
                 print("overrun!")
@@ -810,7 +833,7 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
         if test_exception is not None:
             raise test_exception
 
-        # clear_previous_lines(4)
+        clear_previous_lines(4)
         if success:
             print("Remove result: ", curr_removing_flow.__name__, " ✅", end="")
             if shortcut:
@@ -883,24 +906,31 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                     print("flow: ", j, flow_states[j].flow.__name__)
 
                     curr_flow_state = flow_states[j]
-                    random.setstate(curr_flow_state.random_state)
+
+
+                    previous_flow_state = None
+                    if j > 0:
+                        previous_flow_state = flow_states[j-1]
 
                     # This redundancy caused by wake_rs Chain class and core.Chain class existance.
                     for chain in chains:
                         chain_block_time_info = curr_flow_state.chain_block_time_infos[chain.chain_id]
                         if not isinstance(chain, wake_rs.Chain):
                             raise ShrinkingTestException("chain must be wake_rs.Chain")
-                        # assert chain.blocks["latest"].number < chain_block_time_info.block_number, f"block number must be smaller: {chain.blocks['latest'].number} < {chain_block_time_info.block_number}" # shrink remove flows, so it must be less than current block number
-                        if not chain.blocks["latest"].timestamp <= chain_block_time_info.block_timestamp:
-                            raise ShrinkingTestException(f"block timestamp must be smaller: {chain.blocks['latest'].timestamp} < {chain_block_time_info.block_timestamp}") # shrink remove flows, so it must be less than current block timestamp
-                        # chain.mine_many(chain_block_time_info.block_number - chain.blocks["latest"].number, chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
 
-                        chain.mine(lambda _: chain_block_time_info.block_timestamp)
+                        # If previous flow is not executed, we add timestamp for execution to make execution of current flow timestamp the same. (or potencially more future)
+                        relative_timestamp = 0
+                        if previous_flow_state is not None and not previous_flow_state.required: # not required means not executed # TODO SURE?
 
+                            relative_timestamp = chain_block_time_info.block_timestamp - previous_flow_state.chain_block_time_infos[chain.chain_id].block_timestamp
 
-                        # assert chain.blocks["latest"].number == chain_block_time_info.block_number, f"block number must be equal: {chain.blocks['latest'].number} == {chain_block_time_info.block_number}"
-                        if not chain.blocks["latest"].timestamp == chain_block_time_info.block_timestamp:
-                            raise ShrinkingTestException(f"block timestamp must be equal: {chain.blocks['latest'].timestamp} == {chain_block_time_info.block_timestamp}")
+                        if chain_block_time_info.block_timestamp > chain.blocks["latest"].timestamp:
+                            relative_timestamp = chain_block_time_info.block_timestamp - chain.blocks["latest"].timestamp
+
+                        if relative_timestamp > 0:
+                            chain.mine(lambda x : x + relative_timestamp)
+
+                    random.setstate(curr_flow_state.random_state)
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
