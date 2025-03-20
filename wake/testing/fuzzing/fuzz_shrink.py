@@ -43,6 +43,8 @@ from ..core import get_connected_chains
 from .fuzz_test import FuzzTest
 from .generators import generate
 
+SNAPSHOT_PERIOD = 2
+
 EXACT_FLOW_INDEX = (
     get_shrink_exact_flow()
 )  # Set True if you accept the same error that happened earlier than the crash log.
@@ -1081,6 +1083,110 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
     print(f"Shrunken data file written to {shrank_file}")
 
 
+def validate_flows(
+    flows: List[Callable],
+    flows_counter: DefaultDict[Callable, int],
+    test_instance: FuzzTest
+) -> Tuple[List[Callable], List[float]]:
+    """Validate and return valid flows with their weights"""
+    valid_flows = [
+        f for f in flows
+        if (not hasattr(f, "max_times") or flows_counter[f] < getattr(f, "max_times"))
+        and (not hasattr(f, "precondition") or getattr(f, "precondition")(test_instance))
+    ]
+    weights = [getattr(f, "weight") for f in valid_flows]
+    return valid_flows, weights
+
+def raise_no_valid_flows_error(flows: List[Callable], flows_counter: DefaultDict[Callable, int], test_instance: FuzzTest):
+    max_times_flows = [
+        f for f in flows
+        if hasattr(f, "max_times") and flows_counter[f] >= getattr(f, "max_times")
+    ]
+    precondition_flows = [
+        f for f in flows
+        if hasattr(f, "precondition") and not getattr(f, "precondition")(test_instance)
+    ]
+    raise Exception(
+        f"Could not find a valid flow to run.\n"
+        f"Flows that have reached their max_times: {max_times_flows}\n"
+        f"Flows that do not satisfy their precondition: {precondition_flows}"
+    )
+
+def handle_flow_return(
+    ret: Any,
+    flow: Callable,
+    flow_stats: Dict[str, Dict[Optional[str], int]],
+    flows_counter: DefaultDict[Callable, int],
+    valid_flows: List[Callable],
+    weights: List[float],
+    flow_exit_reasons: Dict[Callable, str]
+) -> bool:
+    """
+    Handle the return value from a flow execution and update relevant state.
+
+    Args:
+        ret: Return value from flow execution
+        flow: The flow that was executed
+        flow_stats: Statistics about flow executions
+        flows_counter: Counter tracking flow executions
+        valid_flows: List of currently valid flows
+        weights: Weights corresponding to valid flows
+        flow_exit_reasons: Mapping of flows to their exit reasons
+
+    Returns:
+        bool: True if should break from flow selection loop, False otherwise
+    """
+    if isinstance(ret, tuple):
+        assert len(ret) == 2, "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
+        exit_reason, count_flow = ret
+        flow_stats[flow.__name__][exit_reason] += 1
+
+        if count_flow:
+            flows_counter[flow] += 1
+            return True
+        else:
+            index = valid_flows.index(flow)
+            valid_flows.pop(index)
+            weights.pop(index)
+            flow_exit_reasons[flow] = exit_reason
+            return False
+
+    elif isinstance(ret, str):
+        flow_stats[flow.__name__][ret] += 1
+        index = valid_flows.index(flow)
+        valid_flows.pop(index)
+        weights.pop(index)
+        flow_exit_reasons[flow] = ret
+        return False
+
+    else:
+        flow_stats[flow.__name__][None] += 1
+        flows_counter[flow] += 1
+        return True
+
+def print_flow_exception_info(e: Exception, sequence_num: int, flow_num: int) -> bool:
+    # print exception
+    import rich.traceback
+    rich_tb = rich.traceback.Traceback.from_exception(
+        type(e), e, e.__traceback__
+    )
+    console.print(rich_tb)
+    console.print("sequence: ", sequence_num)
+    console.print("flow: ", flow_num)
+    console.print("Flow Step Execution")
+    console.print("Options:")
+    console.print("1. Go Exception Flow")
+    console.print("2. Exit")
+    while True:
+        choice = input("Enter your choice (1-2): ").strip()
+        if choice == "1":
+            return True # continue iteration
+        elif choice == "2":
+            return False # raise exception and exit
+        else:
+            console.print("Invalid choice. Please enter 1 or 2.")
+
+
 def single_fuzz_test(
     test_class: type[FuzzTest],
     sequences_count: int,
@@ -1102,6 +1208,14 @@ def single_fuzz_test(
         f.__name__: defaultdict(int) for f in flows
     }
 
+    states = StateSnapShot()
+    flows_counter_snapshots: DefaultDict[Callable, int] = defaultdict(int)
+    invariant_periods_snapshots: DefaultDict[Callable[[None], None], int] = defaultdict(int)
+
+    debug_config_flow_select_iteration = 0
+    debug_config_debugging_flow_num = 0
+    debug_config_is_debugging = False
+
     try:
         for i in range(sequences_count):
             flows_counter: DefaultDict[Callable, int] = defaultdict(int)
@@ -1121,97 +1235,96 @@ def single_fuzz_test(
             test_instance._sequence_num = i
             test_instance.pre_sequence()
 
-            for j in range(flows_count):
-                valid_flows = [
-                    f
-                    for f in flows
-                    if (
-                        not hasattr(f, "max_times")
-                        or flows_counter[f] < getattr(f, "max_times")
-                    )
-                    and (
-                        not hasattr(f, "precondition")
-                        or getattr(f, "precondition")(test_instance)
-                    )
-                ]
-                weights = [getattr(f, "weight") for f in valid_flows]
+            # State Snapshot
+            states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate())
+            flows_counter_snapshots = flows_counter.copy()
+            invariant_periods_snapshots = invariant_periods.copy()
+
+            j = 0
+            while j < flows_count:
+
+                if j % SNAPSHOT_PERIOD == 0:
+                    # take snapshot
+                    states.take_snapshot(test_instance, test_class(), chains, overwrite=True, random_state=random.getstate())
+                    flows_counter_snapshots = flows_counter.copy()
+                    invariant_periods_snapshots = invariant_periods.copy()
+
+                valid_flows, weights = validate_flows(flows, flows_counter, test_instance)
 
                 test_instance._flow_num = j
                 set_executing_flow_num(j)
                 flow_exit_reasons = {}
 
-                while True:
-                    if len(valid_flows) == 0:
-                        max_times_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "max_times")
-                            and flows_counter[f] >= getattr(f, "max_times")
+                flow_select_iteration = 0
+                try:
+                    while True:
+                        flow_select_iteration += 1
+
+                        if len(valid_flows) == 0:
+                            raise_no_valid_flows_error(flows, flows_counter, test_instance)
+
+                        # Pick a flow and generate the parameters
+                        flow = random.choices(valid_flows, weights=weights)[0]
+                        flow_params = [
+                            generate(v)
+                            for k, v in get_type_hints(flow, include_extras=True).items()
+                            if k != "return"
                         ]
-                        precondition_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "precondition")
-                            and not getattr(f, "precondition")(test_instance)
-                        ]
-                        raise Exception(
-                            f"Could not find a valid flow to run.\n"
-                            f"Flows that have reached their max_times: {max_times_flows}\n"
-                            f"Flows that do not satisfy their precondition: {precondition_flows}\n"
-                            f"Flows that terminated with failure: {flow_exit_reasons}"
-                        )
 
-                    # Pick a flow and generate the parameters
-                    flow = random.choices(valid_flows, weights=weights)[0]
-                    flow_params = [
-                        generate(v)
-                        for k, v in get_type_hints(flow, include_extras=True).items()
-                        if k != "return"
-                    ]
+                        test_instance.pre_flow(flow)
+                        if (
+                            debug_config_is_debugging
+                            and debug_config_debugging_flow_num == j
+                            and debug_config_flow_select_iteration == flow_select_iteration
+                            ):
 
-                    test_instance.pre_flow(flow)
-                    ret = flow(test_instance, *flow_params)  # Execute the selected flow
-                    test_instance.post_flow(flow)
+                            from ipdb.__main__ import _init_pdb
+                            frame = sys._getframe()  # Get the parent frame
+                            p = _init_pdb(commands=["s", "s", "n"])  # Initialize with two step commands
+                            p.context = 15
+                            p.set_trace(frame)# enter at top of debugging flow
 
-                    if isinstance(ret, tuple):
-                        assert (
-                            len(ret) == 2
-                        ), "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
-                        flow_stats[flow.__name__][ret[0]] += 1
-                        if ret[1]:
-                            flows_counter[flow] += 1
+                        ret = flow(test_instance, *flow_params)  # Execute the selected flow
+                        test_instance.post_flow(flow)
+
+                        if handle_flow_return(ret, flow, flow_stats, flows_counter, valid_flows, weights, flow_exit_reasons):
                             break
-                        else:
-                            index = valid_flows.index(flow)
-                            valid_flows.pop(index)
-                            weights.pop(index)
-                            flow_exit_reasons[flow] = ret[0]
-                    elif isinstance(ret, str):
-                        flow_stats[flow.__name__][ret] += 1
-                        index = valid_flows.index(flow)
-                        valid_flows.pop(index)
-                        weights.pop(index)
-                        flow_exit_reasons[flow] = ret
-                    else:
-                        flow_stats[flow.__name__][None] += 1
-                        flows_counter[flow] += 1
-                        break
 
-                if not dry_run:
-                    test_instance.pre_invariants()
-                    for inv in invariants:
-                        if invariant_periods[inv] == 0:
-                            test_instance.pre_invariant(inv)
-                            inv(test_instance)
-                            test_instance.post_invariant(inv)
+                    if not dry_run:
+                        test_instance.pre_invariants()
+                        for inv in invariants:
+                            if invariant_periods[inv] == 0:
+                                test_instance.pre_invariant(inv)
+                                inv(test_instance)
+                                test_instance.post_invariant(inv)
 
-                        invariant_periods[inv] += 1
-                        if invariant_periods[inv] == getattr(inv, "period"):
-                            invariant_periods[inv] = 0
-                    test_instance.post_invariants()
+                            invariant_periods[inv] += 1
+                            if invariant_periods[inv] == getattr(inv, "period"):
+                                invariant_periods[inv] = 0
+                        test_instance.post_invariants()
 
+                    j += 1
+                except Exception as e:
+                    # print exception
+                    if not print_flow_exception_info(e, test_instance._sequence_num, test_instance._flow_num):
+                        raise
+                    # set debug configs
+                    debug_config_debugging_flow_num = j
+                    debug_config_flow_select_iteration = flow_select_iteration
+                    debug_config_is_debugging = True
+
+                    # revert to previous state
+                    states.revert(test_instance, chains, with_random_state=True)
+                    states.take_snapshot(test_instance, test_class(), chains, overwrite=False, random_state=random.getstate()) # not necessary
+                    flows_counter = flows_counter_snapshots.copy()
+                    invariant_periods = invariant_periods_snapshots.copy()
+                    j = test_instance._flow_num
+                    j += 1
+
+                    continue # continue iteration
+
+            # TODO, when exception in post_seqence.
             test_instance.post_sequence()
-
             # Revert all chains back to their initial snapshot
             for snapshot, chain in zip(snapshots, chains):
                 chain.revert(snapshot)
