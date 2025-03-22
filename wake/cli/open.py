@@ -38,8 +38,17 @@ from .param_types import Chain
     default=False,
     help="Overwrite existing project",
 )
+@click.option(
+    "--export",
+    type=click.Choice(["json"]),
+)
 def run_open(
-    uri: str, chain: int, branch: Optional[str], path: Optional[str], force: bool
+    uri: str,
+    chain: int,
+    branch: Optional[str],
+    path: Optional[str],
+    force: bool,
+    export: Optional[str],
 ) -> None:
     """
     Fetch project from Github or Etherscan-like explorer.
@@ -64,17 +73,29 @@ def run_open(
 
         asyncio.run(
             open_address(
-                uri, chain, None if path is None else Path(path).resolve(), force
+                uri,
+                chain,
+                None if path is None else Path(path).resolve(),
+                force,
+                export,
             )
         )
 
     # github repository
     else:
+        if export is not None:
+            raise click.ClickException(
+                "Exporting to file is not supported for github repositories"
+            )
         open_github(uri, branch, None if path is None else Path(path).resolve(), force)
 
 
 async def open_address(
-    address: str, chain_id: int, project_dir: Optional[Path], force: bool
+    address: str,
+    chain_id: int,
+    project_dir: Optional[Path],
+    force: bool,
+    export: Optional[str],
 ) -> None:
     import json
 
@@ -101,37 +122,45 @@ async def open_address(
         col=0,
     )
 
-    if project_dir.exists() and any(project_dir.iterdir()) and not force:
+    if (
+        project_dir.exists()
+        and any(project_dir.iterdir())
+        and not force
+        and export is None
+    ):
         existing_files = list(project_dir.iterdir())
-        if len(existing_files) != 1 or existing_files[0].name not in {
-            "sourcify_v2.json",
-            "etherscan.json",
-        }:
+        if not all(
+            f.name
+            in {
+                "sourcify.json",
+                "sourcify_v2.json",
+                "etherscan.json",
+                ".wake",
+            }
+            for f in existing_files
+        ):
             console.print(
                 f"{address} already exists at [link={link}]{project_dir}[/link]"
             )
             return
 
     with console.status(f"Fetching {address} from explorer..."):
-        info, source = get_info_from_explorer(address, chain_id, config)
+        info, source = get_info_from_explorer(address, chain_id, config, force=force)
 
     if source == "sourcify":
         version = SolidityVersion.fromstring(info["compilation"]["compilerVersion"])
+        name = info["compilation"]["name"]
+        full_name = info["compilation"]["fullyQualifiedName"]
 
         if any(
-            f
-            for f in info["sources"].keys()
-            if f.endswith(".sol") and PurePosixPath(f).is_absolute()
+            "content" not in s or s["content"] is None for s in info["sources"].values()
         ):
-            raise NotImplementedError("Absolute paths are not supported")
+            raise ValueError("Reading Solidity source code from URL is not supported")
 
-        sources = {}
-        for source_unit_name, content in info["sources"].items():
-            if "content" not in content:
-                raise ValueError(
-                    "Reading Solidity source code from URL is not supported"
-                )
-            sources[project_dir / source_unit_name] = content["content"]
+        sources = {
+            source_unit_name: content["content"]
+            for source_unit_name, content in info["sources"].items()
+        }
 
         config_dict = {"compiler": {"solc": {"target_version": str(version)}}}
 
@@ -163,6 +192,8 @@ async def open_address(
         if compiler_version.startswith("v"):
             compiler_version = compiler_version[1:]
         version = SolidityVersion.fromstring(compiler_version)
+        name = info["ContractName"]
+        full_name = None
 
         optimizations = bool(info["OptimizationUsed"])
         runs = info["Runs"]
@@ -182,11 +213,7 @@ async def open_address(
         code = info["SourceCode"]
         try:
             standard_input: SolcInput = SolcInput.model_validate_json(code[1:-1])
-            if any(
-                PurePosixPath(filename).is_absolute()
-                for filename in standard_input.sources.keys()
-            ):
-                raise NotImplementedError("Absolute paths are not supported")
+
             if standard_input.settings is not None:
                 if standard_input.settings.evm_version is not None:
                     config_dict["compiler"]["solc"]["evm_version"] = str(
@@ -211,6 +238,11 @@ async def open_address(
                         ] = standard_input.settings.optimizer.runs
                     # TODO optimizer details
 
+            if any(s.content is None for s in standard_input.sources.values()):
+                raise ValueError(
+                    "Reading Solidity source code from URL is not supported"
+                )
+
             sources = {
                 project_dir / path: source.content
                 for path, source in standard_input.sources.items()
@@ -219,27 +251,66 @@ async def open_address(
             try:
                 a = TypeAdapter(Dict[str, SolcInputSource])
                 s = a.validate_json(code)
-                if any(PurePosixPath(filename).is_absolute() for filename in s.keys()):
-                    raise NotImplementedError("Absolute paths are not supported")
 
-                sources = {
-                    project_dir / path: source.content for path, source in s.items()
-                }
+                if any(source.content is None for source in s.values()):
+                    raise ValueError(
+                        "Reading Solidity source code from URL is not supported"
+                    )
+
+                sources = {path: source.content for path, source in s.items()}
             except (ValidationError, json.JSONDecodeError) as e:
-                sources = {project_dir / "contracts" / "Source.sol": code}
+                sources = {"contracts/Source.sol": code}
 
-    svm = SolcVersionManager(config)
-    if not svm.installed(version):
-        await svm.install(version)
+    if export == "json":
+        import platform
 
-    with console.status(f"Writing {address} to {project_dir}..."):
-        for path, content in sources.items():
-            if content is None:
-                continue
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content)
+        from wake.utils import get_package_version
 
-    project_dir.joinpath("wake.toml").write_text(tomli_w.dumps(config_dict))
+        out = {
+            "version": get_package_version("eth-wake"),
+            "system": platform.system(),
+            "project_root": str(project_dir),
+            "wake_contracts_path": str(config.wake_contracts_path),
+            "config": config_dict,
+            "sources": {
+                str(project_dir / k): {"content": v} for k, v in sources.items()
+            },
+            "extra": {
+                "name": name,
+            },
+        }
+
+        if full_name is not None:
+            out["extra"]["full_name"] = full_name
+
+        output_dir = project_dir / ".wake"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "sources.json").write_text(json.dumps(out))
+    elif export is not None:
+        raise click.ClickException("Invalid export format")
+    else:
+        from wake.utils import is_relative_to
+
+        if any(PurePosixPath(f).is_absolute() for f in sources.keys()):
+            raise NotImplementedError("Absolute paths are not supported")
+
+        svm = SolcVersionManager(config)
+        if not svm.installed(version):
+            await svm.install(version)
+
+        with console.status(f"Writing {address} to {project_dir}..."):
+            for source_unit_name, content in sources.items():
+                path = project_dir / source_unit_name
+
+                if not is_relative_to(path, project_dir):
+                    raise NotImplementedError(
+                        "Relative paths outside of project directory are not supported"
+                    )
+
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+
+        project_dir.joinpath("wake.toml").write_text(tomli_w.dumps(config_dict))
 
     console.print(f"Opened {address} at [link={link}]{project_dir}[/link]")
 

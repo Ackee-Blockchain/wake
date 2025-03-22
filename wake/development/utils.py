@@ -1612,16 +1612,17 @@ def _get_etherscan_info(
 
 
 def get_info_from_explorer(
-    addr: str, chain_id: int, config: WakeConfig
+    addr: str, chain_id: int, config: WakeConfig, *, force: bool = False
 ) -> Tuple[Dict[str, Any], str]:
     cache_dir = config.global_cache_path / "explorers" / str(chain_id) / addr.lower()
 
-    if (cache_dir / "sourcify_v2.json").exists():
-        with open(cache_dir / "sourcify_v2.json", "r") as f:
-            return json.load(f), "sourcify"
-    elif (cache_dir / "etherscan.json").exists():
-        with open(cache_dir / "etherscan.json", "r") as f:
-            return json.load(f), "etherscan"
+    if not force:
+        if (cache_dir / "sourcify_v2.json").exists():
+            with open(cache_dir / "sourcify_v2.json", "r") as f:
+                return json.load(f), "sourcify"
+        elif (cache_dir / "etherscan.json").exists():
+            with open(cache_dir / "etherscan.json", "r") as f:
+                return json.load(f), "etherscan"
 
     api_key = next(
         (
