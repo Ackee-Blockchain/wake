@@ -77,7 +77,6 @@ async def open_address(
     address: str, chain_id: int, project_dir: Optional[Path], force: bool
 ) -> None:
     import json
-    import urllib.request
 
     import tomli_w
     from pydantic import TypeAdapter, ValidationError

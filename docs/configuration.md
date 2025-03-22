@@ -17,7 +17,6 @@ Wake can be configured using configuration options loaded from multiple sources 
 
     [api_keys]
     # etherscan = "" (unset - no Etherscan API key)
-    # "goerli.etherscan" = "" (unset - no Goerli Etherscan API key)
     # ...
 
     [compiler.solc]
@@ -154,8 +153,8 @@ Command-line arguments for each command can be displayed using the `--help` opti
 
 ### `api_keys` namespace
 
-The `api_keys` namespace may contain API keys for Etherscan, BscScan, PolygonScan, etc.
-Blockchain explorer API keys are stored under the lowercase name of the explorer with a subdomain prefix if needed (e.g. `goerli.etherscan`).
+The `api_keys` namespace may contain API keys for Etherscan and other services.
+Etherscan v2 API is used so one API key is used for all supported chains.
 
 Additionally, detectors and printers may use this namespace to load needed API keys.
 

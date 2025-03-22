@@ -7,6 +7,7 @@ import inspect
 import json
 import logging
 import math
+import time
 import warnings
 from dataclasses import dataclass
 from functools import lru_cache
@@ -25,7 +26,7 @@ from typing import (
     TypeVar,
     Union,
 )
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -71,82 +72,54 @@ class ChainExplorer:
     url: str
     api_url: str
 
-    @property
-    def config_key(self) -> str:
-        return ".".join(urlparse(self.url).netloc.split(".")[:-1])
+
+def retry_with_backoff(
+    retries: int = 5,
+    initial_delay: float = 1.0,
+    max_delay: float = 60.0,
+    exponential_base: float = 2.0,
+    exceptions: tuple = (URLError, HTTPError),
+):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            delay = initial_delay
+            last_exception = None
+
+            for i in range(retries):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exception = e
+                    if i == retries - 1:
+                        raise
+                    time.sleep(delay)
+                    delay = min(delay * exponential_base, max_delay)
+
+            raise last_exception
+
+        return wrapper
+
+    return decorator
 
 
-chain_explorer_urls: Dict[int, ChainExplorer] = {
-    1: ChainExplorer("https://etherscan.io", "https://api.etherscan.io/api"),
-    5: ChainExplorer(
-        "https://goerli.etherscan.io", "https://api-goerli.etherscan.io/api"
-    ),
-    56: ChainExplorer("https://bscscan.com", "https://api.bscscan.com/api"),
-    97: ChainExplorer(
-        "https://testnet.bscscan.com", "https://api-testnet.bscscan.com/api"
-    ),
-    137: ChainExplorer("https://polygonscan.com", "https://api.polygonscan.com/api"),
-    80001: ChainExplorer(
-        "https://mumbai.polygonscan.com", "https://api-mumbai.polygonscan.com/api"
-    ),
-    43114: ChainExplorer("https://snowtrace.io/", "https://api.snowtrace.io/api"),
-    43113: ChainExplorer(
-        "https://testnet.snowtrace.io/", "https://api-testnet.snowtrace.io/api"
-    ),
-    10: ChainExplorer(
-        "https://optimistic.etherscan.io/", "https://api-optimistic.etherscan.io/api"
-    ),
-    420: ChainExplorer(
-        "https://goerli-optimism.etherscan.io/",
-        "https://api-goerli-optimism.etherscan.io/api",
-    ),
-    100: ChainExplorer("https://gnosisscan.io/", "https://api.gnosisscan.io/api"),
-    42161: ChainExplorer("https://arbiscan.io/", "https://api.arbiscan.io/api"),
-    421613: ChainExplorer(
-        "https://testnet.arbiscan.io/", "https://api-testnet.arbiscan.io/api"
-    ),
-    84531: ChainExplorer(
-        "https://goerli.basescan.org/", "https://api-goerli.basescan.org/api"
-    ),
-    11155111: ChainExplorer(
-        "https://sepolia.etherscan.io/", "https://api-sepolia.etherscan.io/api"
-    ),
-    1101: ChainExplorer(
-        "https://zkevm.polygonscan.com/", "https://api-zkevm.polygonscan.com/api"
-    ),
-    1442: ChainExplorer(
-        "https://testnet-zkevm.polygonscan.com/",
-        "https://api-testnet-zkevm.polygonscan.com/api",
-    ),
-    42220: ChainExplorer(
-        "https://celoscan.io/",
-        "https://api.celoscan.io/api",
-    ),
-    44787: ChainExplorer(
-        "https://alfajores.celoscan.io/",
-        "https://api-alfajores.celoscan.io/api",
-    ),
-    1284: ChainExplorer(
-        "https://moonscan.io/",
-        "https://api-moonbeam.moonscan.io/api",
-    ),
-    1287: ChainExplorer(
-        "https://moonbase.moonscan.io/",
-        "https://api-moonbase.moonscan.io/api",
-    ),
-    250: ChainExplorer(
-        "https://ftmscan.com/",
-        "https://api.ftmscan.com/api",
-    ),
-    4002: ChainExplorer(
-        "https://testnet.ftmscan.com/",
-        "https://api-testnet.ftmscan.com/api",
-    ),
-    17000: ChainExplorer(
-        "https://holesky.etherscan.io/",
-        "https://api-holesky.etherscan.io/api",
-    ),
-}
+@lru_cache()
+@retry_with_backoff()
+def get_etherscan_explorer_info() -> Dict[int, ChainExplorer]:
+    req = Request(
+        "https://api.etherscan.io/v2/chainlist",
+        headers={
+            "Accept": "application/json",
+            "User-Agent": f"wake/{get_package_version('eth-wake')}",
+        },
+    )
+    with urlopen(req) as response:
+        data = json.load(response)
+
+        return {
+            int(r["chainid"]): ChainExplorer(r["blockexplorer"], r["apiurl"])
+            for r in data["result"]
+        }
 
 
 def format_int(x: int) -> str:
@@ -1251,7 +1224,7 @@ def _update_erc20_balance(
 
 
 def _get_storage_layout(
-    contract: Union[Account, Type[Contract]]
+    contract: Union[Account, Type[Contract]],
 ) -> SolcOutputStorageLayout:
     if inspect.isclass(contract):
         if not hasattr(contract, "_storage_layout"):
@@ -1264,7 +1237,7 @@ def _get_storage_layout(
         if contract.chain._forked_chain_id is None:
             raise ValueError("Contract not found")
 
-        if contract.chain._forked_chain_id not in chain_explorer_urls:
+        if contract.chain._forked_chain_id not in get_etherscan_explorer_info():
             raise ValueError(
                 f"Chain explorer URL not found for chain ID {contract.chain._forked_chain_id}"
             )
@@ -1591,6 +1564,7 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, Dict]:
     return name, abi_dict
 
 
+@retry_with_backoff()
 def get_info_from_explorer(
     addr: str, chain_id: int, config: WakeConfig
 ) -> Tuple[Dict[str, Any], str]:
@@ -1603,16 +1577,20 @@ def get_info_from_explorer(
         with open(cache_dir / "etherscan.json", "r") as f:
             return json.load(f), "etherscan"
 
-    if chain_id not in chain_explorer_urls:
-        api_key = None
-    else:
-        u = urlparse(chain_explorer_urls[chain_id].url)
-        api_key = config.api_keys.get(".".join(u.netloc.split(".")[:-1]), None)
+    api_key = next(
+        (
+            config.api_keys[k]
+            for k in config.api_keys.keys()
+            if k.lower() == "etherscan"
+        ),
+        None,
+    )
 
-    if api_key is not None:
+    if api_key is not None and chain_id in get_etherscan_explorer_info():
+        api_url = get_etherscan_explorer_info()[chain_id].api_url
         url = (
-            chain_explorer_urls[chain_id].api_url
-            + f"?module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+            api_url
+            + f"&module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
         )
         req = Request(
             url,
@@ -1626,7 +1604,7 @@ def get_info_from_explorer(
             parsed = json.loads(response.read().decode("utf-8"))
 
         if parsed["status"] != "1":
-            raise ValueError(f"Request to {u.netloc} failed: {parsed['result']}")
+            raise ValueError(f"Request to {api_url} failed: {parsed['result']}")
 
         cache_dir.mkdir(parents=True, exist_ok=True)
         with open(cache_dir / "etherscan.json", "w") as f:
@@ -1649,11 +1627,10 @@ def get_info_from_explorer(
                 parsed = json.loads(response.read().decode("utf-8"))
         except HTTPError as e:
             if e.code == 404:
-                if chain_id in chain_explorer_urls:
-                    u = urlparse(chain_explorer_urls[chain_id].url)
+                if chain_id in get_etherscan_explorer_info():
                     raise AbiNotFound(
                         method="sourcify",
-                        api_key_name=".".join(u.netloc.split(".")[:-1]),
+                        api_key_name="etherscan",
                     ) from None
                 else:
                     raise AbiNotFound(method="sourcify") from None
