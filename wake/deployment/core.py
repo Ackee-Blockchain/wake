@@ -34,7 +34,7 @@ from wake.development.transactions import (
     TransactionAbc,
     TransactionStatusEnum,
 )
-from wake.development.utils import chain_explorer_urls
+from wake.development.utils import get_etherscan_explorer_info
 from wake.utils.formatters import format_wei
 
 
@@ -307,8 +307,9 @@ class Chain(wake.development.core.Chain):
         self, tx: TransactionAbc, confirmations: Optional[int]
     ) -> None:
         def get_pending_text():
-            if tx.chain.chain_id in chain_explorer_urls:
-                text = f"Waiting for transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] to be mined\n"
+            explorers = get_etherscan_explorer_info()
+            if tx.chain.chain_id in explorers:
+                text = f"Waiting for transaction [link={explorers[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] to be mined\n"
             else:
                 text = f"Waiting for transaction {tx.tx_hash} to be mined\n"
 
@@ -361,9 +362,10 @@ class Chain(wake.development.core.Chain):
                     status.update(get_pending_text())
 
         if not config.deployment.silent:
-            if tx.chain.chain_id in chain_explorer_urls:
+            explorers = get_etherscan_explorer_info()
+            if tx.chain.chain_id in explorers:
                 console.print(
-                    f"Transaction [link={chain_explorer_urls[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block_number}"
+                    f"Transaction [link={explorers[tx.chain.chain_id].url}/tx/{tx.tx_hash}]{tx.tx_hash}[/link] mined in block {tx.block_number}"
                 )
             else:
                 console.print(
