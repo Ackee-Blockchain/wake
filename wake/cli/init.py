@@ -643,6 +643,16 @@ def run_init(
         write_config(config)
 
 
+@run_init.command(name="gitignore")
+@click.pass_context
+def run_init_gitignore(ctx: Context) -> None:
+    """Initialize .gitignore file."""
+    config: WakeConfig = ctx.obj["config"]
+
+    # update .gitignore, --force is not needed
+    update_gitignore(config.project_root_path / ".gitignore")
+
+
 async def run_init_pytypes(
     config: WakeConfig,
     return_tx: bool,
