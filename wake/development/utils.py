@@ -12,7 +12,7 @@ import warnings
 from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import (
     Any,
     Callable,
@@ -1548,6 +1548,69 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, Dict]:
 
 
 @retry_with_backoff()
+def _get_sourcify_info(addr: str, chain_id: int, cache_dir: Path) -> Dict[str, Any]:
+    url = f"https://sourcify.dev/server/v2/contract/{chain_id}/{addr}?fields=all"
+
+    req = Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": f"wake/{get_package_version('eth-wake')}",
+        },
+    )
+
+    try:
+        with urlopen(req) as response:
+            parsed = json.loads(response.read().decode("utf-8"))
+    except HTTPError as e:
+        if e.code == 404:
+            if chain_id in get_etherscan_explorer_info():
+                raise AbiNotFound(
+                    method="sourcify",
+                    api_key_name="etherscan",
+                ) from None
+            else:
+                raise AbiNotFound(method="sourcify") from None
+        else:
+            raise
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    with open(cache_dir / "sourcify_v2.json", "w") as f:
+        json.dump(parsed, f)
+
+    return parsed
+
+
+@retry_with_backoff()
+def _get_etherscan_info(
+    addr: str, chain_id: int, api_key: str, cache_dir: Path
+) -> Dict[str, Any]:
+    api_url = get_etherscan_explorer_info()[chain_id].api_url
+    url = (
+        api_url
+        + f"&module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
+    )
+    req = Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": f"wake/{get_package_version('eth-wake')}",
+        },
+    )
+
+    with urlopen(req) as response:
+        parsed = json.loads(response.read().decode("utf-8"))
+
+    if parsed["status"] != "1":
+        raise ValueError(f"Request to {api_url} failed: {parsed['result']}")
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    with open(cache_dir / "etherscan.json", "w") as f:
+        json.dump(parsed["result"][0], f)
+
+    return parsed["result"][0]
+
+
 def get_info_from_explorer(
     addr: str, chain_id: int, config: WakeConfig
 ) -> Tuple[Dict[str, Any], str]:
@@ -1569,62 +1632,12 @@ def get_info_from_explorer(
         None,
     )
 
-    if api_key is not None and chain_id in get_etherscan_explorer_info():
-        api_url = get_etherscan_explorer_info()[chain_id].api_url
-        url = (
-            api_url
-            + f"&module=contract&action=getsourcecode&address={addr}&apikey={api_key}"
-        )
-        req = Request(
-            url,
-            headers={
-                "Accept": "application/json",
-                "User-Agent": f"wake/{get_package_version('eth-wake')}",
-            },
-        )
-
-        with urlopen(req) as response:
-            parsed = json.loads(response.read().decode("utf-8"))
-
-        if parsed["status"] != "1":
-            raise ValueError(f"Request to {api_url} failed: {parsed['result']}")
-
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        with open(cache_dir / "etherscan.json", "w") as f:
-            json.dump(parsed["result"][0], f)
-
-        return parsed["result"][0], "etherscan"
-    else:
-        url = f"https://sourcify.dev/server/v2/contract/{chain_id}/{addr}?fields=all"
-
-        req = Request(
-            url,
-            headers={
-                "Accept": "application/json",
-                "User-Agent": f"wake/{get_package_version('eth-wake')}",
-            },
-        )
-
-        try:
-            with urlopen(req) as response:
-                parsed = json.loads(response.read().decode("utf-8"))
-        except HTTPError as e:
-            if e.code == 404:
-                if chain_id in get_etherscan_explorer_info():
-                    raise AbiNotFound(
-                        method="sourcify",
-                        api_key_name="etherscan",
-                    ) from None
-                else:
-                    raise AbiNotFound(method="sourcify") from None
-            else:
-                raise
-
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        with open(cache_dir / "sourcify_v2.json", "w") as f:
-            json.dump(parsed, f)
-
-        return parsed, "sourcify"
+    try:
+        return _get_sourcify_info(addr, chain_id, cache_dir), "sourcify"
+    except Exception:
+        if api_key is not None and chain_id in get_etherscan_explorer_info():
+            return _get_etherscan_info(addr, chain_id, api_key, cache_dir), "etherscan"
+        raise
 
 
 # should already be called with address of implementation contract
