@@ -25,7 +25,7 @@ class SourcePathResolver:
         There may be more steps implemented in the future. For example, we can add support for GitHub URLs.
         NPM packages can be easily resolved using the `include_paths` config option.
         """
-        matching_paths = []
+        matching_paths = set()
 
         for include_path in itertools.chain(
             [self.__config.project_root_path],
@@ -34,9 +34,9 @@ class SourcePathResolver:
         ):
             path = Path(include_path / source_unit_name)
             if path.is_file():
-                matching_paths.append(path)
+                matching_paths.add(path)
             elif path in virtual_files:
-                matching_paths.append(path)
+                matching_paths.add(path)
 
         if len(matching_paths) == 0:
             raise CompilationResolveError(
@@ -48,7 +48,7 @@ class SourcePathResolver:
             for matching_path in matching_paths:
                 err += f"\n{matching_path}"
             raise CompilationResolveError(err)
-        return matching_paths[0]
+        return matching_paths.pop()
 
     def matches(self, source_unit_name: str, file: Path) -> bool:
         """
