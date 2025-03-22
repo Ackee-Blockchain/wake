@@ -104,7 +104,7 @@ async def open_address(
     if project_dir.exists() and any(project_dir.iterdir()) and not force:
         existing_files = list(project_dir.iterdir())
         if len(existing_files) != 1 or existing_files[0].name not in {
-            "sourcify.json",
+            "sourcify_v2.json",
             "etherscan.json",
         }:
             console.print(
@@ -116,35 +116,45 @@ async def open_address(
         info, source = get_info_from_explorer(address, chain_id, config)
 
     if source == "sourcify":
-        metadata = json.loads(
-            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
-        )
-        version = SolidityVersion.fromstring(metadata["compiler"]["version"])
+        version = SolidityVersion.fromstring(info["compilation"]["compilerVersion"])
 
         if any(
             f
-            for f in info["files"]
-            if f["name"].endswith(".sol") and PurePosixPath(f["name"]).is_absolute()
+            for f in info["sources"].keys()
+            if f.endswith(".sol") and PurePosixPath(f).is_absolute()
         ):
             raise NotImplementedError("Absolute paths are not supported")
 
-        sources = {
-            project_dir
-            / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
-            for file in info["files"]
-            if file["name"].endswith(".sol")
-        }
+        sources = {}
+        for source_unit_name, content in info["sources"].items():
+            if "content" not in content:
+                raise ValueError(
+                    "Reading Solidity source code from URL is not supported"
+                )
+            sources[project_dir / source_unit_name] = content["content"]
 
-        config_dict = {
-            "compiler": {
-                "solc": {
-                    "target_version": str(version),
-                    "evm_version": metadata["settings"]["evmVersion"],
-                    "remappings": metadata["settings"]["remappings"],
-                    "optimizer": metadata["settings"]["optimizer"],
-                }
-            }
-        }
+        config_dict = {"compiler": {"solc": {"target_version": str(version)}}}
+
+        c = info["compilation"]["compilerSettings"]
+        if "optimizer" in c:
+            config_dict["compiler"]["solc"]["optimizer"] = {}
+            if "enabled" in c["optimizer"]:
+                config_dict["compiler"]["solc"]["optimizer"]["enabled"] = c[
+                    "optimizer"
+                ]["enabled"]
+            if "runs" in c["optimizer"]:
+                config_dict["compiler"]["solc"]["optimizer"]["runs"] = c["optimizer"][
+                    "runs"
+                ]
+
+        if "remappings" in c:
+            config_dict["compiler"]["solc"]["remappings"] = c["remappings"]
+
+        if "evmVersion" in c:
+            config_dict["compiler"]["solc"]["evm_version"] = c["evmVersion"]
+
+        if "viaIR" in c:
+            config_dict["compiler"]["solc"]["via_IR"] = c["viaIR"]
     else:
         compiler_version: str = info["CompilerVersion"]
         if compiler_version.startswith("vyper"):
