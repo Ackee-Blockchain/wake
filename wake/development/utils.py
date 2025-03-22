@@ -1522,11 +1522,8 @@ def get_name_abi_from_explorer(addr: str, chain_id: int) -> Tuple[str, Dict]:
     info, source = get_info_from_explorer(addr, chain_id, config)
 
     if source == "sourcify":
-        metadata = json.loads(
-            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
-        )
-        name = next(iter(metadata["settings"]["compilationTarget"].values()))
-        abi = metadata["output"]["abi"]
+        name = info["compilation"]["name"]
+        abi = info["abi"]
     else:
         # etherscan-like
         name = info["ContractName"]
@@ -1556,8 +1553,8 @@ def get_info_from_explorer(
 ) -> Tuple[Dict[str, Any], str]:
     cache_dir = config.global_cache_path / "explorers" / str(chain_id) / addr.lower()
 
-    if (cache_dir / "sourcify.json").exists():
-        with open(cache_dir / "sourcify.json", "r") as f:
+    if (cache_dir / "sourcify_v2.json").exists():
+        with open(cache_dir / "sourcify_v2.json", "r") as f:
             return json.load(f), "sourcify"
     elif (cache_dir / "etherscan.json").exists():
         with open(cache_dir / "etherscan.json", "r") as f:
@@ -1598,7 +1595,7 @@ def get_info_from_explorer(
 
         return parsed["result"][0], "etherscan"
     else:
-        url = f"https://sourcify.dev/server/files/any/{chain_id}/{addr}"
+        url = f"https://sourcify.dev/server/v2/contract/{chain_id}/{addr}?fields=all"
 
         req = Request(
             url,
@@ -1624,7 +1621,7 @@ def get_info_from_explorer(
                 raise
 
         cache_dir.mkdir(parents=True, exist_ok=True)
-        with open(cache_dir / "sourcify.json", "w") as f:
+        with open(cache_dir / "sourcify_v2.json", "w") as f:
             json.dump(parsed, f)
 
         return parsed, "sourcify"
@@ -1641,38 +1638,15 @@ def _get_storage_layout_from_explorer(
     info, source = get_info_from_explorer(addr, chain_id, config)
 
     if source == "sourcify":
-        # sourcify is currently Solidity-only
-        metadata = json.loads(
-            next(f for f in info["files"] if f["name"] == "metadata.json")["content"]
-        )
-        name = next(iter(metadata["settings"]["compilationTarget"].values()))
-
-        version = SolidityVersion.fromstring(metadata["compiler"]["version"])
-
-        sources = {
-            config.project_root_path
-            / PurePosixPath(*PurePosixPath(file["path"]).parts[5:]): file["content"]
-            for file in info["files"]
-            if file["name"].endswith(".sol")
-        }
-
-        config_dict = {
-            "compiler": {
-                "solc": {
-                    "target_version": str(version),
-                    "evm_version": metadata["settings"]["evmVersion"],
-                    "remappings": metadata["settings"]["remappings"],
-                    "optimizer": metadata["settings"]["optimizer"],
-                }
-                # TODO libraries should not be needed
-            }
-        }
+        if info["compilation"]["language"] != "Solidity":
+            raise ValueError("Reading storage layout is only supported for Solidity")
+        return SolcOutputStorageLayout.model_validate(info["storageLayout"])
     else:
         # etherscan-like
         name = info["ContractName"]
         compiler_version: str = info["CompilerVersion"]
         if compiler_version.startswith("vyper"):
-            raise ValueError("Cannot set balance of Vyper contract")
+            raise ValueError("Reading storage layout is only supported for Solidity")
 
         if compiler_version.startswith("v"):
             compiler_version = compiler_version[1:]
