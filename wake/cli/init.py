@@ -15,6 +15,8 @@ from .detect import DetectCli, run_detect
 from .print import PrintCli, run_print
 
 if TYPE_CHECKING:
+    from wake.compiler import SolidityCompiler
+    from wake.compiler.build_data_model import SolcOutputError
     from wake.config import WakeConfig
 
 
@@ -433,6 +435,77 @@ def update_gitignore(file: Path) -> None:
             f.write("\n" + "\n".join(new_lines))
 
 
+def update_compilation_config(
+    config: WakeConfig,
+    compiler: SolidityCompiler,
+    errors: Set[SolcOutputError],
+    sol_files: Set[Path],
+    incremental: Optional[bool],
+) -> None:
+    from ..compiler import SolcOutputSelectionEnum
+    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+
+    contract_size_limit = any(
+        e
+        for e in errors
+        if e.severity == SolcOutputErrorSeverityEnum.WARNING
+        and "Contract code size" in e.message
+    )
+    stack_too_deep = any(
+        e
+        for e in errors
+        if e.severity == SolcOutputErrorSeverityEnum.ERROR
+        and "Stack too deep" in e.message
+    )
+
+    if contract_size_limit or stack_too_deep:
+        if stack_too_deep:
+            console.print(
+                "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
+            )
+        elif contract_size_limit:
+            console.print(
+                "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
+            )
+        config.update({"compiler": {"solc": {"optimizer": {"enabled": True}}}}, [])
+
+        _, errors = asyncio.run(
+            compiler.compile(
+                sol_files,
+                [SolcOutputSelectionEnum.ALL],
+                write_artifacts=True,
+                force_recompile=False,
+                console=console,
+                no_warnings=True,
+                incremental=incremental,
+            )
+        )
+        stack_too_deep = any(
+            e
+            for e in errors
+            if e.severity == SolcOutputErrorSeverityEnum.ERROR
+            and "Stack too deep" in e.message
+        )
+
+        if stack_too_deep:
+            console.print(
+                "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
+            )
+            config.update({"compiler": {"solc": {"via_IR": True}}}, [])
+
+            _, errors = asyncio.run(
+                compiler.compile(
+                    sol_files,
+                    [SolcOutputSelectionEnum.ALL],
+                    write_artifacts=True,
+                    force_recompile=False,
+                    console=console,
+                    no_warnings=True,
+                    incremental=incremental,
+                )
+            )
+
+
 @click.group(name="up", invoke_without_command=True)
 @click.option(
     "--force", "-f", is_flag=True, default=False, help="Force overwrite existing files."
@@ -555,65 +628,10 @@ def run_init(
             )
         )
 
-        contract_size_limit = any(
-            e
-            for e in errors
-            if e.severity == SolcOutputErrorSeverityEnum.WARNING
-            and "Contract code size" in e.message
-        )
-        stack_too_deep = any(
-            e
-            for e in errors
-            if e.severity == SolcOutputErrorSeverityEnum.ERROR
-            and "Stack too deep" in e.message
-        )
+        if not (config.project_root_path / "foundry.toml").exists():
+            # check contract size limit & stack too deep and update accordingly
+            update_compilation_config(config, compiler, errors, sol_files, incremental)
 
-        if contract_size_limit or stack_too_deep:
-            if stack_too_deep:
-                console.print(
-                    "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
-                )
-            elif contract_size_limit:
-                console.print(
-                    "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
-                )
-            config.update({"compiler": {"solc": {"optimizer": {"enabled": True}}}}, [])
-
-            _, errors = asyncio.run(
-                compiler.compile(
-                    sol_files,
-                    [SolcOutputSelectionEnum.ALL],
-                    write_artifacts=True,
-                    force_recompile=False,
-                    console=console,
-                    no_warnings=True,
-                    incremental=incremental,
-                )
-            )
-            stack_too_deep = any(
-                e
-                for e in errors
-                if e.severity == SolcOutputErrorSeverityEnum.ERROR
-                and "Stack too deep" in e.message
-            )
-
-            if stack_too_deep:
-                console.print(
-                    "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
-                )
-                config.update({"compiler": {"solc": {"via_IR": True}}}, [])
-
-                _, errors = asyncio.run(
-                    compiler.compile(
-                        sol_files,
-                        [SolcOutputSelectionEnum.ALL],
-                        write_artifacts=True,
-                        force_recompile=False,
-                        console=console,
-                        no_warnings=True,
-                        incremental=incremental,
-                    )
-                )
         start = time.perf_counter()
         with console.status("[bold green]Generating pytypes..."):
             type_generator = TypeGenerator(config, False)
@@ -925,16 +943,22 @@ def run_init_config(
     import subprocess
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
-    from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
     from ..utils.file_utils import is_relative_to
 
     config: WakeConfig = ctx.obj["config"]
+
+    if config.local_config_path.exists() and not force:
+        raise click.ClickException(
+            "Config file already exists, use --force to overwrite."
+        )
 
     if (config.project_root_path / "foundry.toml").exists():
         toml = subprocess.run(["forge", "config"], capture_output=True).stdout.decode(
             "utf-8"
         )
         import_foundry_profile(config, toml, foundry_profile)
+        write_config(config)
+        return
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
@@ -969,65 +993,8 @@ def run_init_config(
             )
         )
 
-        contract_size_limit = any(
-            e
-            for e in errors
-            if e.severity == SolcOutputErrorSeverityEnum.WARNING
-            and "Contract code size" in e.message
-        )
-        stack_too_deep = any(
-            e
-            for e in errors
-            if e.severity == SolcOutputErrorSeverityEnum.ERROR
-            and "Stack too deep" in e.message
-        )
-
-        if contract_size_limit or stack_too_deep:
-            if stack_too_deep:
-                console.print(
-                    "[yellow]Stack too deep error detected. Enabling optimizer.[/]"
-                )
-            elif contract_size_limit:
-                console.print(
-                    "[yellow]Contract size limit warning detected. Enabling optimizer.[/]"
-                )
-            config.update({"compiler": {"solc": {"optimizer": {"enabled": True}}}}, [])
-
-            _, errors = asyncio.run(
-                compiler.compile(
-                    sol_files,
-                    [SolcOutputSelectionEnum.ALL],
-                    write_artifacts=True,
-                    force_recompile=False,
-                    console=console,
-                    no_warnings=True,
-                    incremental=incremental,
-                )
-            )
-            stack_too_deep = any(
-                e
-                for e in errors
-                if e.severity == SolcOutputErrorSeverityEnum.ERROR
-                and "Stack too deep" in e.message
-            )
-
-            if stack_too_deep:
-                console.print(
-                    "[yellow]Stack too deep error still detected. Enabling --via-ir.[/]"
-                )
-                config.update({"compiler": {"solc": {"via_IR": True}}}, [])
-
-                _, errors = asyncio.run(
-                    compiler.compile(
-                        sol_files,
-                        [SolcOutputSelectionEnum.ALL],
-                        write_artifacts=True,
-                        force_recompile=False,
-                        console=console,
-                        no_warnings=True,
-                        incremental=incremental,
-                    )
-                )
+        # check contract size limit & stack too deep and update accordingly
+        update_compilation_config(config, compiler, errors, sol_files, incremental)
 
     write_config(config)
 
