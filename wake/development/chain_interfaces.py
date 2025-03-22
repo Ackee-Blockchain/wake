@@ -197,12 +197,16 @@ class ChainInterfaceAbc(ABC):
 
         console.print(f"Launching {' '.join(args)}")
         try:
-            process = subprocess.Popen(args, stdout=subprocess.DEVNULL, start_new_session=True)
+            process = subprocess.Popen(
+                args, stdout=subprocess.DEVNULL, start_new_session=True
+            )
         except FileNotFoundError:
             if args[0] == "anvil" and platform.system() != "Windows":
                 args[0] = str(Path.home() / ".foundry/bin/anvil")
                 console.print(f"Launching {' '.join(args)}")
-                process = subprocess.Popen(args, stdout=subprocess.DEVNULL, start_new_session=True)
+                process = subprocess.Popen(
+                    args, stdout=subprocess.DEVNULL, start_new_session=True
+                )
             else:
                 raise
 
@@ -847,7 +851,12 @@ class GethChainInterface(GethLikeChainInterfaceAbc):
         return "Geth"
 
     def get_accounts(self) -> List[str]:
-        return self._communicator.send_request("eth_accounts")
+        try:
+            return self._communicator.send_request("eth_accounts")
+        except JsonRpcError as e:
+            if e.data.get("code", None) == -32601:
+                return []
+            raise
 
 
 class HermezChainInterface(GethLikeChainInterfaceAbc):
