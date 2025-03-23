@@ -254,6 +254,8 @@ class ChainInterfaceAbc(ABC):
                 return ErigonChainInterface(config, communicator)
             elif "nitro" in client_version:
                 return NitroChainInterface(config, communicator)
+            elif client_version.startswith("reth"):
+                return RethChainInterface(config, communicator)
             elif chain_id in {43113, 43114}:
                 # Avax client reports just a version number without the name of the client
                 # => hard to distinguish from other clients
@@ -857,6 +859,12 @@ class GethChainInterface(GethLikeChainInterfaceAbc):
             if e.data.get("code", None) == -32601:
                 return []
             raise
+
+
+class RethChainInterface(GethLikeChainInterfaceAbc):
+    @property
+    def _name(self) -> str:
+        return "Reth"
 
 
 class HermezChainInterface(GethLikeChainInterfaceAbc):
