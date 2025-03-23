@@ -495,7 +495,7 @@ class ContractDefinition(DeclarationAbc):
     def linearized_base_contracts(self) -> Tuple[ContractDefinition, ...]:
         """
         Returns:
-            C3 linearized list of all base contracts.
+            C3 linearized list of all base contracts, including this contract.
         """
         base_contracts = []
         for base_contract in self._linearized_base_contracts:
