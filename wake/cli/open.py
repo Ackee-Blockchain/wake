@@ -98,15 +98,19 @@ async def open_address(
     export: Optional[str],
 ) -> None:
     import json
+    import sys
 
     import tomli_w
     from pydantic import TypeAdapter, ValidationError
 
     from wake.compiler.solc_frontend import SolcInput, SolcInputSource
     from wake.config import WakeConfig
+    from wake.core import get_logger
     from wake.core.solidity_version import SolidityVersion
     from wake.development.utils import get_info_from_explorer
     from wake.svm import SolcVersionManager
+
+    logger = get_logger(__name__)
 
     config = WakeConfig()
     config.load_configs()
@@ -152,10 +156,15 @@ async def open_address(
         name = info["compilation"]["name"]
         full_name = info["compilation"]["fullyQualifiedName"]
 
+        if info["compilation"]["language"] != "Solidity":
+            logger.error("Only Solidity contracts are supported")
+            sys.exit(64)
+
         if any(
             "content" not in s or s["content"] is None for s in info["sources"].values()
         ):
-            raise ValueError("Reading Solidity source code from URL is not supported")
+            logger.error("Reading Solidity source code from URL is not supported")
+            sys.exit(65)
 
         sources = {
             source_unit_name: content["content"]
@@ -187,7 +196,8 @@ async def open_address(
     else:
         compiler_version: str = info["CompilerVersion"]
         if compiler_version.startswith("vyper"):
-            raise ValueError("Cannot set balance of Vyper contract")
+            logger.error("Vyper contracts are not supported")
+            sys.exit(64)
 
         if compiler_version.startswith("v"):
             compiler_version = compiler_version[1:]
@@ -239,9 +249,8 @@ async def open_address(
                     # TODO optimizer details
 
             if any(s.content is None for s in standard_input.sources.values()):
-                raise ValueError(
-                    "Reading Solidity source code from URL is not supported"
-                )
+                logger.error("Reading Solidity source code from URL is not supported")
+                sys.exit(65)
 
             sources = {
                 project_dir / path: source.content
@@ -253,9 +262,10 @@ async def open_address(
                 s = a.validate_json(code)
 
                 if any(source.content is None for source in s.values()):
-                    raise ValueError(
+                    logger.error(
                         "Reading Solidity source code from URL is not supported"
                     )
+                    sys.exit(65)
 
                 sources = {path: source.content for path, source in s.items()}
             except (ValidationError, json.JSONDecodeError) as e:
@@ -292,7 +302,8 @@ async def open_address(
         from wake.utils import is_relative_to
 
         if any(PurePosixPath(f).is_absolute() for f in sources.keys()):
-            raise NotImplementedError("Absolute paths are not supported")
+            logger.error("Absolute paths are not supported")
+            sys.exit(66)
 
         svm = SolcVersionManager(config)
         if not svm.installed(version):
@@ -303,9 +314,10 @@ async def open_address(
                 path = project_dir / source_unit_name
 
                 if not is_relative_to(path, project_dir):
-                    raise NotImplementedError(
+                    logger.error(
                         "Relative paths outside of project directory are not supported"
                     )
+                    sys.exit(67)
 
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(content)
