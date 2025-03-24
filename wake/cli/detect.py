@@ -13,6 +13,7 @@ from typing import (
     FrozenSet,
     Iterable,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -27,6 +28,7 @@ from wake.core import get_logger
 from wake.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
+    from wake.compiler.build_data_model import ProjectBuild
     from wake.config import WakeConfig
     from wake.detectors import (
         Detection,
@@ -385,6 +387,137 @@ class DetectCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         super().invoke(ctx)
 
 
+class Location(NamedTuple):
+    source_unit_name: str
+    start: int
+    end: int
+
+    def overlaps(self, other: "Location") -> bool:
+        return (
+            self.source_unit_name == other.source_unit_name
+            and self.start <= other.end
+            and self.end >= other.start
+        )
+
+
+def find_relevant_locations(build: ProjectBuild, contract_name: str) -> Set[Location]:
+    from itertools import chain
+
+    from wake.ir import ContractDefinition, ExternalReference, IdentifierPathPart, IrAbc
+
+    locations = set()
+    # collect all relevant contracts, then find structs, events, etc. referenced by them
+    contracts = set()
+
+    for source_unit in build.source_units.values():
+        for contract in source_unit.contracts:
+            if contract.name != contract_name:
+                continue
+
+            # always include global using for directives
+            for using_for in source_unit.using_for_directives:
+                if using_for.library_name is not None:
+                    contracts.add(using_for.library_name.referenced_declaration)
+                    locations.add(
+                        Location(
+                            using_for.library_name.referenced_declaration.source_unit.source_unit_name,
+                            *using_for.library_name.referenced_declaration.byte_location,
+                        )
+                    )
+
+                locations.update(
+                    [
+                        Location(
+                            f.referenced_declaration.source_unit.source_unit_name,
+                            *f.referenced_declaration.byte_location,
+                        )
+                        for f in using_for.functions
+                    ]
+                )
+
+            contracts.update(contract.linearized_base_contracts)
+            locations.update(
+                [
+                    Location(b.source_unit.source_unit_name, *b.byte_location)
+                    for b in contract.linearized_base_contracts
+                ]
+            )
+
+            for using_for in contract.using_for_directives:
+                if using_for.library_name is not None:
+                    contracts.add(using_for.library_name.referenced_declaration)
+                    locations.add(
+                        Location(
+                            using_for.library_name.referenced_declaration.source_unit.source_unit_name,
+                            *using_for.library_name.referenced_declaration.byte_location,
+                        )
+                    )
+
+                locations.update(
+                    [
+                        Location(
+                            f.referenced_declaration.source_unit.source_unit_name,
+                            *f.referenced_declaration.byte_location,
+                        )
+                        for f in using_for.functions
+                    ]
+                )
+
+    def referenced_by(ref: Union[IrAbc, ExternalReference, IdentifierPathPart]) -> bool:
+        if isinstance(ref, IdentifierPathPart):
+            ref = ref.underlying_node
+        elif isinstance(ref, ExternalReference):
+            ref = ref.inline_assembly
+
+        while not isinstance(ref, ContractDefinition):
+            if ref.parent is None:
+                return False
+            ref = ref.parent
+
+        return ref in contracts
+
+    for source_unit in build.source_units.values():
+        for decl in chain(
+            source_unit.declared_variables,
+            source_unit.enums,
+            source_unit.functions,
+            source_unit.structs,
+            source_unit.errors,
+            source_unit.user_defined_value_types,
+            source_unit.events,
+        ):
+            if any(referenced_by(r) for r in decl.references):
+                locations.add(
+                    Location(source_unit.source_unit_name, *decl.byte_location)
+                )
+
+    return locations
+
+
+def is_detection_relevant(
+    detection: DetectorResult, relevant_locations: Set[Location]
+) -> bool:
+    detection_locations = set()
+
+    def add_detection_location(detection: Detection):
+        detection_locations.add(
+            Location(
+                detection.ir_node.source_unit.source_unit_name,
+                *detection.ir_node.byte_location,
+            )
+        )
+        if detection.subdetections_mandatory:
+            for subdetection in detection.subdetections:
+                add_detection_location(subdetection)
+
+    add_detection_location(detection.detection)
+
+    return any(
+        any(detection_location.overlaps(l) for l in relevant_locations)
+        for detection_location in detection_locations
+    )
+
+
 async def detect_(
     config: WakeConfig,
     no_artifacts: bool,
@@ -398,6 +531,7 @@ async def detect_(
     import glob
     import json
     import os
+    from functools import partial
 
     from jschema_to_python.to_json import to_json
     from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
@@ -464,7 +598,9 @@ async def detect_(
     ctx = click.get_current_context()
     ctx_args = [*ctx.obj["subcommand_protected_args"][1:], *ctx.obj["subcommand_args"]]
 
-    def callback(build: ProjectBuild, build_info: ProjectBuildInfo):
+    def callback(
+        build: ProjectBuild, build_info: ProjectBuildInfo, scan_extra: Dict[str, Any]
+    ):
         errored = any(
             error.severity == SolcOutputErrorSeverityEnum.ERROR
             for info in build_info.compilation_units.values()
@@ -489,6 +625,11 @@ async def detect_(
         else:
             detectors = ctx.invoked_subcommand
 
+        if "name" in scan_extra:
+            relevant_locations = find_relevant_locations(build, scan_extra["name"])
+        else:
+            relevant_locations = None
+
         used_detectors, detections, exceptions = detect(
             detectors,
             build,
@@ -502,7 +643,7 @@ async def detect_(
             capture_exceptions=ignore_errors,
             default_min_impact=default_min_impact,  # pyright: ignore reportGeneralTypeIssues
             default_min_confidence=default_min_confidence,  # pyright: ignore reportGeneralTypeIssues
-            extra={"lsp": False},
+            extra={"lsp": False, "scan": scan_extra},
         )
 
         if ignore_errors:
@@ -632,6 +773,11 @@ async def detect_(
                     "detection": process_detection(detection.detection),
                 }
 
+                if relevant_locations is not None:
+                    info["in_scope"] = is_detection_relevant(
+                        detection, relevant_locations
+                    )
+
                 if export == "json-html":
                     print_detection(
                         detector_name,
@@ -662,6 +808,7 @@ async def detect_(
             sys.exit(0 if len(all_detections) == 0 else 3)
 
     if import_json is None:
+        scan_extra = {}
         sol_files: Set[Path] = set()
         modified_files: Dict[Path, bytes] = {}
         start = time.perf_counter()
@@ -685,6 +832,8 @@ async def detect_(
     else:
         with open(import_json, "r") as f:
             loaded = json.load(f)
+
+        scan_extra = loaded.get("extra", {})
 
         if loaded["version"] != get_package_version("eth-wake"):
             raise click.BadParameter(
@@ -750,7 +899,7 @@ async def detect_(
             console=console,
             no_warnings=True,
         )
-        fs_handler.register_callback(callback)
+        fs_handler.register_callback(partial(callback, scan_extra=scan_extra))
 
         observer = Observer()
         observer.schedule(
@@ -775,7 +924,7 @@ async def detect_(
     )
 
     assert compiler.latest_build_info is not None
-    callback(build, compiler.latest_build_info)
+    callback(build, compiler.latest_build_info, scan_extra=scan_extra)
 
     if watch:
         assert fs_handler is not None
