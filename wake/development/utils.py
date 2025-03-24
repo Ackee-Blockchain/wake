@@ -1615,6 +1615,10 @@ def _get_etherscan_info(
     with urlopen(req) as response:
         parsed = json.loads(response.read().decode("utf-8"))
 
+    # etherscan v2 currently returns 200 ok even if the contract is not found
+    if len(parsed["result"][0]["ContractName"]) == 0:
+        raise AbiNotFound(method="etherscan")
+
     if parsed["status"] != "1":
         raise ValueError(f"Request to {api_url} failed: {parsed['result']}")
 
