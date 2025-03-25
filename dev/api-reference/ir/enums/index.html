@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../../../images/wake-favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -30,7 +30,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -5237,6 +5237,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#wake.ir.enums.InlineAssemblyEvmVersion.OSAKA" class="md-nav__link">
+    <span class="md-ellipsis">
+      OSAKA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#wake.ir.enums.InlineAssemblyEvmVersion.PARIS" class="md-nav__link">
     <span class="md-ellipsis">
       PARIS
@@ -6238,6 +6247,8 @@
       
         
       
+        
+      
     
     
       
@@ -6438,6 +6449,28 @@
   
   <span class="md-ellipsis">
     source_unit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meta/storage-layout-specifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    storage_layout_specifier
     
   </span>
   
@@ -10482,6 +10515,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#wake.ir.enums.InlineAssemblyEvmVersion.OSAKA" class="md-nav__link">
+    <span class="md-ellipsis">
+      OSAKA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#wake.ir.enums.InlineAssemblyEvmVersion.PARIS" class="md-nav__link">
     <span class="md-ellipsis">
       PARIS
@@ -12500,8 +12542,7 @@ It also specifies the data location of the following types:</p>
 
         <details class="quote">
           <summary>Source code in <code>wake/ir/enums.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-354">354</a></span>
-<span class="normal"><a href="#__codelineno-0-355">355</a></span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-355">355</a></span>
 <span class="normal"><a href="#__codelineno-0-356">356</a></span>
 <span class="normal"><a href="#__codelineno-0-357">357</a></span>
 <span class="normal"><a href="#__codelineno-0-358">358</a></span>
@@ -12552,59 +12593,60 @@ It also specifies the data location of the following types:</p>
 <span class="normal"><a href="#__codelineno-0-403">403</a></span>
 <span class="normal"><a href="#__codelineno-0-404">404</a></span>
 <span class="normal"><a href="#__codelineno-0-405">405</a></span>
-<span class="normal"><a href="#__codelineno-0-406">406</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="k">class</span><span class="w"> </span><span class="nc">FunctionTypeKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">    Kind of a [Function][wake.ir.types.Function] type.</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a>    <span class="n">DECLARATION</span> <span class="o">=</span> <span class="s2">&quot;declaration&quot;</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="n">INTERNAL</span> <span class="o">=</span> <span class="s2">&quot;internal&quot;</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a>    <span class="n">EXTERNAL</span> <span class="o">=</span> <span class="s2">&quot;external&quot;</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="n">DELEGATE_CALL</span> <span class="o">=</span> <span class="s2">&quot;delegatecall&quot;</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="n">BARE_CALL</span> <span class="o">=</span> <span class="s2">&quot;barecall&quot;</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="n">BARE_CALL_CODE</span> <span class="o">=</span> <span class="s2">&quot;barecallcode&quot;</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="n">BARE_DELEGATE_CALL</span> <span class="o">=</span> <span class="s2">&quot;baredelegatecall&quot;</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>    <span class="n">BARE_STATIC_CALL</span> <span class="o">=</span> <span class="s2">&quot;barestaticcall&quot;</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="n">CREATION</span> <span class="o">=</span> <span class="s2">&quot;creation&quot;</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="n">SEND</span> <span class="o">=</span> <span class="s2">&quot;send&quot;</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="n">TRANSFER</span> <span class="o">=</span> <span class="s2">&quot;transfer&quot;</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a>    <span class="n">KECCAK256</span> <span class="o">=</span> <span class="s2">&quot;keccak256&quot;</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="n">SELFDESTRUCT</span> <span class="o">=</span> <span class="s2">&quot;selfdestruct&quot;</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>    <span class="n">REVERT</span> <span class="o">=</span> <span class="s2">&quot;revert&quot;</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a>    <span class="n">EC_RECOVER</span> <span class="o">=</span> <span class="s2">&quot;ecrecover&quot;</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="n">SHA256</span> <span class="o">=</span> <span class="s2">&quot;sha256&quot;</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a>    <span class="n">RIPEMD160</span> <span class="o">=</span> <span class="s2">&quot;ripemd160&quot;</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="n">LOG0</span> <span class="o">=</span> <span class="s2">&quot;log0&quot;</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a>    <span class="n">LOG1</span> <span class="o">=</span> <span class="s2">&quot;log1&quot;</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="n">LOG2</span> <span class="o">=</span> <span class="s2">&quot;log2&quot;</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="n">LOG3</span> <span class="o">=</span> <span class="s2">&quot;log3&quot;</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="n">LOG4</span> <span class="o">=</span> <span class="s2">&quot;log4&quot;</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="n">GAS_LEFT</span> <span class="o">=</span> <span class="s2">&quot;gasleft&quot;</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a>    <span class="n">EVENT</span> <span class="o">=</span> <span class="s2">&quot;event&quot;</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="n">WRAP</span> <span class="o">=</span> <span class="s2">&quot;wrap&quot;</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="n">UNWRAP</span> <span class="o">=</span> <span class="s2">&quot;unwrap&quot;</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="n">SET_GAS</span> <span class="o">=</span> <span class="s2">&quot;setgas&quot;</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="n">SET_VALUE</span> <span class="o">=</span> <span class="s2">&quot;setvalue&quot;</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="n">BLOCK_HASH</span> <span class="o">=</span> <span class="s2">&quot;blockhash&quot;</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="n">BLOBHASH</span> <span class="o">=</span> <span class="s2">&quot;blobhash&quot;</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a>    <span class="n">ADD_MOD</span> <span class="o">=</span> <span class="s2">&quot;addmod&quot;</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a>    <span class="n">MUL_MOD</span> <span class="o">=</span> <span class="s2">&quot;mulmod&quot;</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="n">ARRAY_PUSH</span> <span class="o">=</span> <span class="s2">&quot;arraypush&quot;</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="n">ARRAY_POP</span> <span class="o">=</span> <span class="s2">&quot;arraypop&quot;</span>  <span class="c1"># TODO also used for byte array pop, distinguish?</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="n">BYTE_ARRAY_PUSH</span> <span class="o">=</span> <span class="s2">&quot;bytearraypush&quot;</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395"></a>    <span class="n">BYTES_CONCAT</span> <span class="o">=</span> <span class="s2">&quot;bytesconcat&quot;</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396"></a>    <span class="n">STRING_CONCAT</span> <span class="o">=</span> <span class="s2">&quot;stringconcat&quot;</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a>    <span class="n">OBJECT_CREATION</span> <span class="o">=</span> <span class="s2">&quot;objectcreation&quot;</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a>    <span class="n">ASSERT</span> <span class="o">=</span> <span class="s2">&quot;assert&quot;</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a>    <span class="n">REQUIRE</span> <span class="o">=</span> <span class="s2">&quot;require&quot;</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="n">ABI_ENCODE</span> <span class="o">=</span> <span class="s2">&quot;abiencode&quot;</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="n">ABI_ENCODE_PACKED</span> <span class="o">=</span> <span class="s2">&quot;abiencodepacked&quot;</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="n">ABI_ENCODE_WITH_SELECTOR</span> <span class="o">=</span> <span class="s2">&quot;abiencodewithselector&quot;</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="n">ABI_ENCODE_CALL</span> <span class="o">=</span> <span class="s2">&quot;abiencodecall&quot;</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="n">ABI_ENCODE_WITH_SIGNATURE</span> <span class="o">=</span> <span class="s2">&quot;abiencodewithsignature&quot;</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="n">ABI_DECODE</span> <span class="o">=</span> <span class="s2">&quot;abidecode&quot;</span>
-<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="n">META_TYPE</span> <span class="o">=</span> <span class="s2">&quot;metatype&quot;</span>
+<span class="normal"><a href="#__codelineno-0-406">406</a></span>
+<span class="normal"><a href="#__codelineno-0-407">407</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="k">class</span><span class="w"> </span><span class="nc">FunctionTypeKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">    Kind of a [Function][wake.ir.types.Function] type.</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>    <span class="n">DECLARATION</span> <span class="o">=</span> <span class="s2">&quot;declaration&quot;</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a>    <span class="n">INTERNAL</span> <span class="o">=</span> <span class="s2">&quot;internal&quot;</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a>    <span class="n">EXTERNAL</span> <span class="o">=</span> <span class="s2">&quot;external&quot;</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a>    <span class="n">DELEGATE_CALL</span> <span class="o">=</span> <span class="s2">&quot;delegatecall&quot;</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a>    <span class="n">BARE_CALL</span> <span class="o">=</span> <span class="s2">&quot;barecall&quot;</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>    <span class="n">BARE_CALL_CODE</span> <span class="o">=</span> <span class="s2">&quot;barecallcode&quot;</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a>    <span class="n">BARE_DELEGATE_CALL</span> <span class="o">=</span> <span class="s2">&quot;baredelegatecall&quot;</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a>    <span class="n">BARE_STATIC_CALL</span> <span class="o">=</span> <span class="s2">&quot;barestaticcall&quot;</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a>    <span class="n">CREATION</span> <span class="o">=</span> <span class="s2">&quot;creation&quot;</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a>    <span class="n">SEND</span> <span class="o">=</span> <span class="s2">&quot;send&quot;</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a>    <span class="n">TRANSFER</span> <span class="o">=</span> <span class="s2">&quot;transfer&quot;</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>    <span class="n">KECCAK256</span> <span class="o">=</span> <span class="s2">&quot;keccak256&quot;</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a>    <span class="n">SELFDESTRUCT</span> <span class="o">=</span> <span class="s2">&quot;selfdestruct&quot;</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a>    <span class="n">REVERT</span> <span class="o">=</span> <span class="s2">&quot;revert&quot;</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="n">EC_RECOVER</span> <span class="o">=</span> <span class="s2">&quot;ecrecover&quot;</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a>    <span class="n">SHA256</span> <span class="o">=</span> <span class="s2">&quot;sha256&quot;</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="n">RIPEMD160</span> <span class="o">=</span> <span class="s2">&quot;ripemd160&quot;</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377"></a>    <span class="n">LOG0</span> <span class="o">=</span> <span class="s2">&quot;log0&quot;</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378"></a>    <span class="n">LOG1</span> <span class="o">=</span> <span class="s2">&quot;log1&quot;</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a>    <span class="n">LOG2</span> <span class="o">=</span> <span class="s2">&quot;log2&quot;</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a>    <span class="n">LOG3</span> <span class="o">=</span> <span class="s2">&quot;log3&quot;</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a>    <span class="n">LOG4</span> <span class="o">=</span> <span class="s2">&quot;log4&quot;</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a>    <span class="n">GAS_LEFT</span> <span class="o">=</span> <span class="s2">&quot;gasleft&quot;</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="n">EVENT</span> <span class="o">=</span> <span class="s2">&quot;event&quot;</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a>    <span class="n">WRAP</span> <span class="o">=</span> <span class="s2">&quot;wrap&quot;</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a>    <span class="n">UNWRAP</span> <span class="o">=</span> <span class="s2">&quot;unwrap&quot;</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387"></a>    <span class="n">SET_GAS</span> <span class="o">=</span> <span class="s2">&quot;setgas&quot;</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a>    <span class="n">SET_VALUE</span> <span class="o">=</span> <span class="s2">&quot;setvalue&quot;</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a>    <span class="n">BLOCK_HASH</span> <span class="o">=</span> <span class="s2">&quot;blockhash&quot;</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a>    <span class="n">BLOBHASH</span> <span class="o">=</span> <span class="s2">&quot;blobhash&quot;</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a>    <span class="n">ADD_MOD</span> <span class="o">=</span> <span class="s2">&quot;addmod&quot;</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392"></a>    <span class="n">MUL_MOD</span> <span class="o">=</span> <span class="s2">&quot;mulmod&quot;</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="n">ARRAY_PUSH</span> <span class="o">=</span> <span class="s2">&quot;arraypush&quot;</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="n">ARRAY_POP</span> <span class="o">=</span> <span class="s2">&quot;arraypop&quot;</span>  <span class="c1"># TODO also used for byte array pop, distinguish?</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395"></a>    <span class="n">BYTE_ARRAY_PUSH</span> <span class="o">=</span> <span class="s2">&quot;bytearraypush&quot;</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396"></a>    <span class="n">BYTES_CONCAT</span> <span class="o">=</span> <span class="s2">&quot;bytesconcat&quot;</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397"></a>    <span class="n">STRING_CONCAT</span> <span class="o">=</span> <span class="s2">&quot;stringconcat&quot;</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a>    <span class="n">OBJECT_CREATION</span> <span class="o">=</span> <span class="s2">&quot;objectcreation&quot;</span>
+<a id="__codelineno-0-399" name="__codelineno-0-399"></a>    <span class="n">ASSERT</span> <span class="o">=</span> <span class="s2">&quot;assert&quot;</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400"></a>    <span class="n">REQUIRE</span> <span class="o">=</span> <span class="s2">&quot;require&quot;</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>    <span class="n">ABI_ENCODE</span> <span class="o">=</span> <span class="s2">&quot;abiencode&quot;</span>
+<a id="__codelineno-0-402" name="__codelineno-0-402"></a>    <span class="n">ABI_ENCODE_PACKED</span> <span class="o">=</span> <span class="s2">&quot;abiencodepacked&quot;</span>
+<a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="n">ABI_ENCODE_WITH_SELECTOR</span> <span class="o">=</span> <span class="s2">&quot;abiencodewithselector&quot;</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="n">ABI_ENCODE_CALL</span> <span class="o">=</span> <span class="s2">&quot;abiencodecall&quot;</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a>    <span class="n">ABI_ENCODE_WITH_SIGNATURE</span> <span class="o">=</span> <span class="s2">&quot;abiencodewithsignature&quot;</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a>    <span class="n">ABI_DECODE</span> <span class="o">=</span> <span class="s2">&quot;abidecode&quot;</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407"></a>    <span class="n">META_TYPE</span> <span class="o">=</span> <span class="s2">&quot;metatype&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -15409,7 +15451,8 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 <span class="normal"><a href="#__codelineno-0-312">312</a></span>
 <span class="normal"><a href="#__codelineno-0-313">313</a></span>
 <span class="normal"><a href="#__codelineno-0-314">314</a></span>
-<span class="normal"><a href="#__codelineno-0-315">315</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblyEvmVersion</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblyEvmVersion</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
 <a id="__codelineno-0-303" name="__codelineno-0-303"></a>    <span class="n">HOMESTEAD</span> <span class="o">=</span> <span class="s2">&quot;homestead&quot;</span>
 <a id="__codelineno-0-304" name="__codelineno-0-304"></a>    <span class="n">TANGERINE_WHISTLE</span> <span class="o">=</span> <span class="s2">&quot;tangerineWhistle&quot;</span>
 <a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="n">SPURIOUS_DRAGON</span> <span class="o">=</span> <span class="s2">&quot;spuriousDragon&quot;</span>
@@ -15423,6 +15466,7 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 <a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="n">SHANGHAI</span> <span class="o">=</span> <span class="s2">&quot;shanghai&quot;</span>
 <a id="__codelineno-0-314" name="__codelineno-0-314"></a>    <span class="n">CANCUN</span> <span class="o">=</span> <span class="s2">&quot;cancun&quot;</span>
 <a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="n">PRAGUE</span> <span class="o">=</span> <span class="s2">&quot;prague&quot;</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>    <span class="n">OSAKA</span> <span class="o">=</span> <span class="s2">&quot;osaka&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -15569,6 +15613,26 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
   </span>
 
 <a href="#wake.ir.enums.InlineAssemblyEvmVersion.LONDON" class="headerlink" title="Permanent link">#</a></h3>
+
+
+    <div class="doc doc-contents ">
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="wake.ir.enums.InlineAssemblyEvmVersion.OSAKA" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">OSAKA</span> <span class="o">=</span> <span class="s1">&#39;osaka&#39;</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#wake.ir.enums.InlineAssemblyEvmVersion.OSAKA" class="headerlink" title="Permanent link">#</a></h3>
 
 
     <div class="doc doc-contents ">
@@ -15729,9 +15793,9 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 
         <details class="quote">
           <summary>Source code in <code>wake/ir/enums.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-326">326</a></span>
-<span class="normal"><a href="#__codelineno-0-327">327</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblyFlag</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a>    <span class="n">MEMORY_SAFE</span> <span class="o">=</span> <span class="s2">&quot;memory-safe&quot;</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-327">327</a></span>
+<span class="normal"><a href="#__codelineno-0-328">328</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblyFlag</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>    <span class="n">MEMORY_SAFE</span> <span class="o">=</span> <span class="s2">&quot;memory-safe&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -15798,17 +15862,17 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 
         <details class="quote">
           <summary>Source code in <code>wake/ir/enums.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-318">318</a></span>
-<span class="normal"><a href="#__codelineno-0-319">319</a></span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-319">319</a></span>
 <span class="normal"><a href="#__codelineno-0-320">320</a></span>
 <span class="normal"><a href="#__codelineno-0-321">321</a></span>
 <span class="normal"><a href="#__codelineno-0-322">322</a></span>
-<span class="normal"><a href="#__codelineno-0-323">323</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblySuffix</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319"></a>    <span class="n">SLOT</span> <span class="o">=</span> <span class="s2">&quot;slot&quot;</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="n">OFFSET</span> <span class="o">=</span> <span class="s2">&quot;offset&quot;</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a>    <span class="n">LENGTH</span> <span class="o">=</span> <span class="s2">&quot;length&quot;</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="n">ADDRESS</span> <span class="o">=</span> <span class="s2">&quot;address&quot;</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a>    <span class="n">SELECTOR</span> <span class="o">=</span> <span class="s2">&quot;selector&quot;</span>
+<span class="normal"><a href="#__codelineno-0-323">323</a></span>
+<span class="normal"><a href="#__codelineno-0-324">324</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-319" name="__codelineno-0-319"></a><span class="k">class</span><span class="w"> </span><span class="nc">InlineAssemblySuffix</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="n">SLOT</span> <span class="o">=</span> <span class="s2">&quot;slot&quot;</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>    <span class="n">OFFSET</span> <span class="o">=</span> <span class="s2">&quot;offset&quot;</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a>    <span class="n">LENGTH</span> <span class="o">=</span> <span class="s2">&quot;length&quot;</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a>    <span class="n">ADDRESS</span> <span class="o">=</span> <span class="s2">&quot;address&quot;</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a>    <span class="n">SELECTOR</span> <span class="o">=</span> <span class="s2">&quot;selector&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -16124,8 +16188,7 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 
         <details class="quote">
           <summary>Source code in <code>wake/ir/enums.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-409">409</a></span>
-<span class="normal"><a href="#__codelineno-0-410">410</a></span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-410">410</a></span>
 <span class="normal"><a href="#__codelineno-0-411">411</a></span>
 <span class="normal"><a href="#__codelineno-0-412">412</a></span>
 <span class="normal"><a href="#__codelineno-0-413">413</a></span>
@@ -16133,16 +16196,17 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
 <span class="normal"><a href="#__codelineno-0-415">415</a></span>
 <span class="normal"><a href="#__codelineno-0-416">416</a></span>
 <span class="normal"><a href="#__codelineno-0-417">417</a></span>
-<span class="normal"><a href="#__codelineno-0-418">418</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-409" name="__codelineno-0-409"></a><span class="k">class</span><span class="w"> </span><span class="nc">MagicTypeKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="sd">    Kind of a [Magic][wake.ir.types.Magic] type.</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413"></a>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a>    <span class="n">BLOCK</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
-<a id="__codelineno-0-415" name="__codelineno-0-415"></a>    <span class="n">MESSAGE</span> <span class="o">=</span> <span class="s2">&quot;message&quot;</span>
-<a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="n">TRANSACTION</span> <span class="o">=</span> <span class="s2">&quot;transaction&quot;</span>
-<a id="__codelineno-0-417" name="__codelineno-0-417"></a>    <span class="n">ABI</span> <span class="o">=</span> <span class="s2">&quot;abi&quot;</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="n">META_TYPE</span> <span class="o">=</span> <span class="s2">&quot;meta_type&quot;</span>
+<span class="normal"><a href="#__codelineno-0-418">418</a></span>
+<span class="normal"><a href="#__codelineno-0-419">419</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="k">class</span><span class="w"> </span><span class="nc">MagicTypeKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="sd">    Kind of a [Magic][wake.ir.types.Magic] type.</span>
+<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414"></a>
+<a id="__codelineno-0-415" name="__codelineno-0-415"></a>    <span class="n">BLOCK</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416"></a>    <span class="n">MESSAGE</span> <span class="o">=</span> <span class="s2">&quot;message&quot;</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417"></a>    <span class="n">TRANSACTION</span> <span class="o">=</span> <span class="s2">&quot;transaction&quot;</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a>    <span class="n">ABI</span> <span class="o">=</span> <span class="s2">&quot;abi&quot;</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a>    <span class="n">META_TYPE</span> <span class="o">=</span> <span class="s2">&quot;meta_type&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -17221,7 +17285,7 @@ See the <a href="https://docs.soliditylang.org/en/latest/units-and-global-variab
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.f1b6f286.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c8b220af.min.js"></script>
       
         <script src="../../../js/mathjax.js"></script>
       

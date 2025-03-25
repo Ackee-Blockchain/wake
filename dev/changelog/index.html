@@ -22,7 +22,7 @@
       
       
       <link rel="icon" href="../images/wake-favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
@@ -30,7 +30,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.8608ea7d.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
@@ -655,6 +655,15 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#4.16.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.16.0 (Mar 25, 2025)
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#4.15.0" class="md-nav__link">
@@ -4194,6 +4203,8 @@
       
         
       
+        
+      
     
     
       
@@ -4394,6 +4405,28 @@
   
   <span class="md-ellipsis">
     source_unit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/ir/meta/storage-layout-specifier/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    storage_layout_specifier
     
   </span>
   
@@ -6703,6 +6736,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.16.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.16.0 (Mar 25, 2025)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.15.0" class="md-nav__link">
     <span class="md-ellipsis">
       4.15.0 (Feb 20, 2025)
@@ -6989,6 +7031,27 @@ small.label {
 }
 </style>
 
+<h2 id="4.16.0">4.16.0 <small>(Mar 25, 2025)</small><a class="headerlink" href="#4.16.0" title="Permanent link">#</a></h2>
+<p>Features &amp; improvements:</p>
+<ul>
+<li>added support for Solidity 0.8.29 and Osaka EVM <small class="label">[core]</small></li>
+<li>optimized solc compilers JSON list to only download when necessary <small class="label">[core]</small></li>
+<li>implemented <code>wake up gitignore</code> command <small class="label">[core]</small></li>
+<li>added JSON export functionality to <code>wake open</code> command <small class="label">[core]</small></li>
+<li><code>wake open</code> now uses different exit codes on errors <small class="label">[core]</small></li>
+<li>implemented Foundry compilation config options importing with <code>wake up</code> <small class="label">[core]</small></li>
+<li>implemented detections filtering for on-chain scanning <small class="label">[static analysis]</small></li>
+<li>improved text output format in single process testing <small class="label">[testing framework]</small></li>
+<li>migrated to Sourcify v2 &amp; Etherscan v2 APIs; using only one API key for Etherscan <small class="label">[testing &amp; deployment framework]</small></li>
+<li>implemented Sourcify &amp; Etherscan fetched ABI in-memory caching <small class="label">[testing &amp; deployment framework]</small></li>
+<li>Reth nodes are now recognized without warning <small class="label">[testing &amp; deployment framework]</small></li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>fixed source paths resolving issue incorrectly marking source path as ambiguous during compilation <small class="label">[core]</small></li>
+<li>clarified docs that <code>linearized_base_contracts</code> includes <code>self</code> <small class="label">[core]</small></li>
+<li>fixed handling of JSON-RPC error returned when no accounts for signing available <small class="label">[testing &amp; deployment framework]</small></li>
+</ul>
 <h2 id="4.15.0">4.15.0 <small>(Feb 20, 2025)</small><a class="headerlink" href="#4.15.0" title="Permanent link">#</a></h2>
 <p>Features:</p>
 <ul>
@@ -7536,7 +7599,7 @@ small.label {
     <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.tracking", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.tabs"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.f1b6f286.min.js"></script>
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
       
         <script src="../js/mathjax.js"></script>
       
