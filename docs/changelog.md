@@ -6,6 +6,28 @@ small.label {
 }
 </style>
 
+## 4.16.0 <small>(Mar 25, 2025)</small> { id="4.16.0" }
+
+Features & improvements:
+
+- added support for Solidity 0.8.29 and Osaka EVM <small class="label">[core]</small>
+- optimized solc compilers JSON list to only download when necessary <small class="label">[core]</small>
+- implemented `wake up gitignore` command <small class="label">[core]</small>
+- added JSON export functionality to `wake open` command <small class="label">[core]</small>
+- `wake open` now uses different exit codes on errors <small class="label">[core]</small>
+- implemented Foundry compilation config options importing with `wake up` <small class="label">[core]</small>
+- implemented detections filtering for on-chain scanning <small class="label">[static analysis]</small>
+- improved text output format in single process testing <small class="label">[testing framework]</small>
+- migrated to Sourcify v2 & Etherscan v2 APIs; using only one API key for Etherscan <small class="label">[testing & deployment framework]</small>
+- implemented Sourcify & Etherscan fetched ABI in-memory caching <small class="label">[testing & deployment framework]</small>
+- Reth nodes are now recognized without warning <small class="label">[testing & deployment framework]</small>
+
+Fixes:
+
+- fixed source paths resolving issue incorrectly marking source path as ambiguous during compilation <small class="label">[core]</small>
+- clarified docs that `linearized_base_contracts` includes `self` <small class="label">[core]</small>
+- fixed handling of JSON-RPC error returned when no accounts for signing available <small class="label">[testing & deployment framework]</small>
+
 ## 4.15.0 <small>(Feb 20, 2025)</small> { id="4.15.0" }
 
 Features:
