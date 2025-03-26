@@ -165,9 +165,7 @@ class ControlFlowGraph:
         ):
             pass
 
-        self._statements_lookup = {
-            stmt: node for node in self._graph.nodes for stmt in node.statements
-        }
+        self._statements_lookup = {}
         for node in self._graph.nodes:
             for stmt in node.statements:
                 self._statements_lookup[stmt] = node
