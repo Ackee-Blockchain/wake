@@ -638,7 +638,10 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
-                        (self.get_name(error_decl.parent), self.get_name(error_decl)),
+                        (
+                            self.get_name(error_decl.parent, force_simple=True),
+                            self.get_name(error_decl, force_simple=True),
+                        ),
                     )
                 elif isinstance(error_decl.parent, SourceUnit):
                     error_module_name = "pytypes." + _make_path_alphanum(
@@ -646,7 +649,7 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__errors_index[selector][fqn] = (
                         error_module_name,
-                        (self.get_name(error_decl),),
+                        (self.get_name(error_decl, force_simple=True),),
                     )
                 else:
                     raise Exception("Unknown error parent")
@@ -673,7 +676,10 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__events_index[selector][fqn] = (
                         event_module_name,
-                        (self.get_name(event_decl.parent), self.get_name(event_decl)),
+                        (
+                            self.get_name(event_decl.parent, force_simple=True),
+                            self.get_name(event_decl, force_simple=True),
+                        ),
                     )
                 elif isinstance(event_decl.parent, SourceUnit):
                     event_module_name = "pytypes." + _make_path_alphanum(
@@ -681,7 +687,7 @@ class TypeGenerator:
                     ).replace("/", ".")
                     self.__events_index[selector][fqn] = (
                         event_module_name,
-                        (self.get_name(event_decl),),
+                        (self.get_name(event_decl, force_simple=True),),
                     )
                 else:
                     raise Exception("Unknown event parent")
@@ -1147,6 +1153,7 @@ class TypeGenerator:
 
         returns: List[Tuple[str, str, str]] = []
         param_names: List[Tuple[str, str]] = []
+
         # if the type is compound we need to use the type as an index, for primitive types we use the
         # the type only for the return
         # TODO reorder the elif chain such that the most common types are on the top
@@ -1578,7 +1585,7 @@ class TypeGenerator:
         ).replace("/", ".")
         self.__contracts_index[fqn] = (
             contract_module_name,
-            (self.get_name(contract),),
+            (self.get_name(contract, force_simple=True),),
         )
 
         if len(base_names) == 0:
