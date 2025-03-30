@@ -1824,6 +1824,25 @@ class LspCompiler:
         ) = await self.__detect_target_versions(compilation_units, show_message=False)
         await self.__install_solc(target_versions)
 
+        # files passed as files_to_compile and files importing them
+        files_to_recompile = set(
+            graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
+            for n in nx.edge_bfs(
+                graph,
+                [
+                    source_unit_name
+                    for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
+                    if graph.nodes[  # pyright: ignore reportGeneralTypeIssues
+                        source_unit_name
+                    ][  # pyright: ignore reportGeneralTypeIssues
+                        "path"
+                    ]
+                    in files_to_compile  # pyright: ignore reportGeneralTypeIssues
+                ],
+            )
+        ) | set(files_to_compile)
+        files_to_recompile_static = set(files_to_recompile)
+
         for compilation_unit in skipped_compilation_units:
             for file in compilation_unit.files:
                 try:
@@ -1851,20 +1870,26 @@ class LspCompiler:
                     files.add(file)
 
                     for file in files:
-                        # this file won't be taken from any CU, even if compiled successfully
-                        compilation_units_per_file[file].clear()
+                        if (
+                            file in self.__deleted_files
+                            or file in files_to_recompile_static
+                        ):
+                            # this file won't be taken from any CU, even if compiled successfully
+                            compilation_units_per_file[file].clear()
 
-                        # clear diagnostics
-                        await self.__diagnostic_queue.put((file, set()))
+                            # clear diagnostics
+                            await self.__diagnostic_queue.put((file, set()))
 
-                        if file in self.__interval_trees:
-                            self.__interval_trees.pop(file)
+                            if file in self.__interval_trees:
+                                self.__interval_trees.pop(file)
 
-                        if file in self.__source_units:
-                            self.__ir_reference_resolver.run_destroy_callbacks(file)
-                            self.__ir_reference_resolver.clear_registered_nodes([file])
-                            source_unit = self.__source_units.pop(file)
-                            self.__cu_counter[source_unit.cu_hash] -= 1
+                            if file in self.__source_units:
+                                self.__ir_reference_resolver.run_destroy_callbacks(file)
+                                self.__ir_reference_resolver.clear_registered_nodes(
+                                    [file]
+                                )
+                                source_unit = self.__source_units.pop(file)
+                                self.__cu_counter[source_unit.cu_hash] -= 1
 
             compilation_units.remove(compilation_unit)
 
@@ -1956,24 +1981,6 @@ class LspCompiler:
             self.__compilation_errors = {}
             return True
 
-        # files passed as files_to_compile and files importing them
-        files_to_recompile = set(
-            graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
-            for n in nx.edge_bfs(
-                graph,
-                [
-                    source_unit_name
-                    for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
-                    if graph.nodes[  # pyright: ignore reportGeneralTypeIssues
-                        source_unit_name
-                    ][  # pyright: ignore reportGeneralTypeIssues
-                        "path"
-                    ]
-                    in files_to_compile  # pyright: ignore reportGeneralTypeIssues
-                ],
-            )
-        ) | set(files_to_compile)
-
         # clear indexed node types responsible for handling multiple structurally different ASTs for the same file
         self.__ir_reference_resolver.clear_indexed_nodes(files_to_recompile)
 
@@ -2000,8 +2007,6 @@ class LspCompiler:
                         )
                     except UnicodeDecodeError:
                         pass
-
-            errored_files: Set[Path] = set()
 
             for error in solc_output.errors:
                 if error.source_location is not None:
@@ -2038,16 +2043,14 @@ class LspCompiler:
                         errors_per_file[path].add(
                             self.__solc_error_to_diagnostic(error, path, cu, ignored)
                         )
-                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                        errored_files.add(path)
-                else:
-                    # whole compilation unit errored
-                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                        errored_files.update(cu.files)
 
-            _out_edge_bfs(cu, errored_files, errored_files)
+            errored = any(
+                e
+                for e in solc_output.errors
+                if e.severity == SolcOutputErrorSeverityEnum.ERROR
+            )
 
-            for file in errored_files:
+            for file in cu.files if errored else set():
                 files_to_recompile.discard(file)
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
@@ -2077,19 +2080,25 @@ class LspCompiler:
                     files.add(file)
 
                     for file in files:
-                        # this file won't be taken from any CU, even if compiled successfully
-                        compilation_units_per_file[file].clear()
+                        if (
+                            file in self.__deleted_files
+                            or file in files_to_recompile_static
+                        ):
+                            # this file won't be taken from any CU, even if compiled successfully
+                            compilation_units_per_file[file].clear()
 
-                        if file in self.__source_units:
-                            self.__ir_reference_resolver.run_destroy_callbacks(file)
-                            self.__ir_reference_resolver.clear_registered_nodes([file])
-                            source_unit = self.__source_units.pop(file)
-                            self.__cu_counter[source_unit.cu_hash] -= 1
+                            if file in self.__source_units:
+                                self.__ir_reference_resolver.run_destroy_callbacks(file)
+                                self.__ir_reference_resolver.clear_registered_nodes(
+                                    [file]
+                                )
+                                source_unit = self.__source_units.pop(file)
+                                self.__cu_counter[source_unit.cu_hash] -= 1
 
-                        if file in self.__interval_trees:
-                            self.__interval_trees.pop(file)
+                            if file in self.__interval_trees:
+                                self.__interval_trees.pop(file)
 
-            if len(errored_files) == 0:
+            if not errored:
                 successful_compilation_units.append((cu, solc_output))
 
         # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
