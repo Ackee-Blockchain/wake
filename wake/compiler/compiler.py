@@ -1117,6 +1117,20 @@ class SolidityCompiler:
 
             build = self._latest_build
 
+        # files_to_compile and files importing them
+        files_to_recompile = set(
+            graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
+            for n in nx.edge_bfs(
+                graph,
+                [
+                    source_unit_name
+                    for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
+                    if graph.nodes[source_unit_name]["path"]
+                    in files_to_compile  # pyright: ignore reportGeneralTypeIssues
+                ],
+            )
+        ) | set(files_to_compile)
+
         target_versions, skipped_compilation_units = self.determine_solc_versions(
             compilation_units, target_versions_by_subproject
         )
@@ -1150,14 +1164,15 @@ class SolidityCompiler:
                     files.add(file)
 
                     for file in files:
-                        # this file won't be taken from any CU, even if compiled successfully
-                        compilation_units_per_file[file].clear()
+                        if file in deleted_files or file in files_to_recompile:
+                            # this file won't be taken from any CU, even if compiled successfully
+                            compilation_units_per_file[file].clear()
 
-                        if file in build.source_units:
-                            build.reference_resolver.run_destroy_callbacks(file)
-                            build.reference_resolver.clear_registered_nodes([file])
-                            build._source_units.pop(file)
-                            build._interval_trees.pop(file)
+                            if file in build.source_units:
+                                build.reference_resolver.run_destroy_callbacks(file)
+                                build.reference_resolver.clear_registered_nodes([file])
+                                build._source_units.pop(file)
+                                build._interval_trees.pop(file)
 
             compilation_units.remove(cu)
 
@@ -1256,25 +1271,15 @@ class SolidityCompiler:
             all_errored_files: Set[Path] = set()
 
             for cu, solc_output in zip(compilation_units, ret):
-                errored_files: Set[Path] = set()
-                errors_per_cu[cu.hash] = set()
+                errors_per_cu[cu.hash] = set(solc_output.errors)
+                errored = any(
+                    e
+                    for e in solc_output.errors
+                    if e.severity == SolcOutputErrorSeverityEnum.ERROR
+                )
 
-                for error in solc_output.errors:
-                    errors_per_cu[cu.hash].add(error)
-                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
-                        if error.source_location is not None:
-                            path = cu.source_unit_name_to_path(
-                                error.source_location.file
-                            )
-                            errored_files.add(path)
-                        else:
-                            # whole compilation unit errored
-                            errored_files |= cu.files
-
-                self._out_edge_bfs(cu, errored_files, errored_files)
-                all_errored_files |= errored_files
-
-                for file in errored_files:
+                # whole CU won't be indexed if errored
+                for file in cu.files if errored else set():
                     try:
                         compilation_units_per_file[file].remove(cu)
                     except KeyError:
@@ -1300,31 +1305,21 @@ class SolidityCompiler:
                         files.add(file)
 
                         for file in files:
-                            # this file won't be taken from any CU, even if compiled successfully
-                            compilation_units_per_file[file].clear()
+                            if file in deleted_files or file in files_to_recompile:
+                                # this file won't be taken from any CU, even if compiled successfully
+                                compilation_units_per_file[file].clear()
+                                all_errored_files.add(file)
 
-                            if file in build.source_units:
-                                build.reference_resolver.run_destroy_callbacks(file)
-                                build.reference_resolver.clear_registered_nodes([file])
-                                build._source_units.pop(file)
-                                build._interval_trees.pop(file)
+                                if file in build.source_units:
+                                    build.reference_resolver.run_destroy_callbacks(file)
+                                    build.reference_resolver.clear_registered_nodes(
+                                        [file]
+                                    )
+                                    build._source_units.pop(file)
+                                    build._interval_trees.pop(file)
 
-                if len(errored_files) == 0:
+                if not errored:
                     successful_compilation_units.append((cu, solc_output))
-
-            # files_to_compile and files importing them
-            files_to_recompile = set(
-                graph.nodes[n[1]]["path"]  # pyright: ignore reportGeneralTypeIssues
-                for n in nx.edge_bfs(
-                    graph,
-                    [
-                        source_unit_name
-                        for source_unit_name in graph.nodes  # pyright: ignore reportGeneralTypeIssues
-                        if graph.nodes[source_unit_name]["path"]
-                        in files_to_compile  # pyright: ignore reportGeneralTypeIssues
-                    ],
-                )
-            ) | set(files_to_compile)
 
             # destroy callbacks for IR nodes that will be replaced by new ones must be executed before
             # new IR nodes are created
