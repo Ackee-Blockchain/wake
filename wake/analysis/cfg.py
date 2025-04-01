@@ -779,6 +779,9 @@ class CfgNode:
         revert_end: CfgNode,
         do_while_statement: DoWhileStatement,
     ) -> CfgNode:
+        control_block = CfgNode()
+        graph.add_node(control_block)
+        control_block._control_statement = do_while_statement
         body = CfgNode()
         graph.add_node(body)
         next = CfgNode()
@@ -786,17 +789,24 @@ class CfgNode:
         body_end = cls.from_statement(
             graph, body, success_end, revert_end, body, next, do_while_statement.body
         )
-        assert body_end._control_statement is None
-        body_end._control_statement = do_while_statement
 
-        graph.add_edge(prev, body, condition=(TransitionConditionKind.ALWAYS, None))
+        graph.add_edge(
+            prev,
+            body,
+            condition=(TransitionConditionKind.ALWAYS, None)
+        )
         graph.add_edge(
             body_end,
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None)
+        )
+        graph.add_edge(
+            control_block,
             next,
             condition=(TransitionConditionKind.IS_FALSE, do_while_statement.condition),
         )
         graph.add_edge(
-            body_end,
+            control_block,
             body,
             condition=(TransitionConditionKind.IS_TRUE, do_while_statement.condition),
         )
@@ -821,9 +831,10 @@ class CfgNode:
                 None,
                 for_statement.initialization_expression,
             )
-        assert prev._control_statement is None
-        prev._control_statement = for_statement
 
+        control_block = CfgNode()
+        graph.add_node(control_block)
+        control_block._control_statement = for_statement
         body = CfgNode()
         graph.add_node(body)
         next = CfgNode()
@@ -847,27 +858,27 @@ class CfgNode:
         )
 
         graph.add_edge(
+            prev,
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
+        )
+        graph.add_edge(
             body_end, loop_post, condition=(TransitionConditionKind.ALWAYS, None)
         )
         graph.add_edge(
-            prev,
+            control_block,
             body,
             condition=(TransitionConditionKind.IS_TRUE, for_statement.condition),
         )
         graph.add_edge(
-            prev,
+            control_block,
             next,
             condition=(TransitionConditionKind.IS_FALSE, for_statement.condition),
         )
         graph.add_edge(
             loop_post_end,
-            body,
-            condition=(TransitionConditionKind.IS_TRUE, for_statement.condition),
-        )
-        graph.add_edge(
-            loop_post_end,
-            next,
-            condition=(TransitionConditionKind.IS_FALSE, for_statement.condition),
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
         )
         return next
 
@@ -880,13 +891,12 @@ class CfgNode:
         revert_end: CfgNode,
         for_loop: YulForLoop,
     ) -> CfgNode:
-        assert prev._control_statement is None
         prev = cls.from_statement(
             graph, prev, success_end, revert_end, None, None, for_loop.pre
         )
-        assert prev._control_statement is None
-        prev._control_statement = for_loop
-
+        control_block = CfgNode()
+        graph.add_node(control_block)
+        control_block._control_statement = for_loop
         body = CfgNode()
         graph.add_node(body)
         next = CfgNode()
@@ -901,25 +911,23 @@ class CfgNode:
         )
 
         graph.add_edge(
+            prev,
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
+        )
+        graph.add_edge(
+            control_block, body, condition=(TransitionConditionKind.IS_TRUE, for_loop.condition)
+        )
+        graph.add_edge(
+            control_block, next, condition=(TransitionConditionKind.IS_FALSE, for_loop.condition)
+        )
+        graph.add_edge(
             body_end, loop_post, condition=(TransitionConditionKind.ALWAYS, None)
         )
         graph.add_edge(
-            prev, body, condition=(TransitionConditionKind.IS_TRUE, for_loop.condition)
-        )
-        graph.add_edge(
-            prev,
-            next,
-            condition=(TransitionConditionKind.IS_FALSE, for_loop.condition),
-        )
-        graph.add_edge(
             loop_post_end,
-            body,
-            condition=(TransitionConditionKind.IS_TRUE, for_loop.condition),
-        )
-        graph.add_edge(
-            loop_post_end,
-            next,
-            condition=(TransitionConditionKind.IS_FALSE, for_loop.condition),
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
         )
         return next
 
@@ -1112,9 +1120,10 @@ class CfgNode:
         revert_end: CfgNode,
         while_statement: WhileStatement,
     ) -> CfgNode:
-        assert prev._control_statement is None
-        prev._control_statement = while_statement
 
+        control_block = CfgNode()
+        graph.add_node(control_block)
+        control_block._control_statement = while_statement
         body = CfgNode()
         graph.add_node(body)
         next = CfgNode()
@@ -1125,21 +1134,21 @@ class CfgNode:
 
         graph.add_edge(
             prev,
-            body,
-            condition=(TransitionConditionKind.IS_TRUE, while_statement.condition),
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
         )
         graph.add_edge(
-            prev,
-            next,
-            condition=(TransitionConditionKind.IS_FALSE, while_statement.condition),
-        )
-        graph.add_edge(
+            control_block,
             body_end,
-            body,
             condition=(TransitionConditionKind.IS_TRUE, while_statement.condition),
         )
         graph.add_edge(
             body_end,
+            control_block,
+            condition=(TransitionConditionKind.ALWAYS, None),
+        )
+        graph.add_edge(
+            control_block,
             next,
             condition=(TransitionConditionKind.IS_FALSE, while_statement.condition),
         )
