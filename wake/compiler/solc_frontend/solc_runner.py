@@ -54,6 +54,21 @@ class SolcFrontend:
             standard_input.sources[unit_name] = SolcInputSource(content=content)
         standard_input.settings = settings
 
+        if (
+            target_version < "0.8.18"
+            and settings.metadata is not None
+            and settings.metadata.append_CBOR is not None
+        ):
+            if not settings.metadata.append_CBOR:
+                logger.warning(
+                    "`append_CBOR` is not supported for solc versions < 0.8.18. This option will be ignored."
+                )
+            standard_input.settings.metadata = (
+                standard_input.settings.metadata.model_copy(
+                    update={"append_CBOR": None}
+                )
+            )
+
         return await self.__run_solc(target_version, standard_input)
 
     async def __run_solc(
