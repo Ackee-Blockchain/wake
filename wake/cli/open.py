@@ -253,8 +253,7 @@ async def open_address(
                 sys.exit(65)
 
             sources = {
-                project_dir / path: source.content
-                for path, source in standard_input.sources.items()
+                path: source.content for path, source in standard_input.sources.items()
             }
         except ValidationError as e:
             try:
