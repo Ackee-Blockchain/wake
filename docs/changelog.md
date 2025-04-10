@@ -6,6 +6,15 @@ small.label {
 }
 </style>
 
+## 4.16.1 <small>(Apr 10, 2025)</small> { id="4.16.1" }
+
+Fixes:
+
+- fixed the `appendCBOR` compilation option being passed to solc versions not supporting it, causing a compilation error <small class="label">[core]</small>
+- fixed compilation crash during subprojects compilation when files being imported from another subproject contain a compilation error <small class="label">[core]</small>
+- fixed `wake open` incorrectly complaining about absolute paths when fetching from Etherscan with standard JSON format <small class="label">[core]</small>
+- fixed resolution of renamed events & errors causing `AttributeError` in some cases <small class="label">[testing & deployment framework]</small>
+
 ## 4.16.0 <small>(Mar 25, 2025)</small> { id="4.16.0" }
 
 Features & improvements:
