@@ -82,11 +82,15 @@ class GlobalSymbol(IntEnum):
 
     # available for contracts and interfaces
     TYPE_NAME = -800
+
+    # available for contracts only
     TYPE_CREATION_CODE = -801
     TYPE_RUNTIME_CODE = -802
+
     # available for interfaces only
     TYPE_INTERFACE_ID = -803
-    # available for integers
+
+    # available for integers and enums
     TYPE_MIN = -804
     TYPE_MAX = -805
 
