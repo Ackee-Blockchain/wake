@@ -1137,7 +1137,7 @@ class CfgNode:
         )
         graph.add_edge(
             control_block,
-            body_end,
+            body,
             condition=(TransitionConditionKind.IS_TRUE, while_statement.condition),
         )
         graph.add_edge(
