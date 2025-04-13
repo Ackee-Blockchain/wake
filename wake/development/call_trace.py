@@ -4,6 +4,7 @@ import importlib
 import reprlib
 from collections import ChainMap
 from dataclasses import dataclass
+from functools import partial
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
@@ -37,6 +38,7 @@ from .core import (
     Address,
     Contract,
     Wei,
+    contracts_by_metadata,
     fix_library_abi,
     get_contracts_by_fqn,
     get_fqn_from_address,
@@ -306,6 +308,17 @@ def _decode_event_args(
             merged.append(decoded.pop(0))
 
     return merged, [arg["name"] for arg in abi]
+
+
+def fqn_to_contract_abi_impl(
+    fqn: str, contracts_by_fqn: Dict[str, Tuple[str, List[str]]]
+):
+    module_name, attrs = contracts_by_fqn[fqn]
+    obj = getattr(importlib.import_module(module_name), attrs[0])
+    for attr in attrs[1:]:
+        obj = getattr(obj, attr)
+    contract_abi = obj._abi
+    return obj, contract_abi
 
 
 class CallTraceKind(StrEnum):
@@ -992,14 +1005,6 @@ class CallTrace:
     ):
         from .transactions import PanicCodeEnum
 
-        def fqn_to_contract_abi_impl(fqn: str):
-            module_name, attrs = contracts_by_fqn[fqn]
-            obj = getattr(importlib.import_module(module_name), attrs[0])
-            for attr in attrs[1:]:
-                obj = getattr(obj, attr)
-            contract_abi = obj._abi
-            return obj, contract_abi
-
         assert tx_params["gas"] != "auto"
 
         if fqn_overrides is None:
@@ -1011,7 +1016,9 @@ class CallTrace:
             all_fqns = contracts_by_fqn.keys()
 
         if fqn_to_contract_abi is None:
-            fqn_to_contract_abi = fqn_to_contract_abi_impl
+            fqn_to_contract_abi = partial(
+                fqn_to_contract_abi_impl, contracts_by_fqn=contracts_by_fqn
+            )
 
         to = Account(tx_params["to"], chain) if "to" in tx_params else None
 
@@ -1046,9 +1053,11 @@ class CallTrace:
             elif chain.forked_chain_id is not None:
                 explorer_info = get_name_abi_from_explorer_cached(
                     str(to.address),
-                    chain.forked_chain_id
-                    if chain.forked_chain_id is not None
-                    else chain.chain_id,
+                    (
+                        chain.forked_chain_id
+                        if chain.forked_chain_id is not None
+                        else chain.chain_id
+                    ),
                 )
 
         if (
@@ -1347,9 +1356,11 @@ class CallTrace:
                     elif chain.forked_chain_id is not None:
                         explorer_info = get_name_abi_from_explorer_cached(
                             str(addr),
-                            chain.forked_chain_id
-                            if chain.forked_chain_id is not None
-                            else chain.chain_id,
+                            (
+                                chain.forked_chain_id
+                                if chain.forked_chain_id is not None
+                                else chain.chain_id
+                            ),
                         )
 
                 if fqn is None and explorer_info is None and precompiled_info is None:
@@ -1750,3 +1761,355 @@ class CallTrace:
                     current_trace._all_events.append(event)
 
         return root_trace
+
+    @classmethod
+    def from_native_trace(
+        cls,
+        trace: NativeTrace,
+        sender: Address,
+        chain: Chain,
+        *,
+        depth: int = 0,
+    ) -> CallTrace:
+        from .transactions import PanicCodeEnum
+
+        origin = Account(sender, chain)
+        fqn_to_contract_abi = partial(
+            fqn_to_contract_abi_impl, contracts_by_fqn=get_contracts_by_fqn()
+        )
+
+        if trace.metadata is not None:
+            try:
+                fqn = contracts_by_metadata[trace.metadata]
+            except KeyError:
+                fqn = None
+        else:
+            fqn = None
+
+        if Address(0) < trace.target_address <= Address(9):
+            precompiled_info = get_precompiled_info(
+                trace.target_address,
+                trace.input,
+            )
+            call_trace = CallTrace(
+                contract=None,
+                contract_name="<precompiled>",
+                function_name=precompiled_info[0],
+                selector=None,
+                address=trace.target_address,
+                arguments=precompiled_info[1],
+                argument_names=precompiled_info[2],
+                gas=trace.gas_limit,
+                value=trace.value,
+                kind=trace.kind,
+                depth=depth,
+                chain=chain,
+                origin=origin,
+                output_abi=None,
+                abi={},
+                function_is_special=False,
+            )
+        elif (
+            trace.target_address
+            == Address("0x000000000000000000636F6e736F6c652e6c6f67")
+            and trace.input[:4] in hardhat_console.abis
+        ):
+            fn_abi = hardhat_console.abis[trace.input[:4]]
+            try:
+                args, arg_names = _decode_args(fn_abi, trace.input[4:], chain)
+            except Exception:
+                args = None
+                arg_names = None
+
+            call_trace = CallTrace(
+                contract=None,
+                contract_name="console",
+                function_name="log",
+                selector=trace.input[:4],
+                address=trace.target_address,
+                arguments=args,
+                argument_names=arg_names,
+                gas=trace.gas_limit,
+                value=trace.value,
+                kind=trace.kind,
+                depth=depth,
+                chain=chain,
+                origin=origin,
+                output_abi=[],
+                abi={},
+                function_is_special=False,
+            )
+        elif trace.kind.upper() in {CallTraceKind.CREATE, CallTraceKind.CREATE2}:
+            # even though fqn is known, it is still needed to compute the offset of constructor data in creation code
+            try:
+                fqn, constructor_offset = get_fqn_from_creation_code(trace.input)
+
+                contract_name = fqn.split(":")[-1]
+                obj, contract_abi = fqn_to_contract_abi(fqn)
+
+                if "constructor" not in contract_abi:
+                    args = []
+                    arg_names = []
+                else:
+                    fn_abi = contract_abi["constructor"]
+                    try:
+                        args, arg_names = _decode_args(
+                            fn_abi["inputs"],
+                            trace.input[constructor_offset:],
+                            chain,
+                        )
+                    except Exception:
+                        args = None
+                        arg_names = None
+            except ValueError:
+                fqn = None
+                obj = None
+                contract_abi = {}
+                contract_name = None
+                args = []
+                arg_names = []
+
+            call_trace = CallTrace(
+                contract=obj,
+                contract_name=contract_name,
+                function_name="constructor",
+                selector=None,
+                address=trace.target_address,
+                arguments=args,
+                argument_names=arg_names,
+                gas=trace.gas_limit,
+                value=trace.value,
+                kind=trace.kind,
+                depth=depth,
+                chain=chain,
+                origin=origin,
+                output_abi=[],
+                abi=contract_abi,
+                function_is_special=True,
+            )
+        elif fqn is not None or (
+            chain.forked_chain_id is not None
+            and (
+                explorer_info := get_name_abi_from_explorer_cached(
+                    str(trace.target_address), chain.forked_chain_id
+                )
+            )
+            is not None
+        ):
+            if fqn is not None:
+                contract_name = fqn.split(":")[-1]
+                obj, contract_abi = fqn_to_contract_abi(fqn)
+            else:
+                contract_name, contract_abi = explorer_info
+                obj = None
+
+            if len(trace.input) >= 4:
+                selector = trace.input[:4]
+                if selector in contract_abi:
+                    fn_abi = contract_abi[selector]
+                    try:
+                        args, arg_names = _decode_args(
+                            fn_abi["inputs"], trace.input[4:], chain
+                        )
+                    except Exception:
+                        args = None
+                        arg_names = None
+                    output_abi = fn_abi["outputs"] if "outputs" in fn_abi else []
+                    fn_name = fn_abi["name"]
+                    is_special = False
+                elif "fallback" in contract_abi and (
+                    trace.value == 0
+                    or contract_abi["fallback"]["stateMutability"] == "payable"
+                ):
+                    selector = None
+                    fn_name = "fallback"
+                    args = [trace.input]
+                    arg_names = [None]
+                    output_abi = []
+                    is_special = True
+                else:
+                    selector = None
+                    fn_name = None
+                    args = [trace.input]
+                    arg_names = [None]
+                    output_abi = []
+                    is_special = True
+            else:
+                selector = None
+                output_abi = []
+                if len(trace.input) == 0 and "receive" in contract_abi:
+                    fn_name = "receive"
+                    args = []
+                    arg_names = []
+                    is_special = True
+                elif "fallback" in contract_abi and (
+                    trace.value == 0
+                    or contract_abi["fallback"]["stateMutability"] == "payable"
+                ):
+                    fn_name = "fallback"
+                    args = [trace.input]
+                    arg_names = [None]
+                    is_special = True
+                else:
+                    fn_name = None
+                    args = [trace.input]
+                    arg_names = [None]
+                    is_special = True
+
+            call_trace = CallTrace(
+                contract=obj,
+                contract_name=contract_name,
+                function_name=fn_name,
+                selector=selector,
+                address=trace.target_address,
+                arguments=args,
+                argument_names=arg_names,
+                gas=trace.gas_limit,
+                value=trace.value,
+                kind=trace.kind,
+                depth=depth,
+                chain=chain,
+                origin=origin,
+                output_abi=output_abi,
+                abi=contract_abi,
+                function_is_special=is_special,
+            )
+        else:
+            breakpoint()
+            call_trace = CallTrace(
+                contract=None,
+                contract_name=None,
+                function_name=None,
+                selector=None,
+                address=trace.target_address,
+                arguments=[trace.input],
+                argument_names=[None],
+                gas=trace.gas_limit,
+                value=trace.value,
+                kind=trace.kind,
+                depth=depth,
+                chain=chain,
+                origin=origin,
+                output_abi=None,
+                abi={},
+                function_is_special=True,
+            )
+
+        for log in trace.logs:
+            try:
+                event_args, event_names = _decode_event_args(
+                    call_trace._abi[log.topics[0]]["inputs"],
+                    log.topics[1:],
+                    log.data,
+                    chain,
+                )
+                event = CallTraceEvent(
+                    name=call_trace._abi[log.topics[0]]["name"],
+                    args=event_args,
+                    arg_names=event_names,
+                )
+            except Exception as ex:
+                event = CallTraceEvent(
+                    name="UnknownEvent",
+                    args=log.topics + [log.data],
+                    arg_names=[f"topic{i}" for i in range(len(log.topics))] + ["data"],
+                )
+            call_trace._events.append(event)
+            call_trace._all_events.append(event)
+
+        for subtrace in trace.subtraces:
+            subtrace_call_trace = CallTrace.from_native_trace(
+                subtrace, sender, chain, depth=depth + 1
+            )
+            subtrace_call_trace._parent = call_trace
+            call_trace._subtraces.append(subtrace_call_trace)
+            if subtrace.success:
+                call_trace._all_events.extend(subtrace_call_trace._all_events)
+
+        call_trace._status = trace.success
+        if trace.success:
+            # set return value & return names
+            try:
+                if call_trace._output_abi is not None:
+                    return_value, return_names = _decode_args(
+                        call_trace._output_abi, trace.output, chain
+                    )
+                else:
+                    return_value, return_names = _decode_precompiled(
+                        trace.target_address, trace.output
+                    )
+            except Exception as ex:
+                return_value = [trace.output]
+                return_names = [None]
+
+            call_trace._return_value = return_value
+            call_trace._return_names = return_names
+        elif trace.result.upper() == "REVERT":
+            call_trace._all_events.clear()
+            call_trace._revert_data = trace.output
+
+            if (
+                subtrace := next(
+                    (
+                        t
+                        for t in call_trace._subtraces
+                        if t._revert_data == trace.output
+                    ),
+                    None,
+                )
+            ) is not None:
+                call_trace._error_name = subtrace._error_name
+                call_trace._error_arguments = subtrace._error_arguments
+                call_trace._error_names = subtrace._error_names
+            elif len(trace.output) < 4 or trace.output[:4] not in call_trace._abi:
+                call_trace._error_name = "UnknownRevertError"
+                call_trace._error_arguments = [trace.output]
+                call_trace._error_names = [None]
+            else:
+                try:
+                    error_args, error_names = _decode_args(
+                        call_trace._abi[trace.output[:4]]["inputs"],
+                        trace.output[4:],
+                        chain,
+                    )
+                    call_trace._error_name = call_trace._abi[trace.output[:4]]["name"]
+                    if (
+                        trace.output[:4] == bytes.fromhex("4e487b71")
+                        and error_args is not None
+                    ):
+                        # convert Panic int to enum
+                        error_args[0] = PanicCodeEnum(error_args[0])
+                    call_trace._error_arguments = error_args
+                    call_trace._error_names = error_names
+                except Exception:
+                    call_trace._error_name = "UnknownRevertError"
+                    call_trace._error_arguments = [trace.output]
+                    call_trace._error_names = [None]
+        else:
+            call_trace._all_events.clear()
+            call_trace._error_name = trace.result
+            call_trace._error_arguments = []
+            call_trace._error_names = []
+
+        return call_trace
+
+
+class NativeLog:
+    topics: List[bytes]
+    data: bytes
+
+
+class NativeTrace:
+    metadata: Optional[bytes]
+    input: bytes
+    target_address: Address
+    kind: CallTraceKind
+    value: int
+    gas_limit: int
+
+    output: bytes
+    success: bool
+    result: str
+
+    logs: List[NativeLog]
+    subtraces: List[NativeTrace]
