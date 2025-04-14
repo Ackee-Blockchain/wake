@@ -266,7 +266,14 @@ class ReproducibleFlowState:
     flow_num: int
     flow_name: str
     flow_params: List[Any]
-    chain_block_time_infos: dict[int, BlockTimeInfo] # chain_id -> block_number
+    chain_block_time_infos: dict[int, BlockTimeInfo] # chain_id -> block_number # original executed
+    """
+    Timestamp got at data collecting phase
+    """
+    executed_timestamp_infos:dict[int, BlockTimeInfo] # chain_id -> block_timestamp # after shrink timestamp
+    """
+    Timestamp after shrink
+    """
 
     def to_dict(self):
         return {
@@ -284,6 +291,10 @@ class ReproducibleFlowState:
                 str(chain_id): block_time_info.to_dict()  # Convert BlockTimeInfo to dict
                 for chain_id, block_time_info in self.chain_block_time_infos.items()
             },
+            "executed_timestamp_infos": {
+                str(chain_id): block_time_info.to_dict()  # Convert BlockTimeInfo to dict
+                for chain_id, block_time_info in self.executed_timestamp_infos.items()
+            },
         }
 
     @classmethod
@@ -298,9 +309,14 @@ class ReproducibleFlowState:
             flow_num=data["flow_num"],
             flow_name=data["flow_name"],
             flow_params=data["flow_params"],
+            # not necessary this data for reproduction howevever does not much use data and might usable in the future
             chain_block_time_infos={
                 int(chain_id): BlockTimeInfo.from_dict(block_time_info_dict)  # Convert dict back to BlockTimeInfo
                 for chain_id, block_time_info_dict in data["chain_block_time_infos"].items()
+            },
+            executed_timestamp_infos={
+                int(chain_id): BlockTimeInfo.from_dict(block_time_info_dict)  # Convert dict back to BlockTimeInfo
+                for chain_id, block_time_info_dict in data["executed_timestamp_infos"].items()
             },
         )
 
@@ -404,6 +420,12 @@ def shrank_reproduce(test_class: type[FuzzTest], dry_run: bool = False):
         )
         if flow is None:
             raise Exception("Flow not found")
+
+        for chain in chains:
+            block_time_info = store_data.required_flows[j].executed_timestamp_infos[chain.chain_id]
+            if block_time_info.block_timestamp > chain.blocks["latest"].timestamp:
+                chain.mine(lambda x : x + block_time_info.block_timestamp - chain.blocks["latest"].timestamp)
+
         flow_params = store_data.required_flows[j].flow_params
         test_instance._flow_num = store_data.required_flows[j].flow_num
         if not hasattr(flow, "precondition") or getattr(flow, "precondition")(
@@ -535,6 +557,7 @@ def shrink_collecting_phase(
                             flow_num=j,
                             flow=flow,
                             chain_block_time_infos=chain_block_time_infos,
+                            executed_timestamp_infos={},
                         )
                     )
 
@@ -760,6 +783,13 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
                         if relative_timestamp > 0:
                             chain.mine(lambda x : x + relative_timestamp)
 
+
+                        # passively collect executing timestamp
+                        curr_flow_state.executed_timestamp_infos[chain.chain_id] = BlockTimeInfo(
+                            block_number=chain.blocks["latest"].number,
+                            block_timestamp=chain.blocks["latest"].timestamp
+                        )
+
                     flow = curr_flow_state.flow
                     flow_params = curr_flow_state.flow_params
 
@@ -931,6 +961,11 @@ def shrink_test(test_class: type[FuzzTest], flows_count: int):
 
                         if relative_timestamp > 0:
                             chain.mine(lambda x : x + relative_timestamp)
+
+                        curr_flow_state.executed_timestamp_infos[chain.chain_id] = BlockTimeInfo(
+                            block_number=chain.blocks["latest"].number,
+                            block_timestamp=chain.blocks["latest"].timestamp
+                        )
 
                     random.setstate(curr_flow_state.random_state)
                     flow = curr_flow_state.flow
