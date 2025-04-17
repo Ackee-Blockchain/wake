@@ -74,6 +74,7 @@ _is_fuzzing: bool = False
 
 _fuzz_test_stats: Dict[str, Dict[str, Dict[Optional[str], int]]] = {}
 
+_debug_right_before_snapshot_period: int
 
 def set_is_fuzzing(is_fuzzing: bool):
     global _is_fuzzing
@@ -96,6 +97,14 @@ def get_shrank_path() -> Optional[Path]:
 def set_current_test_id(test_id: str):
     global _current_test_id
     _current_test_id = test_id
+
+def set_debug_right_before_snapshot_period(snapshot_period: int):
+    global _debug_right_before_snapshot_period
+    _debug_right_before_snapshot_period = snapshot_period
+
+
+def get_debug_right_before_snapshot_period() -> int:
+    return _debug_right_before_snapshot_period
 
 
 def get_current_test_id() -> Optional[str]:

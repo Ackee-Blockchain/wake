@@ -115,7 +115,10 @@ class PytestWakePluginSingle:
         import json
 
         # select correct item from
-        if self._test_mode == 0:
+        if self._test_mode == 0 or self._test_mode == 4:
+            # normal fuzzing
+            if self._test_mode == 4:
+                set_fuzz_mode(4)
             return
         elif self._test_mode == 1:
             # shrink
@@ -170,6 +173,7 @@ class PytestWakePluginSingle:
 
             set_shrank_path(shrank_data_path)
         elif self._test_mode == 3:
+            # Ru
             shrink_crash_path = self.get_shrink_argument_path(
                 self._test_info_path, "crashes"
             )
@@ -192,6 +196,8 @@ class PytestWakePluginSingle:
                 )
 
             self._test_random_state = crash_log_dict["initial_random_state"]
+
+
 
     def pytest_runtest_setup(self, item: Item):
         reset_exception_handled()
