@@ -100,6 +100,18 @@ class FileAndPassParamType(click.ParamType):
     required=False,
 )
 @click.option(
+    "-DR",
+    "--debug-right-before",
+    # Didn't use click.Path since we accept relative index of crash log file
+    type=int,
+    help="Snapshot period of right before exception flow.",
+    is_flag=False,
+    flag_value="1000",
+    default=None,
+    required=False,
+)
+
+@click.option(
     "-SH",
     "--shrink",
     # Didn't use click.Path since we accept relative index of crash log file
@@ -150,6 +162,7 @@ def run_test(
     dist: str,
     verbosity: int,
     random_state: Optional[str],
+    debug_right_before: Optional[int],
     shrink: Optional[str],
     shrink_exact_flow: bool,
     shrink_exact_exception: bool,
@@ -255,6 +268,7 @@ def run_test(
             set_shrink_exact_exception,
             set_shrink_exact_flow,
             set_shrink_target_invariants_only,
+            set_debug_right_before_snapshot_period
         )
         from wake.testing.pytest_plugin_single import PytestWakePluginSingle
 
@@ -272,6 +286,9 @@ def run_test(
         if shrank:
             test_mode = 2
             test_info_path = shrank
+        if debug_right_before is not None:
+            test_mode = 4
+            set_debug_right_before_snapshot_period(debug_right_before)
         sys.exit(
             pytest.main(
                 pytest_args,
