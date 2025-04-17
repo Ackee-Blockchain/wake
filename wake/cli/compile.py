@@ -12,12 +12,17 @@ from click.core import Context
 from wake.core.enums import EvmVersionEnum
 
 if TYPE_CHECKING:
-    from wake.config import WakeConfig
     from wake.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
     from wake.compiler.compiler import SolidityCompiler
+    from wake.config import WakeConfig
 
 
-def export_json(config: WakeConfig, compiler: SolidityCompiler, build: ProjectBuild, build_info: ProjectBuildInfo):
+def export_json(
+    config: WakeConfig,
+    compiler: SolidityCompiler,
+    build: ProjectBuild,
+    build_info: ProjectBuildInfo,
+):
     import json
     import platform
 
@@ -46,7 +51,7 @@ def export_json(config: WakeConfig, compiler: SolidityCompiler, build: ProjectBu
 
 async def compile(
     config: WakeConfig,
-    paths: Tuple[str],
+    paths: Tuple[str, ...],
     no_artifacts: bool,
     no_warnings: bool,
     force: bool,
@@ -74,7 +79,9 @@ async def compile(
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
         if len(paths) == 0:
-            for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
+            for f in glob.iglob(
+                str(config.project_root_path / "**/*.sol"), recursive=True
+            ):
                 file = Path(f)
                 if (
                     not any(
@@ -123,7 +130,9 @@ async def compile(
 
         if export == "json":
             fs_handler.register_callback(
-                lambda build, build_info: export_json(config, compiler, build, build_info)
+                lambda build, build_info: export_json(
+                    config, compiler, build, build_info
+                )
             )
 
         observer = Observer()
@@ -170,7 +179,9 @@ async def compile(
         elif export == "json":
             assert compiler.latest_build is not None
             assert compiler.latest_build_info is not None
-            export_json(config, compiler, compiler.latest_build, compiler.latest_build_info)
+            export_json(
+                config, compiler, compiler.latest_build, compiler.latest_build_info
+            )
 
 
 @click.command(name="compile")
@@ -289,7 +300,7 @@ async def compile(
 @click.pass_context
 def run_compile(
     ctx: Context,
-    paths: Tuple[str],
+    paths: Tuple[str, ...],
     no_artifacts: bool,
     no_warnings: bool,
     force: bool,
@@ -347,5 +358,7 @@ def run_compile(
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
     asyncio.run(
-        compile(config, paths, no_artifacts, no_warnings, force, watch, incremental, export)
+        compile(
+            config, paths, no_artifacts, no_warnings, force, watch, incremental, export
+        )
     )

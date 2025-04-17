@@ -724,6 +724,7 @@ def run_init_gitignore(ctx: Context) -> None:
 
 async def run_init_pytypes(
     config: WakeConfig,
+    paths: Tuple[str, ...],
     return_tx: bool,
     warnings: bool,
     watch: bool,
@@ -753,17 +754,43 @@ async def run_init_pytypes(
     sol_files: Set[Path] = set()
     start = time.perf_counter()
     with console.status("[bold green]Searching for *.sol files...[/]"):
-        for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
-            file = Path(f)
-            if (
-                not any(
-                    is_relative_to(file, p) for p in config.compiler.solc.exclude_paths
-                )
-                and file.is_file()
+        if len(paths) == 0:
+            for f in glob.iglob(
+                str(config.project_root_path / "**/*.sol"), recursive=True
             ):
-                sol_files.add(file)
+                file = Path(f)
+                if (
+                    not any(
+                        is_relative_to(file, p)
+                        for p in config.compiler.solc.exclude_paths
+                    )
+                    and file.is_file()
+                ):
+                    sol_files.add(file)
+        else:
+            for p in paths:
+                path = Path(p)
+                if path.is_file():
+                    if not path.match("*.sol"):
+                        raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                    sol_files.add(path)
+                elif path.is_dir():
+                    for f in glob.iglob(str(path / "**/*.sol"), recursive=True):
+                        file = Path(f)
+                        if (
+                            not any(
+                                is_relative_to(file, p)
+                                for p in config.compiler.solc.exclude_paths
+                            )
+                            and file.is_file()
+                        ):
+                            sol_files.add(file)
+                else:
+                    raise ValueError(f"Argument `{p}` is not a file or directory.")
+
         for file in Path(config.wake_contracts_path).rglob("**/*.sol"):
             sol_files.add(file)
+
     end = time.perf_counter()
     console.log(
         f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
@@ -829,6 +856,7 @@ async def run_init_pytypes(
 
 
 @run_init.command(name="pytypes")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--return-tx",
     is_flag=True,
@@ -936,6 +964,7 @@ async def run_init_pytypes(
 @click.pass_context
 def init_pytypes(
     ctx: Context,
+    paths: Tuple[str, ...],
     return_tx: bool,
     warnings: bool,
     watch: bool,
@@ -987,7 +1016,9 @@ def init_pytypes(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    asyncio.run(run_init_pytypes(config, return_tx, warnings, watch, incremental))
+    asyncio.run(
+        run_init_pytypes(config, paths, return_tx, warnings, watch, incremental)
+    )
 
 
 @run_init.command(name="config")
