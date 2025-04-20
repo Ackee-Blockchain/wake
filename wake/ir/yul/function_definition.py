@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from wake.ir.ast import SolcYulFunctionDefinition
 from wake.utils.decorators import weak_self_lru_cache
 
-from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc, YulStatementAbc
 from .block import YulBlock
@@ -15,9 +13,6 @@ from .typed_name import YulTypedName
 
 if TYPE_CHECKING:
     from wake.analysis.cfg import ControlFlowGraph
-
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
 
 
 class YulFunctionDefinition(YulStatementAbc):
@@ -135,10 +130,3 @@ class YulFunctionDefinition(YulStatementAbc):
         from wake.analysis.cfg import ControlFlowGraph
 
         return ControlFlowGraph(self)
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        # the declaration itself does nothing
-        return set()

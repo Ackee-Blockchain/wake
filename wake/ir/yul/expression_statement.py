@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator
 
 from wake.ir.ast import SolcYulExpressionStatement, SolcYulFunctionCall
 from wake.ir.utils import IrInitTuple
 
-from ..enums import ModifiesStateFlag
 from .abc import YulAbc, YulStatementAbc
 from .function_call import YulFunctionCall
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
     from .block import YulBlock
 
 
@@ -70,9 +67,3 @@ class YulExpressionStatement(YulStatementAbc):
             Underlying expression.
         """
         return self._expression
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self._expression.modifies_state

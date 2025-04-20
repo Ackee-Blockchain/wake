@@ -1,19 +1,13 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import Iterator
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcNewExpression
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.type_names.abc import TypeNameAbc
-from wake.ir.types import Contract
 from wake.ir.utils import IrInitTuple
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class NewExpression(ExpressionAbc):
@@ -69,12 +63,3 @@ class NewExpression(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        if isinstance(self.type, Contract):
-            return {(self, ModifiesStateFlag.DEPLOYS_CONTRACT)}
-        else:
-            return set()

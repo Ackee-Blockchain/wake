@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from functools import reduce
-from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from wake.ir.ast import (
     SolcYulAssignment,
@@ -20,25 +18,15 @@ from wake.ir.ast import (
 )
 from wake.ir.utils import IrInitTuple
 
-from ..enums import ModifiesStateFlag
 from .abc import YulAbc, YulStatementAbc
 
 if TYPE_CHECKING:
     from wake.ir.statements.inline_assembly import InlineAssembly
 
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
-    from .assignment import YulAssignment
-    from .break_statement import YulBreak
     from .case_ import YulCase
-    from .continue_statement import YulContinue
-    from .expression_statement import YulExpressionStatement
     from .for_loop import YulForLoop
     from .function_definition import YulFunctionDefinition
     from .if_statement import YulIf
-    from .leave import YulLeave
-    from .switch import YulSwitch
-    from .variable_declaration import YulVariableDeclaration
 
 
 class YulBlock(YulStatementAbc):
@@ -134,13 +122,3 @@ class YulBlock(YulStatementAbc):
             Statements contained in this block.
         """
         return tuple(self._statements)
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return reduce(
-            or_,
-            (statement.modifies_state for statement in self.statements),
-            set(),
-        )

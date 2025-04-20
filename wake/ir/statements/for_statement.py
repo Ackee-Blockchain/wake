@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import (
@@ -10,7 +9,6 @@ from wake.ir.ast import (
     SolcForStatement,
     SolcVariableDeclarationStatement,
 )
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.statements.expression_statement import ExpressionStatement
@@ -18,10 +16,8 @@ from wake.ir.statements.variable_declaration_statement import (
     VariableDeclarationStatement,
 )
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .if_statement import IfStatement
@@ -192,20 +188,6 @@ class ForStatement(StatementAbc):
             Loop expression of the for loop, if any.
         """
         return self._loop_expression
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = set()
-        if self.initialization_expression is not None:
-            ret |= self.initialization_expression.modifies_state
-        if self.condition is not None:
-            ret |= self.condition.modifies_state
-        if self.loop_expression is not None:
-            ret |= self.loop_expression.modifies_state
-        return ret
 
     def statements_iter(self) -> Iterator[StatementAbc]:
         yield self

@@ -1,27 +1,18 @@
 from __future__ import annotations
 
 import weakref
-from functools import reduce
-from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
-from wake.ir.enums import (
-    FunctionCallKind,
-    GlobalSymbol,
-    ModifiesStateFlag,
-    StateMutability,
-)
+from wake.ir.enums import FunctionCallKind, GlobalSymbol
 from wake.utils.decorators import weak_self_lru_cache
 
-from ...utils import return_on_recursion
 from ..ast import SolcFunctionCall
 from ..declarations.contract_definition import ContractDefinition
 from ..declarations.error_definition import ErrorDefinition
 from ..declarations.event_definition import EventDefinition
 from ..declarations.function_definition import FunctionDefinition
-from ..declarations.modifier_definition import ModifierDefinition
 from ..declarations.struct_definition import StructDefinition
 from ..declarations.variable_declaration import VariableDeclaration
 from ..expressions.abc import ExpressionAbc
@@ -34,10 +25,6 @@ from ..type_names.array_type_name import ArrayTypeName
 from ..type_names.elementary_type_name import ElementaryTypeName
 from ..type_names.user_defined_type_name import UserDefinedTypeName
 from ..utils import IrInitTuple
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 logger = get_logger(__name__)
 
@@ -257,69 +244,3 @@ class FunctionCall(ExpressionAbc):
         if self.kind == FunctionCallKind.TYPE_CONVERSION:
             return self.expression.is_ref_to_state_variable
         return False
-
-    @property
-    @return_on_recursion(frozenset())
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = self.expression.modifies_state | reduce(
-            or_, (arg.modifies_state for arg in self.arguments), set()
-        )
-
-        if self.kind == FunctionCallKind.FUNCTION_CALL:
-            called_function = self.function_called
-            if called_function in {
-                GlobalSymbol.SELFDESTRUCT,
-                GlobalSymbol.SUICIDE,
-            }:
-                ret |= {(self, ModifiesStateFlag.SELFDESTRUCTS)}
-            elif called_function in {
-                GlobalSymbol.ADDRESS_TRANSFER,
-                GlobalSymbol.ADDRESS_SEND,
-            }:
-                ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
-            elif called_function == GlobalSymbol.ADDRESS_CALL:
-                ret |= {(self, ModifiesStateFlag.PERFORMS_CALL)}
-            elif called_function == GlobalSymbol.ADDRESS_DELEGATECALL:
-                ret |= {(self, ModifiesStateFlag.PERFORMS_DELEGATECALL)}
-            elif (
-                called_function
-                in {
-                    GlobalSymbol.ARRAY_PUSH,
-                    GlobalSymbol.ARRAY_POP,
-                    GlobalSymbol.BYTES_PUSH,
-                    GlobalSymbol.BYTES_POP,
-                }
-                and self.expression.is_ref_to_state_variable
-            ):
-                ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
-            elif called_function == GlobalSymbol.FUNCTION_VALUE:
-                ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
-            elif isinstance(called_function, FunctionDefinition):
-                if called_function.state_mutability in {
-                    StateMutability.PURE,
-                    StateMutability.VIEW,
-                }:
-                    pass
-                elif called_function.body is not None:
-                    ret |= called_function.body.modifies_state
-                    for modifier in called_function.modifiers:
-                        modifier_def = modifier.modifier_name.referenced_declaration
-                        assert isinstance(modifier_def, ModifierDefinition)
-                        if modifier_def.body is not None:
-                            ret |= modifier_def.body.modifies_state
-                elif called_function.state_mutability == StateMutability.NONPAYABLE:
-                    ret |= {
-                        (
-                            self,
-                            ModifiesStateFlag.CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION,
-                        )
-                    }
-                elif called_function.state_mutability == StateMutability.PAYABLE:
-                    ret |= {
-                        (self, ModifiesStateFlag.CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION)
-                    }
-                else:
-                    assert False
-        return ret

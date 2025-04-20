@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcWhileStatement
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..yul.abc import YulAbc
@@ -104,13 +101,6 @@ class WhileStatement(StatementAbc):
             Condition of the while statement.
         """
         return self._condition
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.body.modifies_state | self.condition.modifies_state
 
     def statements_iter(self) -> Iterator[StatementAbc]:
         yield self

@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
-from wake.utils.decorators import weak_self_lru_cache
 
 from .abc import StatementAbc
 
 if TYPE_CHECKING:
     from ..meta.parameter_list import ParameterList
-    from ..yul.abc import YulAbc
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcReturn
@@ -127,12 +123,3 @@ class Return(StatementAbc):
             Expression returned by the return statement, if any.
         """
         return self._expression
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        if self._expression is None:
-            return set()
-        return self._expression.modifies_state

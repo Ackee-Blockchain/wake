@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from wake.ir.ast import SolcYulLiteral
-from wake.ir.enums import ModifiesStateFlag, YulLiteralKind
+from wake.ir.enums import YulLiteralKind
 from wake.ir.utils import IrInitTuple
 
 from .abc import YulAbc
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
     from .assignment import YulAssignment
     from .case_ import YulCase
     from .expression_statement import YulExpressionStatement
@@ -125,9 +123,3 @@ class YulLiteral(YulAbc):
             Byte representation of the literal.
         """
         return self._hex_value
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return set()

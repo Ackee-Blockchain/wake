@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import weakref
 from bisect import bisect
-from functools import lru_cache, partial
+from functools import partial
 from typing import TYPE_CHECKING, FrozenSet, Iterator, Optional, Set, Tuple, Union
 
 from intervaltree import IntervalTree
@@ -15,7 +15,6 @@ from wake.ir.enums import (
     InlineAssemblyEvmVersion,
     InlineAssemblyFlag,
     InlineAssemblySuffix,
-    ModifiesStateFlag,
 )
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.statements.abc import StatementAbc
@@ -27,9 +26,7 @@ from ...regex_parser import SoliditySourceParser
 from ..yul.identifier import YulIdentifier
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
     from ..meta.source_unit import SourceUnit
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -363,10 +360,3 @@ class InlineAssembly(StatementAbc):
         if len(intervals) == 0:
             return None
         return intervals.pop().data
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.yul_block.modifies_state

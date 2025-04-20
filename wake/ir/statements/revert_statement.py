@@ -1,20 +1,15 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcRevertStatement
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.function_call import FunctionCall
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -101,10 +96,3 @@ class RevertStatement(StatementAbc):
             Expression representing the error call.
         """
         return self._error_call
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.error_call.modifies_state

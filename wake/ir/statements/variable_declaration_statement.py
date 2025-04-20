@@ -1,20 +1,16 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcVariableDeclarationStatement
 from wake.ir.declarations.variable_declaration import VariableDeclaration
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -136,19 +132,3 @@ class VariableDeclarationStatement(StatementAbc):
             Initial value assigned to the declared variables (if any).
         """
         return self._initial_value
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = set()
-        if self.initial_value is not None:
-            ret |= self.initial_value.modifies_state
-            if any(
-                declaration.is_state_variable
-                for declaration in self.declarations
-                if declaration is not None
-            ):
-                ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
-        return ret

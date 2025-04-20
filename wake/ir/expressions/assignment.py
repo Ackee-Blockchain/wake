@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import Iterator, Optional, Set, Tuple, Union
 
 from typing_extensions import Literal
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcAssignment
-from wake.ir.enums import AssignmentOperator, GlobalSymbol, ModifiesStateFlag
+from wake.ir.enums import AssignmentOperator, GlobalSymbol
 from wake.ir.utils import IrInitTuple
 from wake.utils.decorators import weak_self_lru_cache
 
@@ -23,11 +23,6 @@ from .identifier import Identifier
 from .index_access import IndexAccess
 from .member_access import MemberAccess
 from .tuple_expression import TupleExpression
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
-
 
 AssignedVariablePath = Tuple[
     Union[DeclarationAbc, SourceUnit, Literal["IndexAccess"]], ...
@@ -110,16 +105,6 @@ class Assignment(ExpressionAbc):
     @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return self.left_expression.is_ref_to_state_variable
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = self.left_expression.modifies_state | self.right_expression.modifies_state
-        if self.left_expression.is_ref_to_state_variable:
-            ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
-        return ret
 
     @property
     def assigned_variables(self) -> Tuple[Optional[Set[AssignedVariablePath]], ...]:

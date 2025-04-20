@@ -1,23 +1,17 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, reduce
-from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcBlock
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
     from ..declarations.modifier_definition import ModifierDefinition
-    from ..expressions.abc import ExpressionAbc
     from ..meta.try_catch_clause import TryCatchClause
-    from ..yul.abc import YulAbc
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
     from .if_statement import IfStatement
@@ -108,19 +102,6 @@ class Block(StatementAbc):
             Statements in the block.
         """
         return tuple(self._statements)
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        if self.statements is None:
-            return set()
-        return reduce(
-            or_,
-            (statement.modifies_state for statement in self.statements),
-            set(),
-        )
 
     def statements_iter(self) -> Iterator[StatementAbc]:
         yield self
