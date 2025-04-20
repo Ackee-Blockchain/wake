@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
 from wake.ir.ast import SolcYulFunctionCall, SolcYulIdentifier, SolcYulLiteral
 from wake.ir.utils import IrInitTuple
 
-from ...utils import cached_return_on_recursion
+from ...utils import return_on_recursion
 from ..enums import ModifiesStateFlag, YulLiteralKind
 from .abc import YulAbc
 from .block import YulBlock
@@ -140,7 +140,7 @@ class YulFunctionCall(YulAbc):
         return self._function_name
 
     @property
-    @cached_return_on_recursion(frozenset())
+    @return_on_recursion(frozenset())
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

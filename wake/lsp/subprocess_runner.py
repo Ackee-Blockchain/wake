@@ -16,6 +16,7 @@ from wake.compiler.build_data_model import ProjectBuild, ProjectBuildInfo
 from wake.config import WakeConfig
 from wake.core.exceptions import ThreadCancelledError
 from wake.core.lsp_provider import LspProvider
+from wake.core.visitor import get_extra
 from wake.detectors import DetectorImpact
 from wake.detectors.api import DetectorConfidence, DetectorResult, detect
 from wake.ir import DeclarationAbc, SourceUnit
@@ -209,6 +210,10 @@ def run_detectors_thread(
             verify_paths=False,  # pyright: ignore reportGeneralTypeIssues
         )
 
+        extra = get_extra()
+        extra.clear()
+        extra["lsp"] = True
+
         _, detections, detector_exceptions = detect(
             detector_names,
             last_build,
@@ -220,10 +225,12 @@ def run_detectors_thread(
             verify_paths=False,
             capture_exceptions=True,
             logging_handler=logging_handler,
-            extra={"lsp": True},
+            extra=extra,
             cancel_event=detectors_thread_event,
         )
         exceptions = {name: repr(e) for name, e in detector_exceptions.items()}
+
+        extra.clear()
 
         out_queue.put(
             (
@@ -286,6 +293,10 @@ def run_printers_thread(
         with open(os.devnull, "w") as devnull:
             console = Console(file=devnull)
 
+            extra = get_extra()
+            extra.clear()
+            extra["lsp"] = True
+
             _, printer_exceptions = run_printers(
                 printer_names,
                 last_build,
@@ -298,10 +309,12 @@ def run_printers_thread(
                 verify_paths=False,
                 capture_exceptions=True,
                 logging_handler=logging_handler,
-                extra={"lsp": True},
+                extra=extra,
                 cancel_event=printers_thread_event,
             )
         exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
+
+        extra.clear()
 
         out_queue.put(
             (
@@ -360,7 +373,9 @@ def run_detectors_subprocess(
                 source_units = {}
                 interval_trees = {}
                 for path in build["source_units"]:
-                    source_unit, interval_tree = pickle.loads(build["source_units"][path])
+                    source_unit, interval_tree = pickle.loads(
+                        build["source_units"][path]
+                    )
                     source_units[path] = source_unit
                     interval_trees[path] = interval_tree
 
@@ -481,7 +496,9 @@ def run_printers_subprocess(
                 source_units = {}
                 interval_trees = {}
                 for path in build["source_units"]:
-                    source_unit, interval_tree = pickle.loads(build["source_units"][path])
+                    source_unit, interval_tree = pickle.loads(
+                        build["source_units"][path]
+                    )
                     source_units[path] = source_unit
                     interval_trees[path] = interval_tree
 

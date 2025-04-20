@@ -15,7 +15,7 @@ from wake.ir.enums import (
 )
 from wake.utils.decorators import weak_self_lru_cache
 
-from ...utils import cached_return_on_recursion
+from ...utils import return_on_recursion
 from ..ast import SolcFunctionCall
 from ..declarations.contract_definition import ContractDefinition
 from ..declarations.error_definition import ErrorDefinition
@@ -259,7 +259,7 @@ class FunctionCall(ExpressionAbc):
         return False
 
     @property
-    @cached_return_on_recursion(frozenset())
+    @return_on_recursion(frozenset())
     def modifies_state(
         self,
     ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:

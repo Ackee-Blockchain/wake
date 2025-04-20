@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import functools
 from typing import TYPE_CHECKING
+
+from wake.core.visitor import get_extra
+from wake.utils import dict_cache
 
 if TYPE_CHECKING:
     from wake.ir import ContractDefinition, InlineAssembly
 
 
-@functools.lru_cache(maxsize=256)
+@dict_cache(get_extra(), ("_cache", "wake.analysis.proxy.contract_is_proxy"))
 def contract_is_proxy(contract: ContractDefinition) -> bool:
     from wake.ir import InlineAssembly, YulFunctionCall
     from wake.ir.enums import FunctionKind
