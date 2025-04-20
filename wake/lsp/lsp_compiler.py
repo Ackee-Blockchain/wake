@@ -2008,6 +2008,8 @@ class LspCompiler:
                     except UnicodeDecodeError:
                         pass
 
+            errored_files: Set[Path] = set()
+
             for error in solc_output.errors:
                 if error.source_location is not None:
                     path = cu.source_unit_name_to_path(error.source_location.file)
@@ -2043,6 +2045,16 @@ class LspCompiler:
                         errors_per_file[path].add(
                             self.__solc_error_to_diagnostic(error, path, cu, ignored)
                         )
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        errored_files.add(path)
+                else:
+                    # whole compilation unit errored
+                    if error.severity == SolcOutputErrorSeverityEnum.ERROR:
+                        errored_files.update(cu.files)
+
+            _out_edge_bfs(cu, errored_files, errored_files)
+            for file in errored_files:
+                files_to_recompile.discard(file)
 
             errored = any(
                 e
@@ -2051,7 +2063,6 @@ class LspCompiler:
             )
 
             for file in cu.files if errored else set():
-                files_to_recompile.discard(file)
                 # an error occurred during compilation
                 # AST still may be provided, but it must NOT be parsed (pydantic model is not defined for this case)
 
