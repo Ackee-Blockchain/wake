@@ -346,6 +346,7 @@ class LspProvider:
         self._code_lenses.clear()
         self._inlay_hints.clear()
         self._commands.clear()
+        self._callbacks.clear()  # to avoid memory leaks
 
     def clear_commands(self) -> None:
         self._commands.clear()

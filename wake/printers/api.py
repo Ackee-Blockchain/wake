@@ -270,7 +270,7 @@ def run_printers(
         if cls is not None:
 
             def _callback(  # pyright: ignore reportGeneralTypeIssues
-                printer_name: str, *args, **kwargs
+                printer_name: str, instance: Printer, *args, **kwargs
             ):
                 nonlocal paths
                 if paths is None:
@@ -284,7 +284,6 @@ def run_printers(
                 )  # pyright: ignore reportOptionalCall
 
             original_callback = command.callback
-            command.callback = partial(_callback, command.name)
 
             if lsp_provider is not None and cls.execution_mode == "cli":
                 printers.remove(command)
@@ -307,6 +306,8 @@ def run_printers(
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
+
+                command.callback = partial(_callback, command.name, instance)
 
                 try:
                     instance.__init__()
