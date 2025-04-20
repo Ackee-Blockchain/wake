@@ -14,6 +14,16 @@ if TYPE_CHECKING:
     from wake.config import WakeConfig
 
 
+# to be used by detectors and printers to share the common context
+# can be used by @dict_cache and @dict_cached_return_on_recursion decorators for caching
+# it is a responsibility of the API calling detectors/printers to clear this dictionary when needed
+_extra = {}
+
+
+def get_extra():
+    return _extra
+
+
 group_map: Dict[str, List[str]] = {
     # declarations
     "ContractDefinition": ["SolidityAbc", "DeclarationAbc"],

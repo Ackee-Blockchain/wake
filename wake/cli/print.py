@@ -367,6 +367,7 @@ async def print_(
     from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
 
+    from wake.core.visitor import get_extra
     from wake.printers.api import run_printers
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -399,6 +400,10 @@ async def print_(
         assert isinstance(ctx.command, PrintCli)
         assert ctx.invoked_subcommand is not None
 
+        extra = get_extra()
+        extra.clear()
+        extra["lsp"] = False
+
         run_printers(
             ctx.invoked_subcommand,
             build,
@@ -410,8 +415,10 @@ async def print_(
             None,
             args=list(ctx_args),
             capture_exceptions=ignore_errors,
-            extra={"lsp": False},
+            extra=extra,
         )
+
+        extra.clear()
 
         if export == "html":
             console.save_html(

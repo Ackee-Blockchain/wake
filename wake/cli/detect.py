@@ -538,6 +538,7 @@ async def detect_(
     from watchdog.observers import Observer
 
     from wake.config import WakeConfig
+    from wake.core.visitor import get_extra
     from wake.detectors.api import (
         DetectorConfidence,
         DetectorImpact,
@@ -630,6 +631,11 @@ async def detect_(
         else:
             relevant_locations = None
 
+        extra = get_extra()
+        extra.clear()
+        extra["lsp"] = False
+        extra["scan"] = scan_extra
+
         used_detectors, detections, exceptions = detect(
             detectors,
             build,
@@ -643,8 +649,10 @@ async def detect_(
             capture_exceptions=ignore_errors,
             default_min_impact=default_min_impact,  # pyright: ignore reportGeneralTypeIssues
             default_min_confidence=default_min_confidence,  # pyright: ignore reportGeneralTypeIssues
-            extra={"lsp": False, "scan": scan_extra},
+            extra=extra,
         )
+
+        extra.clear()
 
         if ignore_errors:
             for detector_name, exception in exceptions.items():

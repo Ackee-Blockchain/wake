@@ -6,6 +6,7 @@ import wake.ir.types as types
 from wake.analysis.cfg import CfgNode, ControlFlowGraph, TransitionConditionKind
 from wake.analysis.utils import pair_function_call_arguments
 from wake.core import get_logger
+from wake.core.visitor import get_extra
 from wake.ir import (
     Assignment,
     BinaryOperation,
@@ -34,7 +35,7 @@ from wake.ir.enums import (
     Mutability,
     Visibility,
 )
-from wake.utils import cached_return_on_recursion, return_on_recursion
+from wake.utils import dict_cached_return_on_recursion, return_on_recursion
 
 from .expressions import (
     expression_is_global_symbol,
@@ -204,9 +205,6 @@ def expression_is_only_owner(
     return False
 
 
-_publicly_callable_recursion_guard = set()
-
-
 def statement_is_only_owner(
     statement: Union[StatementAbc, YulStatementAbc], check_only_eoa: bool
 ) -> bool:
@@ -230,7 +228,11 @@ def statement_is_only_owner(
     return False
 
 
-@cached_return_on_recursion(False)
+@dict_cached_return_on_recursion(
+    False,
+    get_extra(),
+    ("_cache", "wake.analysis.ownable._cfg_block_or_statement_is_publicly_reachable"),
+)
 def _cfg_block_or_statement_is_publicly_reachable(
     target: Union[CfgNode, StatementAbc],
     cfg: ControlFlowGraph,
