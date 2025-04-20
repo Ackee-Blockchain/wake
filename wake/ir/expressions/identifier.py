@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, partial
-from typing import TYPE_CHECKING, FrozenSet, List, Set, Tuple, Union
+from functools import partial
+from typing import TYPE_CHECKING, FrozenSet, List, Set, Union
 
-from wake.ir.abc import IrAbc, SolidityAbc
+from wake.ir.abc import SolidityAbc
 from wake.ir.ast import AstNodeId, SolcIdentifier
 from wake.ir.declarations.abc import DeclarationAbc
 from wake.ir.declarations.variable_declaration import VariableDeclaration
-from wake.ir.enums import GlobalSymbol, ModifiesStateFlag
+from wake.ir.enums import GlobalSymbol
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
@@ -16,10 +16,7 @@ from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
-    from ..meta.import_directive import ImportDirective
     from ..meta.source_unit import SourceUnit
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class Identifier(ExpressionAbc):
@@ -219,9 +216,3 @@ class Identifier(ExpressionAbc):
             isinstance(referenced_declaration, VariableDeclaration)
             and referenced_declaration.is_state_variable
         )
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return set()

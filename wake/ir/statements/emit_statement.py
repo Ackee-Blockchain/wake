@@ -1,21 +1,17 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from wake.ir.ast import SolcEmitStatement
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 from ..abc import IrAbc, SolidityAbc
-from ..enums import ModifiesStateFlag
 from ..expressions.function_call import FunctionCall
 from ..statements.abc import StatementAbc
 
 if TYPE_CHECKING:
     from ..expressions.abc import ExpressionAbc
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -98,10 +94,3 @@ class EmitStatement(StatementAbc):
             Expression representing the event call.
         """
         return self._event_call
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return {(self, ModifiesStateFlag.EMITS)} | self.event_call.modifies_state

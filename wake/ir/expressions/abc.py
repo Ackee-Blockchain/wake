@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import logging
 import weakref
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Optional
 
 from wake.core import get_logger
 from wake.ir.abc import SolidityAbc, is_not_none
@@ -25,7 +24,6 @@ from wake.ir.ast import (
     SolcUnaryOperation,
     TypeDescriptionsModel,
 )
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.types import TypeAbc
 from wake.ir.utils import IrInitTuple
 from wake.utils.decorators import weak_self_lru_cache
@@ -33,7 +31,6 @@ from wake.utils.string import StringReader
 
 if TYPE_CHECKING:
     from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 logger = get_logger(__name__)
 
@@ -171,20 +168,6 @@ class ExpressionAbc(SolidityAbc, ABC):
 
         Returns:
             `True` if the expression (possibly) is a reference to a state variable.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        """
-        WARNING:
-            Is not considered stable and so is not exported in the documentation.
-
-        Returns:
-            Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
         """
         ...
 

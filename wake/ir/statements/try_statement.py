@@ -1,22 +1,16 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, reduce
-from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcTryStatement
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.function_call import FunctionCall
 from wake.ir.meta.try_catch_clause import TryCatchClause
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -112,20 +106,6 @@ class TryStatement(StatementAbc):
             External call executed in the try statement.
         """
         return self._external_call
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return (
-            reduce(
-                or_,
-                (clause.modifies_state for clause in self._clauses),
-                set(),
-            )
-            | self.external_call.modifies_state
-        )
 
     def statements_iter(self) -> Iterator[StatementAbc]:
         yield self

@@ -1,21 +1,18 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from typing_extensions import Literal
 
 from wake.ir.ast import SolcYulCase
 
-from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc
 from .block import YulBlock
 from .literal import YulLiteral
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
     from .switch import YulSwitch
 
 
@@ -98,9 +95,3 @@ class YulCase(YulAbc):
             Value that is compared to the switch expression.
         """
         return self._value
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self._body.modifies_state

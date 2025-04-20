@@ -1,21 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
-
-from wake.ir.enums import ModifiesStateFlag
-from wake.utils.decorators import weak_self_lru_cache
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from ..statements.block import Block
 from ..utils import IrInitTuple
 from .parameter_list import ParameterList
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
     from ..statements.try_statement import TryStatement
-    from ..yul.abc import YulAbc
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcTryCatchClause
@@ -160,10 +153,3 @@ class TryCatchClause(SolidityAbc):
             Return parameters in the case of a try clause, or error parameters in the case of a catch clause.
         """
         return self._parameters
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.block.modifies_state

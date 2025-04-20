@@ -1,19 +1,13 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import Iterator, Optional
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcIndexAccess
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.utils import IrInitTuple
 from wake.utils.decorators import weak_self_lru_cache
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class IndexAccess(ExpressionAbc):
@@ -89,13 +83,3 @@ class IndexAccess(ExpressionAbc):
     @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
         return self.base_expression.is_ref_to_state_variable
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = self.base_expression.modifies_state
-        if self.index_expression is not None:
-            ret |= self.index_expression.modifies_state
-        return ret

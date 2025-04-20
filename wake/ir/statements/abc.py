@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import weakref
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from abc import ABC
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
 from wake.ir.abc import SolidityAbc, is_not_none
 from wake.ir.ast import (
@@ -24,15 +24,12 @@ from wake.ir.ast import (
     SolcVariableDeclarationStatement,
     SolcWhileStatement,
 )
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
 
 if TYPE_CHECKING:
     from ..declarations.function_definition import FunctionDefinition
     from ..declarations.modifier_definition import ModifierDefinition
-    from ..expressions.abc import ExpressionAbc
     from ..meta.try_catch_clause import TryCatchClause
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -136,20 +133,6 @@ class StatementAbc(SolidityAbc, ABC):
             Parent node of the statement.
         """
         return super().parent
-
-    @property
-    @abstractmethod
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        """
-        WARNING:
-            Is not considered stable and so is not exported in the documentation.
-
-        Returns:
-            Set of child IR nodes (including `self`) that modify the blockchain state and flags describing how the state is modified.
-        """
-        ...
 
     def statements_iter(self) -> Iterator[StatementAbc]:
         """

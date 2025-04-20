@@ -1,21 +1,16 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from functools import partial
+from typing import Iterator, Optional
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import AstNodeId, SolcUnaryOperation
 from wake.ir.declarations.function_definition import FunctionDefinition
-from wake.ir.enums import ModifiesStateFlag, UnaryOpOperator
+from wake.ir.enums import UnaryOpOperator
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class UnaryOperation(ExpressionAbc):
@@ -104,25 +99,6 @@ class UnaryOperation(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = self.sub_expression.modifies_state
-
-        if (
-            self.operator
-            in {
-                UnaryOpOperator.PLUS_PLUS,
-                UnaryOpOperator.MINUS_MINUS,
-                UnaryOpOperator.DELETE,
-            }
-            and self.sub_expression.is_ref_to_state_variable
-        ):
-            ret |= {(self, ModifiesStateFlag.MODIFIES_STATE_VAR)}
-        return ret
 
     @property
     def function(self) -> Optional[FunctionDefinition]:

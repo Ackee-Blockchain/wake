@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, List, Set, Tuple
 import networkx as nx
 import rich_click as click
 
+import wake.analysis as analysis
 import wake.ir as ir
 import wake.ir.types as types
 from wake.detectors import (
@@ -25,8 +26,8 @@ if TYPE_CHECKING:
 def _modifies_state_after_statement(
     function_definition: ir.FunctionDefinition,
     statement: ir.StatementAbc,
-) -> Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]]:
-    ret: Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]] = set()
+) -> Set[Tuple[ir.IrAbc, analysis.ModifiesStateFlag]]:
+    ret: Set[Tuple[ir.IrAbc, analysis.ModifiesStateFlag]] = set()
     cfg = function_definition.cfg
     start = cfg.get_cfg_node(statement)
     graph = cfg.graph
@@ -39,9 +40,9 @@ def _modifies_state_after_statement(
     else:
         index = start.statements.index(statement)
         for s in start.statements[index + 1 :]:
-            ret.update(s.modifies_state)
+            ret.update(analysis.modifies_state(s))
         if start.control_statement is not None:
-            ret.update(start.control_statement.modifies_state)
+            ret.update(analysis.modifies_state(start.control_statement))
 
     queue = deque([])
     visited: Set[CfgNode] = set()
@@ -56,9 +57,9 @@ def _modifies_state_after_statement(
     while len(queue):
         block = queue.popleft()
         for s in block.statements:
-            ret.update(s.modifies_state)
+            ret.update(analysis.modifies_state(s))
         if block.control_statement is not None:
-            ret.update(block.control_statement.modifies_state)
+            ret.update(analysis.modifies_state(block.control_statement))
 
         to: CfgNode
         for _, to in graph.out_edges(block):  # pyright: ignore reportGeneralTypeIssues
@@ -87,7 +88,7 @@ class ReentrancyDetector(Detector):
         function_definition: ir.FunctionDefinition,
         statement: ir.StatementAbc,
         address_source: ir.ExpressionAbc,
-        child_modifies_state: Set[Tuple[ir.IrAbc, ir.enums.ModifiesStateFlag]],
+        child_modifies_state: Set[Tuple[ir.IrAbc, analysis.ModifiesStateFlag]],
         checked_statements: Set[ir.StatementAbc],
     ) -> List[Tuple[Detection, DetectorImpact, DetectorConfidence]]:
         from functools import reduce
@@ -148,18 +149,18 @@ class ReentrancyDetector(Detector):
         }:
             state_mods = reduce(or_, (mod[1] for mod in this_modifies_state))
             if state_mods & (
-                ir.enums.ModifiesStateFlag.MODIFIES_STATE_VAR
-                | ir.enums.ModifiesStateFlag.SENDS_ETHER
-                | ir.enums.ModifiesStateFlag.PERFORMS_CALL
-                | ir.enums.ModifiesStateFlag.CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION
-                | ir.enums.ModifiesStateFlag.CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION
+                analysis.ModifiesStateFlag.MODIFIES_STATE_VAR
+                | analysis.ModifiesStateFlag.SENDS_ETHER
+                | analysis.ModifiesStateFlag.PERFORMS_CALL
+                | analysis.ModifiesStateFlag.CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION
+                | analysis.ModifiesStateFlag.CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION
             ):
                 impact = DetectorImpact.HIGH
             elif state_mods & (
-                ir.enums.ModifiesStateFlag.EMITS
-                | ir.enums.ModifiesStateFlag.DEPLOYS_CONTRACT
-                | ir.enums.ModifiesStateFlag.SELFDESTRUCTS
-                | ir.enums.ModifiesStateFlag.PERFORMS_DELEGATECALL
+                analysis.ModifiesStateFlag.EMITS
+                | analysis.ModifiesStateFlag.DEPLOYS_CONTRACT
+                | analysis.ModifiesStateFlag.SELFDESTRUCTS
+                | analysis.ModifiesStateFlag.PERFORMS_DELEGATECALL
             ):
                 impact = DetectorImpact.WARNING
             else:

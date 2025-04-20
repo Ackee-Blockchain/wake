@@ -332,30 +332,6 @@ class InlineAssemblyFlag(StrEnum):
     MEMORY_SAFE = "memory-safe"
 
 
-class ModifiesStateFlag(IntFlag):
-    """
-    Flag enum describing how an expression ([ExpressionAbc][wake.ir.expressions.abc.ExpressionAbc]) or statement ([StatementAbc][wake.ir.statements.abc.StatementAbc]) modifies the blockchain state.
-    """
-
-    MODIFIES_STATE_VAR = 1
-    EMITS = 2
-    SENDS_ETHER = 4
-    DEPLOYS_CONTRACT = 8
-    SELFDESTRUCTS = 16
-    PERFORMS_CALL = 32
-    PERFORMS_DELEGATECALL = 64
-    CALLS_UNIMPLEMENTED_NONPAYABLE_FUNCTION = 128
-    CALLS_UNIMPLEMENTED_PAYABLE_FUNCTION = 256
-
-    def __repr__(self):
-        if self.value == 0:
-            return f"{self.__class__.__name__}(0)"
-        flags = [f for f in self.__class__ if f in self]
-        return " | ".join(f.name or "" for f in flags)
-
-    __str__ = __repr__
-
-
 class FunctionTypeKind(StrEnum):
     """
     Kind of a [Function][wake.ir.types.Function] type.

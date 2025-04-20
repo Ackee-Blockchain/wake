@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 import weakref
 from bisect import bisect
-from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from functools import partial
+from typing import Iterator, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
@@ -12,7 +12,7 @@ from wake.ir.ast import AstNodeId, SolcMemberAccess
 from wake.ir.declarations.abc import DeclarationAbc
 from wake.ir.declarations.enum_definition import EnumDefinition
 from wake.ir.declarations.variable_declaration import VariableDeclaration
-from wake.ir.enums import GlobalSymbol, ModifiesStateFlag
+from wake.ir.enums import GlobalSymbol
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.expressions.identifier import Identifier
 from wake.ir.meta.import_directive import ImportDirective
@@ -34,10 +34,6 @@ from wake.ir.utils import IrInitTuple
 from wake.utils.decorators import weak_self_lru_cache
 
 from ...regex_parser import SoliditySourceParser
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 MEMBER_RE = re.compile(r"\s*.\s*(?P<member>.+)".encode("utf-8"))
 
@@ -473,10 +469,3 @@ class MemberAccess(ExpressionAbc):
             and referenced_declaration.is_state_variable
             or self.expression.is_ref_to_state_variable
         )
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.expression.modifies_state

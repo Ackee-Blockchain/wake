@@ -7,6 +7,7 @@ import networkx as nx
 import rich_click as click
 from rich import print
 
+import wake.analysis as analysis
 import wake.ir as ir
 import wake.ir.types as types
 from wake.cli import SolidityName
@@ -29,7 +30,7 @@ class StateChangesPrinter(Printer):
         changes: List[
             Tuple[
                 Union[ir.ExpressionAbc, ir.StatementAbc, ir.YulAbc],
-                ir.enums.ModifiesStateFlag,
+                analysis.ModifiesStateFlag,
             ]
         ],
         text: rich.text.Text,
@@ -73,7 +74,7 @@ class StateChangesPrinter(Printer):
 
     def _collect_function_modifies_state(self, node: ir.FunctionDefinition, m: Set):
         if node.body is not None:
-            m |= node.body.modifies_state
+            m |= analysis.modifies_state(node.body)
 
         for mod_inv in node.modifiers:
             mod = mod_inv.modifier_name.referenced_declaration
@@ -89,7 +90,7 @@ class StateChangesPrinter(Printer):
                     pass
             elif isinstance(mod, ir.ModifierDefinition):
                 if mod.body is not None:
-                    m |= mod.body.modifies_state
+                    m |= analysis.modifies_state(mod.body)
             else:
                 raise AssertionError(f"Unexpected modifier type {type(mod)}")
 
@@ -114,7 +115,7 @@ class StateChangesPrinter(Printer):
             m = set()
             self._collect_function_modifies_state(node, m)
         else:
-            m = node.body.modifies_state
+            m = analysis.modifies_state(node.body)
 
         if len(m) == 0:
             return

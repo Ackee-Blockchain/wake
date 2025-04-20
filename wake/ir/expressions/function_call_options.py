@@ -1,20 +1,12 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache, reduce
-from operator import or_
-from typing import TYPE_CHECKING, Iterator, List, Set, Tuple, Union
+from typing import Iterator, List, Tuple
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcFunctionCallOptions
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class FunctionCallOptions(ExpressionAbc):
@@ -111,17 +103,3 @@ class FunctionCallOptions(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        ret = self.expression.modifies_state | reduce(
-            or_,
-            (option.modifies_state for option in self.options),
-            set(),
-        )
-        if "value" in self.names:
-            ret |= {(self, ModifiesStateFlag.SENDS_ETHER)}
-        return ret

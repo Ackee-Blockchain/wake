@@ -1,20 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import Iterator
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcConditional
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
 from wake.utils.decorators import weak_self_lru_cache
 
 from .abc import ExpressionAbc
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class Conditional(ExpressionAbc):
@@ -94,15 +88,4 @@ class Conditional(ExpressionAbc):
         return (
             self.true_expression.is_ref_to_state_variable
             or self.false_expression.is_ref_to_state_variable
-        )
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return (
-            self.condition.modifies_state
-            | self.true_expression.modifies_state
-            | self.false_expression.modifies_state
         )

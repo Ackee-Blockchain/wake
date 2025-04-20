@@ -1,19 +1,15 @@
 from __future__ import annotations
 
 import weakref
-from functools import lru_cache
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Union
 
 from wake.ir.abc import IrAbc, SolidityAbc
 from wake.ir.ast import SolcExpressionStatement
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
-from wake.utils.decorators import weak_self_lru_cache
 
 if TYPE_CHECKING:
-    from ..yul.abc import YulAbc
     from .block import Block
     from .do_while_statement import DoWhileStatement
     from .for_statement import ForStatement
@@ -144,10 +140,3 @@ class ExpressionStatement(StatementAbc):
             Expression of the expression statement.
         """
         return self._expression
-
-    @property
-    @weak_self_lru_cache(maxsize=2048)
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return self.expression.modifies_state

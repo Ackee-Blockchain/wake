@@ -1,19 +1,14 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Iterator, Set, Tuple, Union
+from typing import Iterator
 
 from wake.ir.ast import SolcElementaryTypeNameExpression
-from wake.ir.enums import ModifiesStateFlag
 from wake.ir.utils import IrInitTuple
 
 from ..abc import IrAbc, SolidityAbc
 from ..type_names.elementary_type_name import ElementaryTypeName
 from .abc import ExpressionAbc
-
-if TYPE_CHECKING:
-    from ..statements.abc import StatementAbc
-    from ..yul.abc import YulAbc
 
 
 class ElementaryTypeNameExpression(ExpressionAbc):
@@ -68,9 +63,3 @@ class ElementaryTypeNameExpression(ExpressionAbc):
     @property
     def is_ref_to_state_variable(self) -> bool:
         return False
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return set()

@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from wake.ir.ast import SolcYulIdentifier
 
 from ..abc import is_not_none
-from ..enums import ModifiesStateFlag
 from ..utils import IrInitTuple
 from .abc import YulAbc
 
 if TYPE_CHECKING:
-    from ..expressions.abc import ExpressionAbc
-    from ..statements.abc import StatementAbc
     from ..statements.inline_assembly import ExternalReference
     from .assignment import YulAssignment
     from .expression_statement import YulExpressionStatement
@@ -102,9 +99,3 @@ class YulIdentifier(YulAbc):
             return None
         else:
             return is_not_none(self._external_reference())
-
-    @property
-    def modifies_state(
-        self,
-    ) -> Set[Tuple[Union[ExpressionAbc, StatementAbc, YulAbc], ModifiesStateFlag]]:
-        return set()
