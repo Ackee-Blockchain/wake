@@ -474,7 +474,7 @@ def detect(
         if cls is not None:
 
             def _callback(  # pyright: ignore reportGeneralTypeIssues
-                detector_name: str, *args, **kwargs
+                detector_name: str, instance: Detector, *args, **kwargs
             ):
                 nonlocal paths, min_impact_by_detector, min_confidence_by_detector
                 if paths is None:
@@ -495,7 +495,6 @@ def detect(
                 )  # pyright: ignore reportOptionalCall
 
             original_callback = command.callback
-            command.callback = partial(_callback, command.name)
 
             if lsp_provider is not None and cls.execution_mode == "cli":
                 detectors.remove(command)
@@ -517,6 +516,8 @@ def detect(
                 instance.logger = get_logger(cls.__name__)
                 if logging_handler is not None:
                     instance.logger.addHandler(logging_handler)
+
+                command.callback = partial(_callback, command.name, instance)
 
                 try:
                     instance.__init__()
