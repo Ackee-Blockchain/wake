@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import networkx as nx
 import rich_click as click
@@ -15,16 +15,13 @@ from wake.detectors import (
     DetectorResult,
     detector,
 )
+from wake.utils import return_on_recursion
 from wake_detectors.utils import generate_detector_uri
 
-_recursion_guard = set()
 
-
-def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]:
+@return_on_recursion(tuple())
+def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> Tuple[Detection, ...]:
     ret = []
-    if address_balance in _recursion_guard:
-        return ret
-    _recursion_guard.add(address_balance)
 
     assigned_var_statement = address_balance
     parents: List[ir.IrAbc] = [address_balance]
@@ -76,7 +73,7 @@ def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]
         assigned_var_statement = assigned_var_statement.parent
 
     if assigned_vars is None:
-        return ret
+        return tuple(ret)
 
     assert statement is not None
     for var in assigned_vars:
@@ -89,7 +86,7 @@ def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]
 
     if len(assigned_vars) > 1 or len(next(iter(assigned_vars))) > 1:
         # currently not supported
-        return ret
+        return tuple(ret)
 
     assigned_var = next(iter(assigned_vars))[0]
     assert assigned_var != "IndexAccess" and not isinstance(assigned_var, ir.SourceUnit)
@@ -104,9 +101,9 @@ def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]
             break
         node = node.parent
     if assigned_var_statement is None:
-        return ret
+        return tuple(ret)
     if function_def is None:
-        return ret
+        return tuple(ret)
 
     cfg = function_def.cfg
     assert cfg is not None
@@ -126,7 +123,7 @@ def _process_assigned_vars(address_balance: ir.ExpressionAbc) -> List[Detection]
                 or assigned_var_statement == ref_statement
             ):
                 ret.extend(_process_assigned_vars(ref))
-    return ret
+    return tuple(ret)
 
 
 class BalanceReliedOnDetector(Detector):
@@ -144,7 +141,7 @@ class BalanceReliedOnDetector(Detector):
             if len(subdetections) > 0:
                 self._detections.append(
                     DetectorResult(
-                        Detection(node, "Use of address.balance", tuple(subdetections)),
+                        Detection(node, "Use of address.balance", subdetections),
                         DetectorImpact.WARNING,
                         DetectorConfidence.LOW,
                         uri=generate_detector_uri(
