@@ -217,6 +217,54 @@ def import_foundry_profile(
 
     c = foundry_config["profile"][foundry_profile]
 
+    if "test" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "exclude_paths": config.compiler.solc.exclude_paths.union(
+                            {Path(c["test"])}
+                        )
+                    }
+                }
+            },
+            [],
+        )
+        config.update(
+            {
+                "detectors": {
+                    "ignore_paths": config.detectors.ignore_paths.union(
+                        {Path(c["test"])}
+                    )
+                }
+            },
+            [],
+        )
+
+    if "script" in c:
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "exclude_paths": config.compiler.solc.exclude_paths.union(
+                            {Path(c["script"])}
+                        )
+                    }
+                }
+            },
+            [],
+        )
+        config.update(
+            {
+                "detectors": {
+                    "exclude_paths": config.detectors.ignore_paths.union(
+                        {Path(c["script"])}
+                    )
+                }
+            },
+            [],
+        )
+
     if "remappings" in c:
         config.update({"compiler": {"solc": {"remappings": c["remappings"]}}}, [])
 
