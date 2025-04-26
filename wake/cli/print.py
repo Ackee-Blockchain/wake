@@ -319,9 +319,9 @@ class PrintCli(click.RichGroup):  # pyright: ignore reportPrivateImportUsage
         self._inject_params(cmd)
         super().add_command(cmd, name)
         if self._loading_from_plugins:
-            self.loaded_from_plugins[
-                name
-            ] = self._current_plugin  # pyright: ignore reportGeneralTypeIssues
+            self.loaded_from_plugins[name] = (
+                self._current_plugin
+            )  # pyright: ignore reportGeneralTypeIssues
 
     def get_command(
         self,
@@ -359,10 +359,12 @@ async def print_(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    no_header: bool,
     theme: str,
     watch: bool,
 ):
     import glob
+    from contextlib import nullcontext
 
     from rich.terminal_theme import DEFAULT_TERMINAL_THEME, SVG_EXPORT_THEME
     from watchdog.observers import Observer
@@ -445,7 +447,11 @@ async def print_(
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
+    with (
+        nullcontext()
+        if no_header
+        else console.status("[bold green]Searching for *.sol files...[/]")
+    ):
         for f in glob.iglob(str(config.project_root_path / "**/*.sol"), recursive=True):
             file = Path(f)
             if (
@@ -456,12 +462,13 @@ async def print_(
             ):
                 sol_files.add(file)
     end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
+    if not no_header:
+        console.log(
+            f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+        )
 
     compiler = SolidityCompiler(config)
-    compiler.load(console=console)
+    compiler.load(console=None if no_header else console)
 
     if watch:
         fs_handler = CompilationFileSystemEventHandler(
@@ -471,7 +478,7 @@ async def print_(
             compiler,
             [SolcOutputSelectionEnum.ALL],
             write_artifacts=not no_artifacts,
-            console=console,
+            console=None if no_header else console,
             no_warnings=True,
         )
         fs_handler.register_callback(callback)
@@ -493,7 +500,7 @@ async def print_(
         sol_files,
         [SolcOutputSelectionEnum.ALL],
         write_artifacts=not no_artifacts,
-        console=console,
+        console=None if no_header else console,
         no_warnings=True,
     )
 
@@ -531,6 +538,12 @@ async def print_(
     "--export",
     type=click.Choice(["svg", "html", "text", "ansi"], case_sensitive=False),
     help="Export output to file.",
+)
+@click.option(
+    "--no-header",
+    is_flag=True,
+    default=False,
+    help="Do not print the header.",
 )
 @click.option(
     "--theme",
@@ -628,6 +641,7 @@ def run_print(
     no_artifacts: bool,
     ignore_errors: bool,
     export: Optional[str],
+    no_header: bool,
     theme: str,
     watch: bool,
     allow_paths: Tuple[str],
@@ -686,7 +700,9 @@ def run_print(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
-    asyncio.run(print_(config, no_artifacts, ignore_errors, export, theme, watch))
+    asyncio.run(
+        print_(config, no_artifacts, ignore_errors, export, no_header, theme, watch)
+    )
 
 
 @run_print.command("list")
