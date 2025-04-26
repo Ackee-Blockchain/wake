@@ -203,19 +203,26 @@ def write_config(config: WakeConfig) -> None:
 
 
 def import_foundry_profile(
-    config: WakeConfig, toml_str: str, foundry_profile: Optional[str]
+    config: WakeConfig,
+    config_toml: str,
+    foundry_toml: str,
+    foundry_profile: Optional[str],
 ) -> None:
     import tomli
 
     if foundry_profile is None:
         foundry_profile = "default"
 
-    foundry_config = tomli.loads(toml_str)
+    parsed_config = tomli.loads(config_toml)  # output of `forge config`
+    parsed_foundry = tomli.loads(foundry_toml)  # contents of `foundry.toml`
 
-    if foundry_profile not in foundry_config["profile"]:
+    if (
+        foundry_profile not in parsed_config["profile"]
+        or foundry_profile not in parsed_foundry["profile"]
+    ):
         raise ValueError(f"Profile {foundry_profile} not found in foundry.toml")
 
-    c = foundry_config["profile"][foundry_profile]
+    c = parsed_config["profile"][foundry_profile]
 
     if "test" in c:
         config.update(
@@ -274,8 +281,21 @@ def import_foundry_profile(
     if "include_paths" in c:
         config.update({"compiler": {"solc": {"include_paths": c["include_paths"]}}}, [])
 
-    if "evm_version" in c:
-        config.update({"compiler": {"solc": {"evm_version": c["evm_version"]}}}, [])
+    if "evm_version" in parsed_foundry["profile"][foundry_profile]:
+        # the value of `evm_version` cannot be trusted in `forge config`
+        # using the parsed `foundry.toml` instead
+        config.update(
+            {
+                "compiler": {
+                    "solc": {
+                        "evm_version": parsed_foundry["profile"][foundry_profile][
+                            "evm_version"
+                        ]
+                    }
+                }
+            },
+            [],
+        )
 
     if "optimizer" in c:
         config.update(
@@ -634,10 +654,11 @@ def run_init(
 
     # load foundry config, if foundry.toml exists
     if (config.project_root_path / "foundry.toml").exists():
-        toml = subprocess.run(["forge", "config"], capture_output=True).stdout.decode(
-            "utf-8"
-        )
-        import_foundry_profile(config, toml, foundry_profile)
+        config_toml = subprocess.run(
+            ["forge", "config"], capture_output=True
+        ).stdout.decode("utf-8")
+        foundry_toml = (config.project_root_path / "foundry.toml").read_text()
+        import_foundry_profile(config, config_toml, foundry_toml, foundry_profile)
 
     sol_files: Set[Path] = set()
     start = time.perf_counter()
@@ -1011,10 +1032,11 @@ def run_init_config(
         )
 
     if (config.project_root_path / "foundry.toml").exists():
-        toml = subprocess.run(["forge", "config"], capture_output=True).stdout.decode(
-            "utf-8"
-        )
-        import_foundry_profile(config, toml, foundry_profile)
+        config_toml = subprocess.run(
+            ["forge", "config"], capture_output=True
+        ).stdout.decode("utf-8")
+        foundry_toml = (config.project_root_path / "foundry.toml").read_text()
+        import_foundry_profile(config, config_toml, foundry_toml, foundry_profile)
         write_config(config)
         return
 
