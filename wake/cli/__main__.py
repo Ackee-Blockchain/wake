@@ -125,6 +125,12 @@ class AliasedGroup(click.RichGroup):
     help="Disable all stdout output.",
 )
 @click.option(
+    "--no-logging",
+    is_flag=True,
+    default=False,
+    help="Disable all logging output.",
+)
+@click.option(
     "--profile", is_flag=True, default=False, help="Enable profiling using cProfile."
 )
 @click.option(
@@ -137,7 +143,12 @@ class AliasedGroup(click.RichGroup):
 @click.version_option(message="%(version)s", package_name="eth-wake")
 @click.pass_context
 def main(
-    ctx: Context, debug: bool, silent: bool, profile: bool, config: Optional[str]
+    ctx: Context,
+    debug: bool,
+    silent: bool,
+    no_logging: bool,
+    profile: bool,
+    config: Optional[str],
 ) -> None:
     from wake.migrations import run_woke_wake_migration, run_xdg_migration
 
@@ -156,11 +167,15 @@ def main(
 
         atexit.register(exit)
 
-    logging.basicConfig(
-        format="%(asctime)s %(name)s: %(message)s",
-        handlers=[RichHandler(show_time=False, console=console, markup=True)],
-        force=True,  # pyright: ignore reportGeneralTypeIssues
-    )
+    if no_logging:
+        logging.basicConfig(handlers=[logging.NullHandler()], force=True)
+    else:
+        logging.basicConfig(
+            format="%(asctime)s %(name)s: %(message)s",
+            handlers=[RichHandler(show_time=False, console=console, markup=True)],
+            force=True,  # pyright: ignore reportGeneralTypeIssues
+        )
+
     sys.excepthook = lambda type, value, traceback: excepthook(
         debug, type, value, traceback
     )
