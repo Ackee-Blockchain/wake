@@ -738,6 +738,10 @@ async def detect_(
                 start_line_index = max(0, start_line - 4)
                 end_line_index = min(len(source_unit._lines_index), start_line + 3)
 
+                source = ""
+                for i in range(start_line_index, end_line_index):
+                    source += source_unit._lines_index[i][0].decode("utf-8")
+
                 ret = {
                     "message": detection.message,
                     "location": {
@@ -750,14 +754,9 @@ async def detect_(
                         "start_col": start_col,
                         "end_line": end_line,
                         "end_col": end_col,
+                        "source": source.rstrip(),
                     },
                 }
-                if export == "json":
-                    source = ""
-                    for i in range(start_line_index, end_line_index):
-                        source += source_unit._lines_index[i][0].decode("utf-8")
-
-                    ret["location"]["source"] = source.rstrip()
 
                 if detection.subdetections:
                     ret["subdetections"] = [
