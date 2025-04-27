@@ -78,9 +78,10 @@ def dict_cache(
 
 
 def return_on_recursion(default: T) -> Callable[[Callable[P, T]], Callable[P, T]]:
-    arguments_guard = set()
-
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        # Create guard set specific to this function instance
+        arguments_guard = set()
+
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if (args, tuple(sorted(kwargs.items()))) in arguments_guard:
@@ -103,9 +104,10 @@ def dict_cached_return_on_recursion(
 
         cache = get_extra()
 
-    arguments_guard = set()
-
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        # Create guard set specific to this function instance
+        arguments_guard = set()
+
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if cache_keys is None:
