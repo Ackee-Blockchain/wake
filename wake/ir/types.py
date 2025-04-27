@@ -12,6 +12,7 @@ if typ.TYPE_CHECKING:
     from wake.ir.declarations.user_defined_value_type_definition import (
         UserDefinedValueTypeDefinition,
     )
+    from wake.ir.meta.source_unit import SourceUnit
 
 from wake.ir.ast import AstNodeId
 from wake.ir.enums import DataLocation, FunctionTypeKind, MagicTypeKind, StateMutability
@@ -2075,18 +2076,25 @@ class UserDefinedValueType(TypeAbc):
 class Module(TypeAbc):
     """
     Module type.
-    !!! note
-        It is probably currently not possible to create an expression of this type.
+    !!! example
+        `Common` in the following example is of type [Module][wake.ir.types.Module].
+        ```solidity
+        import "../Common.sol" as Common;
+
+        function foo() returns (uint256) {
+            return Common.CONSTANT;
+        }
+        ```
     """
 
-    _source_unit_id: int
+    _ast_id: AstNodeId
     _reference_resolver: ReferenceResolver
     _cu_hash: bytes
 
     def __init__(
-        self, source_unit_id: int, reference_resolver: ReferenceResolver, cu_hash: bytes
+        self, ast_id: AstNodeId, reference_resolver: ReferenceResolver, cu_hash: bytes
     ):
-        self._source_unit_id = source_unit_id
+        self._ast_id = ast_id
         self._reference_resolver = reference_resolver
         self._cu_hash = cu_hash
 
@@ -2112,14 +2120,26 @@ class Module(TypeAbc):
 
         match = NUMBER_RE.match(type_identifier.data)
         assert match is not None, f"{type_identifier} is not a valid module"
-        source_unit_id = int(match.group("number"))
+        ast_id = AstNodeId(int(match.group("number")))
         type_identifier.read(match.group("number"))
 
-        return Module(source_unit_id, reference_resolver, cu_hash)
+        return Module(ast_id, reference_resolver, cu_hash)
 
     @property
     def abi_type(self) -> str:
         raise NotImplementedError
+
+    @property
+    def source_unit(self) -> SourceUnit:
+        """
+        Returns:
+            Source unit IR node.
+        """
+        from wake.ir.meta.source_unit import SourceUnit
+
+        node = self._reference_resolver.resolve_node(self._ast_id, self._cu_hash)
+        assert isinstance(node, SourceUnit)
+        return node
 
     @property
     def file(self) -> Path:
@@ -2127,9 +2147,7 @@ class Module(TypeAbc):
         Returns:
             Path representing the source file (module).
         """
-        return self._reference_resolver.resolve_source_file_id(
-            self._source_unit_id, self._cu_hash
-        )
+        return self.source_unit.file
 
 
 class Error(TypeAbc):
