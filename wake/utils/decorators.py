@@ -1,8 +1,17 @@
 import weakref
 from functools import lru_cache, wraps
-from typing import Any, Tuple
+from typing import Any, Callable, Optional, Tuple, TypeVar
+
+from typing_extensions import ParamSpec
 
 from .context_managers import recursion_guard
+
+T = TypeVar("T")
+P = ParamSpec("P")
+
+
+def get_full_qualified_name(func: Callable) -> str:
+    return f"{func.__module__}.{func.__qualname__}"
 
 
 def weak_self_lru_cache(maxsize=128, typed=False):
@@ -32,12 +41,24 @@ def weak_self_lru_cache(maxsize=128, typed=False):
     return decorator
 
 
-def dict_cache(cache: dict, cache_keys: Tuple[Any, ...]):
-    def decorator(func):
+def dict_cache(
+    cache: Optional[dict] = None, cache_keys: Optional[Tuple[Any, ...]] = None
+):
+    if cache is None:
+        from wake.core.visitor import get_extra
+
+        cache = get_extra()
+
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            if cache_keys is None:
+                keys = ("_cache", get_full_qualified_name(func))
+            else:
+                keys = cache_keys
+
             current = cache
-            for key in cache_keys:
+            for key in keys:
                 if key not in current:
                     current[key] = {}
                 current = current[key]
@@ -56,12 +77,12 @@ def dict_cache(cache: dict, cache_keys: Tuple[Any, ...]):
     return decorator
 
 
-def return_on_recursion(default):
+def return_on_recursion(default: T) -> Callable[[Callable[P, T]], Callable[P, T]]:
     arguments_guard = set()
 
-    def decorator(func):
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if (args, tuple(sorted(kwargs.items()))) in arguments_guard:
                 return default
             with recursion_guard(arguments_guard, *args, **kwargs):
@@ -72,14 +93,28 @@ def return_on_recursion(default):
     return decorator
 
 
-def dict_cached_return_on_recursion(default, cache: dict, cache_keys: Tuple[Any, ...]):
+def dict_cached_return_on_recursion(
+    default: T,
+    cache: Optional[dict] = None,
+    cache_keys: Optional[Tuple[Any, ...]] = None,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    if cache is None:
+        from wake.core.visitor import get_extra
+
+        cache = get_extra()
+
     arguments_guard = set()
 
-    def decorator(func):
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            if cache_keys is None:
+                keys = ("_cache", get_full_qualified_name(func))
+            else:
+                keys = cache_keys
+
             current = cache
-            for key in cache_keys:
+            for key in keys:
                 if key not in current:
                     current[key] = {}
                 current = current[key]

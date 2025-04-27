@@ -6,7 +6,6 @@ import wake.ir.types as types
 from wake.analysis.cfg import CfgNode, ControlFlowGraph, TransitionConditionKind
 from wake.analysis.utils import pair_function_call_arguments
 from wake.core import get_logger
-from wake.core.visitor import get_extra
 from wake.ir import (
     Assignment,
     BinaryOperation,
@@ -228,11 +227,7 @@ def statement_is_only_owner(
     return False
 
 
-@dict_cached_return_on_recursion(
-    False,
-    get_extra(),
-    ("_cache", "wake.analysis.ownable._cfg_block_or_statement_is_publicly_reachable"),
-)
+@dict_cached_return_on_recursion(False)
 def _cfg_block_or_statement_is_publicly_reachable(
     target: Union[CfgNode, StatementAbc],
     cfg: ControlFlowGraph,
