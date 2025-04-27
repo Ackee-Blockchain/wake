@@ -1868,11 +1868,13 @@ class LspCompiler:
                         )
                     }
                     files.add(file)
+                    original_file = file
 
                     for file in files:
                         if (
                             file in self.__deleted_files
                             or file in files_to_recompile_static
+                            or file == original_file
                         ):
                             # this file won't be taken from any CU, even if compiled successfully
                             compilation_units_per_file[file].clear()
@@ -2089,11 +2091,13 @@ class LspCompiler:
                         )
                     }
                     files.add(file)
+                    original_file = file
 
                     for file in files:
                         if (
                             file in self.__deleted_files
                             or file in files_to_recompile_static
+                            or file == original_file
                         ):
                             # this file won't be taken from any CU, even if compiled successfully
                             compilation_units_per_file[file].clear()

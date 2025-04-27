@@ -1162,9 +1162,14 @@ class SolidityCompiler:
                         )
                     }
                     files.add(file)
+                    original_file = file
 
                     for file in files:
-                        if file in deleted_files or file in files_to_recompile:
+                        if (
+                            file in deleted_files
+                            or file in files_to_recompile
+                            or file == original_file
+                        ):
                             # this file won't be taken from any CU, even if compiled successfully
                             compilation_units_per_file[file].clear()
 
@@ -1303,9 +1308,14 @@ class SolidityCompiler:
                             )
                         }
                         files.add(file)
+                        original_file = file
 
                         for file in files:
-                            if file in deleted_files or file in files_to_recompile:
+                            if (
+                                file in deleted_files
+                                or file in files_to_recompile
+                                or file == original_file
+                            ):
                                 # this file won't be taken from any CU, even if compiled successfully
                                 compilation_units_per_file[file].clear()
                                 all_errored_files.add(file)
