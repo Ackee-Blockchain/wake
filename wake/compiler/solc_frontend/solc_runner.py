@@ -7,6 +7,7 @@ from typing import Dict
 
 from wake.config import WakeConfig
 from wake.core import get_logger
+from wake.core.enums import EvmVersionEnum
 from wake.core.solidity_version import SolidityVersion
 from wake.svm import SolcVersionManager
 
@@ -20,6 +21,18 @@ from .input_data_model import (
 from .output_data_model import SolcOutput
 
 logger = get_logger(__name__)
+
+
+MAX_SUPPORTED_EVM_VERSIONS = {
+    # older solc versions are not supported anyway
+    SolidityVersion.fromstring("0.5.12"): EvmVersionEnum.BERLIN,
+    SolidityVersion.fromstring("0.8.7"): EvmVersionEnum.LONDON,
+    SolidityVersion.fromstring("0.8.18"): EvmVersionEnum.PARIS,
+    SolidityVersion.fromstring("0.8.20"): EvmVersionEnum.SHANGHAI,
+    SolidityVersion.fromstring("0.8.24"): EvmVersionEnum.CANCUN,
+    SolidityVersion.fromstring("0.8.27"): EvmVersionEnum.PRAGUE,
+    SolidityVersion.fromstring("0.8.29"): EvmVersionEnum.OSAKA,
+}
 
 
 class SolcFrontend:
@@ -52,7 +65,7 @@ class SolcFrontend:
 
         for unit_name, content in sources.items():
             standard_input.sources[unit_name] = SolcInputSource(content=content)
-        standard_input.settings = settings
+        standard_input.settings = settings.model_copy(deep=True)
 
         if (
             target_version < "0.8.18"
@@ -63,11 +76,26 @@ class SolcFrontend:
                 logger.warning(
                     "`append_CBOR` is not supported for solc versions < 0.8.18. This option will be ignored."
                 )
-            standard_input.settings.metadata = (
-                standard_input.settings.metadata.model_copy(
-                    update={"append_CBOR": None}
-                )
+            standard_input.settings.metadata = settings.metadata.model_copy(
+                update={"append_CBOR": None}
             )
+
+        if settings.evm_version is not None:
+            # find nearest <= version in MAX_SUPPORTED_EVM_VERSIONS
+            nearest_version = max(
+                version
+                for version in MAX_SUPPORTED_EVM_VERSIONS.keys()
+                if version <= target_version
+            )
+
+            if MAX_SUPPORTED_EVM_VERSIONS[nearest_version] < settings.evm_version:
+                logger.warning(
+                    f"solc version `{target_version}` does not support evm version `{settings.evm_version}` set in settings. "
+                    f"Lowering evm version to `{MAX_SUPPORTED_EVM_VERSIONS[nearest_version]}`."
+                )
+                standard_input.settings.evm_version = MAX_SUPPORTED_EVM_VERSIONS[
+                    nearest_version
+                ]
 
         return await self.__run_solc(target_version, standard_input)
 
