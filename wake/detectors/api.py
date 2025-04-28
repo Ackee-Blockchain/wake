@@ -15,6 +15,7 @@ from typing import (
     DefaultDict,
     Dict,
     List,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -166,6 +167,155 @@ class Detector(Visitor, metaclass=ABCMeta):
         ...
 
 
+class Location(NamedTuple):
+    source_unit_name: str
+    start: int
+    end: int
+
+    def overlaps(self, other: "Location") -> bool:
+        return (
+            self.source_unit_name == other.source_unit_name
+            and self.start <= other.end
+            and self.end >= other.start
+        )
+
+
+def _detection_in_known_contract(detection: Detection) -> bool:
+    from wake.ir import ContractDefinition
+    from wake.utils.known_contracts import KNOWN_CONTRACTS, compute_code_checksum
+
+    detection_contract = detection.ir_node
+    while not isinstance(detection_contract, ContractDefinition):
+        detection_contract = detection_contract.parent
+        if detection_contract is None:
+            break
+
+    if detection_contract is not None:
+        contract_code_checksum = compute_code_checksum(detection_contract.source)
+        if contract_code_checksum in KNOWN_CONTRACTS:
+            return True
+
+    return False
+
+
+def is_detection_relevant(
+    detection: DetectorResult, relevant_locations: Set[Location]
+) -> bool:
+    detection_locations = set()
+
+    def add_detection_location(detection: Detection):
+        detection_locations.add(
+            Location(
+                detection.ir_node.source_unit.source_unit_name,
+                *detection.ir_node.byte_location,
+            )
+        )
+        if detection.subdetections_mandatory:
+            for subdetection in detection.subdetections:
+                add_detection_location(subdetection)
+
+    add_detection_location(detection.detection)
+
+    return any(
+        any(detection_location.overlaps(l) for l in relevant_locations)
+        for detection_location in detection_locations
+    )
+
+
+def find_relevant_locations(build: ProjectBuild, contract_name: str) -> Set[Location]:
+    from itertools import chain
+
+    from wake.ir import ContractDefinition, ExternalReference, IdentifierPathPart
+
+    locations = set()
+    # collect all relevant contracts, then find structs, events, etc. referenced by them
+    contracts = set()
+
+    for source_unit in build.source_units.values():
+        for contract in source_unit.contracts:
+            if contract.name != contract_name:
+                continue
+
+            # always include global using for directives
+            for using_for in source_unit.using_for_directives:
+                if using_for.library_name is not None:
+                    contracts.add(using_for.library_name.referenced_declaration)
+                    locations.add(
+                        Location(
+                            using_for.library_name.referenced_declaration.source_unit.source_unit_name,
+                            *using_for.library_name.referenced_declaration.byte_location,
+                        )
+                    )
+
+                locations.update(
+                    [
+                        Location(
+                            f.referenced_declaration.source_unit.source_unit_name,
+                            *f.referenced_declaration.byte_location,
+                        )
+                        for f in using_for.functions
+                    ]
+                )
+
+            contracts.update(contract.linearized_base_contracts)
+            locations.update(
+                [
+                    Location(b.source_unit.source_unit_name, *b.byte_location)
+                    for b in contract.linearized_base_contracts
+                ]
+            )
+
+            for using_for in contract.using_for_directives:
+                if using_for.library_name is not None:
+                    contracts.add(using_for.library_name.referenced_declaration)
+                    locations.add(
+                        Location(
+                            using_for.library_name.referenced_declaration.source_unit.source_unit_name,
+                            *using_for.library_name.referenced_declaration.byte_location,
+                        )
+                    )
+
+                locations.update(
+                    [
+                        Location(
+                            f.referenced_declaration.source_unit.source_unit_name,
+                            *f.referenced_declaration.byte_location,
+                        )
+                        for f in using_for.functions
+                    ]
+                )
+
+    def referenced_by(ref: Union[IrAbc, ExternalReference, IdentifierPathPart]) -> bool:
+        if isinstance(ref, IdentifierPathPart):
+            ref = ref.underlying_node
+        elif isinstance(ref, ExternalReference):
+            ref = ref.inline_assembly
+
+        while not isinstance(ref, ContractDefinition):
+            if ref.parent is None:
+                return False
+            ref = ref.parent
+
+        return ref in contracts
+
+    for source_unit in build.source_units.values():
+        for decl in chain(
+            source_unit.declared_variables,
+            source_unit.enums,
+            source_unit.functions,
+            source_unit.structs,
+            source_unit.errors,
+            source_unit.user_defined_value_types,
+            source_unit.events,
+        ):
+            if any(referenced_by(r) for r in decl.references):
+                locations.add(
+                    Location(source_unit.source_unit_name, *decl.byte_location)
+                )
+
+    return locations
+
+
 def _detection_commented_out(
     detector_name: str,
     detection: Detection,
@@ -207,7 +357,8 @@ def _detection_commented_out(
 
 
 def _strip_excluded_subdetections(
-    detection: Detection, config: WakeConfig
+    detection: Detection,
+    strip_predicate: Callable[[Detection], bool],
 ) -> Detection:
     """
     Strip all subdetections that are located in excluded paths and their parents are also in excluded paths.
@@ -218,14 +369,11 @@ def _strip_excluded_subdetections(
 
     subdetections = []
     for d in detection.subdetections:
-        if not any(
-            is_relative_to(d.ir_node.source_unit.file, p)
-            for p in chain(config.detectors.exclude_paths, [config.wake_contracts_path])
-        ):
+        if not strip_predicate(d):
             subdetections.append(d)
             continue
 
-        d = _strip_excluded_subdetections(d, config)
+        d = _strip_excluded_subdetections(d, strip_predicate)
         if len(d.subdetections) != 0:
             subdetections.append(d)
 
@@ -276,6 +424,7 @@ def _filter_detections(
     detections: List[DetectorResult],
     min_impact: DetectorImpact,
     min_confidence: DetectorConfidence,
+    strip_in_known_contracts: bool,
     config: WakeConfig,
     wake_comments: Dict[Path, Dict[str, Dict[int, WakeComment]]],
     source_units: Dict[Path, SourceUnit],
@@ -328,7 +477,28 @@ def _filter_detections(
             for p in chain(config.detectors.exclude_paths, [config.wake_contracts_path])
         ):
             detection = DetectorResult(
-                _strip_excluded_subdetections(detection.detection, config),
+                _strip_excluded_subdetections(
+                    detection.detection,
+                    strip_predicate=lambda d: any(
+                        is_relative_to(d.ir_node.source_unit.file, p)
+                        for p in chain(
+                            config.detectors.exclude_paths, [config.wake_contracts_path]
+                        )
+                    ),
+                ),
+                detection.impact,
+                detection.confidence,
+                detection.uri,
+            )
+            if len(detection.detection.subdetections) == 0:
+                continue
+
+        if strip_in_known_contracts:
+            detection = DetectorResult(
+                _strip_excluded_subdetections(
+                    detection.detection,
+                    strip_predicate=lambda d: _detection_in_known_contract(d),
+                ),
                 detection.impact,
                 detection.confidence,
                 detection.uri,
@@ -367,6 +537,7 @@ def detect(
     logging_handler: Optional[logging.Handler] = None,
     extra: Optional[Dict[Any, Any]] = None,
     cancel_event: Optional[threading.Event] = None,
+    strip_in_known_contracts: bool = False,
 ) -> Tuple[
     List[click.Command],
     Dict[str, Tuple[List[DetectorResult], List[DetectorResult]]],
@@ -603,6 +774,7 @@ def detect(
                             d,
                             min_impact_by_detector[command.name],
                             min_confidence_by_detector[command.name],
+                            strip_in_known_contracts,
                             config,
                             wake_comments,
                             build.source_units,
@@ -681,6 +853,7 @@ def detect(
                 detector.detect(),
                 min_impact_by_detector[detector_name],
                 min_confidence_by_detector[detector_name],
+                strip_in_known_contracts,
                 config,
                 wake_comments,
                 build.source_units,
