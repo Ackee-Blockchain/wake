@@ -681,6 +681,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.17.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.17.0 (Apr 28, 2025)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.16.1" class="md-nav__link">
     <span class="md-ellipsis">
       4.16.1 (Apr 10, 2025)
@@ -6995,6 +7004,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.17.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.17.0 (Apr 28, 2025)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.16.1" class="md-nav__link">
     <span class="md-ellipsis">
       4.16.1 (Apr 10, 2025)
@@ -7299,6 +7317,26 @@ small.label {
 }
 </style>
 
+<h2 id="4.17.0">4.17.0 <small>(Apr 28, 2025)</small><a class="headerlink" href="#4.17.0" title="Permanent link">#</a></h2>
+<p>Features &amp; improvements:</p>
+<ul>
+<li>implemented <code>--no-logging</code> CLI option <small class="label">[cli]</small></li>
+<li>implemented <code>--no-header</code> CLI option for <code>wake print</code> <small class="label">[cli]</small></li>
+<li><code>wake up pytypes</code> now accepts paths to generate pytypes for <small class="label">[cli]</small></li>
+<li>absolute paths are now supported in compilation <small class="label">[core]</small></li>
+<li><code>exclude_paths</code> and <code>ignore_paths</code> are now set accordingly when importing Foundry config <small class="label">[core]</small></li>
+<li><code>evm_version</code> is now auto-downgraded with a warning if not supported by the current solc <small class="label">[core]</small></li>
+<li>added a database of known contracts and implemented automatic ignoring of detections in such contracts <small class="label">[static analysis]</small></li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>fixed multiple sources of memory leaks <small class="label">[core]</small></li>
+<li>fixed compilation crash on file removal regression <small class="label">[core]</small></li>
+<li>fixed IR <code>Module</code> type and its attributes <small class="label">[core]</small></li>
+<li>fixed progressive compilation (recompilation of all files except for errored ones) regression <small class="label">[language server]</small></li>
+<li>fixed while loops in control flow graphs <small class="label">[static analysis]</small></li>
+<li>fixed injected <code>IERC20Metadata.sol</code> compilation with older versions of solc <small class="label">[testing &amp; deployment framework]</small></li>
+</ul>
 <h2 id="4.16.1">4.16.1 <small>(Apr 10, 2025)</small><a class="headerlink" href="#4.16.1" title="Permanent link">#</a></h2>
 <p>Fixes:</p>
 <ul>
