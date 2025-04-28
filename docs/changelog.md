@@ -6,6 +6,27 @@ small.label {
 }
 </style>
 
+## 4.17.0 <small>(Apr 28, 2025)</small> { id="4.17.0" }
+
+Features & improvements:
+
+- implemented `--no-logging` CLI option <small class="label">[cli]</small>
+- implemented `--no-header` CLI option for `wake print` <small class="label">[cli]</small>
+- `wake up pytypes` now accepts paths to generate pytypes for <small class="label">[cli]</small>
+- absolute paths are now supported in compilation <small class="label">[core]</small>
+- `exclude_paths` and `ignore_paths` are now set accordingly when importing Foundry config <small class="label">[core]</small>
+- `evm_version` is now auto-downgraded with a warning if not supported by the current solc <small class="label">[core]</small>
+- added a database of known contracts and implemented automatic ignoring of detections in such contracts <small class="label">[static analysis]</small>
+
+Fixes:
+
+- fixed multiple sources of memory leaks <small class="label">[core]</small>
+- fixed compilation crash on file removal regression <small class="label">[core]</small>
+- fixed IR `Module` type and its attributes <small class="label">[core]</small>
+- fixed progressive compilation (recompilation of all files except for errored ones) regression <small class="label">[language server]</small>
+- fixed while loops in control flow graphs <small class="label">[static analysis]</small>
+- fixed injected `IERC20Metadata.sol` compilation with older versions of solc <small class="label">[testing & deployment framework]</small>
+
 ## 4.16.1 <small>(Apr 10, 2025)</small> { id="4.16.1" }
 
 Fixes:
