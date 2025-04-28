@@ -4,6 +4,9 @@ from typing import List
 
 from wake.config import WakeConfig
 from wake.config.data_model import SolcRemapping
+from wake.core import get_logger
+
+logger = get_logger(__name__)
 
 
 class SourceUnitNameResolver:
@@ -127,4 +130,5 @@ class SourceUnitNameResolver:
             except ValueError:
                 pass
 
-        raise ValueError(f"File {arg} is not in the project root dir or include paths.")
+        logger.warning(f"File {arg} is not in the project root dir or include paths.")
+        return str(PurePosixPath(pure_path))
