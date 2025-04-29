@@ -493,7 +493,9 @@ def _filter_detections(
             if len(detection.detection.subdetections) == 0:
                 continue
 
-        if strip_in_known_contracts:
+        if strip_in_known_contracts and _detection_in_known_contract(
+            detection.detection
+        ):
             detection = DetectorResult(
                 _strip_excluded_subdetections(
                     detection.detection,
