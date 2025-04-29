@@ -28,7 +28,7 @@ wake-printers = "wake_printers"
 [tool.poetry.dependencies]
 python = "^3.8"
 pydantic = "^2.7"
-typing-extensions = "^4"
+typing-extensions = ">=4.12"
 aiohttp = [
     { version = "^3.8", python = "<3.12" },
     { version = ">=3.9.0b1", python = ">=3.12" }
