@@ -700,6 +700,12 @@ class SolidityCompiler:
             target_version = target_versions_by_subproject.get(
                 compilation_unit.subproject
             )
+            if all(
+                is_relative_to(f, self.__config.wake_contracts_path)
+                for f in compilation_unit.files
+            ):
+                target_version = None
+
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
                     files_str = "\n".join(str(path) for path in compilation_unit.files)
