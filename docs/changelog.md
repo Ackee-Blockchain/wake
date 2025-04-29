@@ -6,6 +6,13 @@ small.label {
 }
 </style>
 
+## 4.17.2 <small>(Apr 29, 2025)</small> { id="4.17.2" }
+
+Fixes:
+
+- added missing `modifies_state.py` file <small class="label">[core]</small>
+- bumped `typing-extension` to `>=4.12` to reflect recent changes <small class="label">[core]</small>
+
 ## 4.17.1 <small>(Apr 29, 2025)</small> { id="4.17.1" }
 
 Fixes:
