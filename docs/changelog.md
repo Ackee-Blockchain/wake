@@ -6,6 +6,13 @@ small.label {
 }
 </style>
 
+## 4.17.1 <small>(Apr 29, 2025)</small> { id="4.17.1" }
+
+Fixes:
+
+- fixed compilation of injected contracts when `target_version` set <small class="label">[core]</small>
+- fixed all detections without subdetections filtered out with known contracts filtering enabled <small class="label">[static analysis]</small>
+
 ## 4.17.0 <small>(Apr 28, 2025)</small> { id="4.17.0" }
 
 Features & improvements:
