@@ -6,20 +6,24 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 from wake.core import get_logger
 from wake.ir import (
     BinaryOperation,
+    ContractDefinition,
     DeclarationAbc,
     FunctionDefinition,
     Identifier,
     IdentifierPath,
+    InheritanceSpecifier,
     IrAbc,
     MemberAccess,
     ModifierDefinition,
+    ModifierInvocation,
+    NewExpression,
     SourceUnit,
     UnaryOperation,
     UserDefinedTypeName,
     VariableDeclaration,
     YulIdentifier,
 )
-from wake.ir.enums import GlobalSymbol
+from wake.ir.enums import FunctionKind, GlobalSymbol
 from wake.lsp.common_structures import (
     DocumentUri,
     Location,
@@ -157,6 +161,24 @@ def _get_results_from_node(
         definitions = set()
         for n in node:
             definitions |= resolve(n)
+    elif isinstance(node, ContractDefinition):
+        assert not isinstance(original_node, GlobalSymbol)
+        n = original_node
+        if isinstance(n, IdentifierPath) and isinstance(n.parent, UserDefinedTypeName):
+            n = n.parent
+        if isinstance(n.parent, (ModifierInvocation, NewExpression)) or (
+            isinstance(n.parent, InheritanceSpecifier)
+            and n.parent.arguments is not None
+        ):
+            try:
+                constructor = next(
+                    f for f in node.functions if f.kind == FunctionKind.CONSTRUCTOR
+                )
+                definitions = resolve(constructor)
+            except StopIteration:
+                definitions = resolve(node)
+        else:
+            definitions = resolve(node)
     else:
         definitions = resolve(node)
 
@@ -249,9 +271,14 @@ async def definition(
 
     path = uri_to_path(params.text_document.uri).resolve()
 
-    await next(asyncio.as_completed(
-        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
-    ))
+    await next(
+        asyncio.as_completed(
+            [
+                context.compiler.compilation_ready.wait(),
+                context.compiler.cache_ready.wait(),
+            ]
+        )
+    )
 
     if (
         path not in context.compiler.interval_trees
