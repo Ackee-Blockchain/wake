@@ -1182,6 +1182,7 @@ class SolidityCompiler:
                             if file in build.source_units:
                                 build.reference_resolver.run_destroy_callbacks(file)
                                 build.reference_resolver.clear_registered_nodes([file])
+                                build.reference_resolver.clear_indexed_nodes([file])
                                 build._source_units.pop(file)
                                 build._interval_trees.pop(file)
 
@@ -1247,6 +1248,7 @@ class SolidityCompiler:
             if deleted_file in build.source_units:
                 build.reference_resolver.run_destroy_callbacks(deleted_file)
                 build.reference_resolver.clear_registered_nodes([deleted_file])
+                build.reference_resolver.clear_indexed_nodes([deleted_file])
                 build._source_units.pop(deleted_file)
                 build._interval_trees.pop(deleted_file)
 
@@ -1331,6 +1333,7 @@ class SolidityCompiler:
                                     build.reference_resolver.clear_registered_nodes(
                                         [file]
                                     )
+                                    build.reference_resolver.clear_indexed_nodes([file])
                                     build._source_units.pop(file)
                                     build._interval_trees.pop(file)
 

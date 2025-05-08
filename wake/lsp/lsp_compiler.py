@@ -1742,6 +1742,7 @@ class LspCompiler:
             if deleted_file in self.__source_units:
                 self.__ir_reference_resolver.run_destroy_callbacks(deleted_file)
                 self.__ir_reference_resolver.clear_registered_nodes([deleted_file])
+                self.__ir_reference_resolver.clear_indexed_nodes([deleted_file])
                 source_unit = self.__source_units.pop(deleted_file)
                 self.__interval_trees.pop(deleted_file)
                 self.__compilation_errors.pop(deleted_file, None)
@@ -1890,6 +1891,7 @@ class LspCompiler:
                                 self.__ir_reference_resolver.clear_registered_nodes(
                                     [file]
                                 )
+                                self.__ir_reference_resolver.clear_indexed_nodes([file])
                                 source_unit = self.__source_units.pop(file)
                                 self.__cu_counter[source_unit.cu_hash] -= 1
 
@@ -2107,6 +2109,7 @@ class LspCompiler:
                                 self.__ir_reference_resolver.clear_registered_nodes(
                                     [file]
                                 )
+                                self.__ir_reference_resolver.clear_indexed_nodes([file])
                                 source_unit = self.__source_units.pop(file)
                                 self.__cu_counter[source_unit.cu_hash] -= 1
 
