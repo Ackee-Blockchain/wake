@@ -18,6 +18,7 @@ from .unprotected_selfdestruct import UnprotectedSelfdestructDetector
 from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .unsafe_erc20_call import UnsafeErc20CallDetector
 from .unused_contract import UnusedContractDetector
+from .unused_event import UnusedEventDetector
 from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector
 from .unused_modifier import UnusedModifierDetector
