@@ -20,8 +20,6 @@ Features:
 - Python (version 3.8 or higher)
 - Rosetta must be enabled on Apple Silicon Macs
 
-> ⚠️ Python 3.12 is experimentally supported.
-
 ## Installation
 
 via `pip`

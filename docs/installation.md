@@ -1,9 +1,6 @@
 # Installation
 Wake requires Python 3.8 or higher.
 
-!!! warning
-    Python 3.12 is experimentally supported.
-
 ## Using pip
 
 ```shell
