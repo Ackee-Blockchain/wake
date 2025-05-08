@@ -1094,6 +1094,7 @@ class SolcEnumValue(SolidityNode):
     name: StrictStr
     # optional
     name_location: Optional[Src] = None  # new in 0.8.2
+    documentation: Optional["SolcStructuredDocumentation"] = None  # new in 0.8.30
 
 
 class SolcInheritanceSpecifier(SolidityNode):

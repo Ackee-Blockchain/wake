@@ -106,7 +106,7 @@ class EnumDefinition(DeclarationAbc):
         return super().parent
 
     @property
-    def children(self) -> Iterator[EnumValue]:
+    def children(self) -> Iterator[Union[EnumValue, StructuredDocumentation]]:
         """
         Yields:
             Direct children of this node.
