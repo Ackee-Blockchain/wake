@@ -6,6 +6,25 @@ small.label {
 }
 </style>
 
+## 4.18.0 <small>(May 8, 2025)</small> { id="4.18.0" }
+
+Features & improvements:
+
+- added support for Solidity 0.8.30 <small class="label">[core]</small>
+- improved LSP hover text for declarations <small class="label">[language server]</small>
+    - added missing NatSpec documentation to enums and structs
+    - added `indexed` keyword to event parameters
+- go to definition and hover LSP features now point to contract's constructor instead of the contract where appropriate <small class="label">[language server]</small>
+- `@inheritdoc` is now expanded in LSP hover <small class="label">[language server]</small>
+- added highlighting of relevant code for command-line detections output <small class="label">[static analysis]</small>
+- implemented `chainlink-deprecated-function`, `unused-error`, and `unused-event` detectors <small class="label">[static analysis]</small>
+
+Fixes:
+
+- fixed compilation of files with structurally different ASTs <small class="label">[core]</small>
+- `extra` dictionary is no longer cleared after LSP printers run as it may be used by command callbacks <small class="label">[language server]</small>
+
+
 ## 4.17.2 <small>(Apr 29, 2025)</small> { id="4.17.2" }
 
 Fixes:
