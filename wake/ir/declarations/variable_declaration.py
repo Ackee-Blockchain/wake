@@ -356,6 +356,7 @@ class VariableDeclaration(DeclarationAbc):
         ret = self.type_name.source
         ret += f" {self.visibility}" if self.is_state_variable else ""
         ret += f" {self.mutability}" if self.mutability != Mutability.MUTABLE else ""
+        ret += " indexed" if self.indexed else ""
         ret += (
             f" {self.data_location}"
             if self.data_location != DataLocation.DEFAULT
