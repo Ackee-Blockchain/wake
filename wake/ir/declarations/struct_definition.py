@@ -129,12 +129,21 @@ class StructDefinition(DeclarationAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
-        return (
+        ret = (
             f"struct {self.name}"
             + " {\n"
             + ";\n".join(f"    {member.declaration_string}" for member in self._members)
             + ";\n}"
         )
+        if self._documentation is not None:
+            return (
+                "/// "
+                + "\n///".join(line for line in self._documentation.text.splitlines())
+                + "\n"
+                + ret
+            )
+        else:
+            return ret
 
     @property
     def members(self) -> Tuple[VariableDeclaration, ...]:
