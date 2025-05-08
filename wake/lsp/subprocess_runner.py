@@ -314,7 +314,7 @@ def run_printers_thread(
             )
         exceptions = {name: repr(e) for name, e in printer_exceptions.items()}
 
-        extra.clear()
+        # not clearing extra, because it may be used by command callbacks
 
         out_queue.put(
             (
