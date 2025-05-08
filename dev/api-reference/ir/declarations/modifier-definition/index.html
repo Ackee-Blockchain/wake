@@ -1430,6 +1430,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1571,6 +1577,29 @@
   
   <span class="md-ellipsis">
     Call options not called
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/chainlink-deprecated-function/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Chainlink deprecated function
     
   </span>
   
@@ -1870,6 +1899,52 @@
   
   <span class="md-ellipsis">
     Unused contract
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unused error
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../static-analysis/detectors/unused-event/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unused event
     
   </span>
   
@@ -7513,7 +7588,35 @@
 <span class="normal"><a href="#__codelineno-0-472">472</a></span>
 <span class="normal"><a href="#__codelineno-0-473">473</a></span>
 <span class="normal"><a href="#__codelineno-0-474">474</a></span>
-<span class="normal"><a href="#__codelineno-0-475">475</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">class</span><span class="w"> </span><span class="nc">ModifierDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-475">475</a></span>
+<span class="normal"><a href="#__codelineno-0-476">476</a></span>
+<span class="normal"><a href="#__codelineno-0-477">477</a></span>
+<span class="normal"><a href="#__codelineno-0-478">478</a></span>
+<span class="normal"><a href="#__codelineno-0-479">479</a></span>
+<span class="normal"><a href="#__codelineno-0-480">480</a></span>
+<span class="normal"><a href="#__codelineno-0-481">481</a></span>
+<span class="normal"><a href="#__codelineno-0-482">482</a></span>
+<span class="normal"><a href="#__codelineno-0-483">483</a></span>
+<span class="normal"><a href="#__codelineno-0-484">484</a></span>
+<span class="normal"><a href="#__codelineno-0-485">485</a></span>
+<span class="normal"><a href="#__codelineno-0-486">486</a></span>
+<span class="normal"><a href="#__codelineno-0-487">487</a></span>
+<span class="normal"><a href="#__codelineno-0-488">488</a></span>
+<span class="normal"><a href="#__codelineno-0-489">489</a></span>
+<span class="normal"><a href="#__codelineno-0-490">490</a></span>
+<span class="normal"><a href="#__codelineno-0-491">491</a></span>
+<span class="normal"><a href="#__codelineno-0-492">492</a></span>
+<span class="normal"><a href="#__codelineno-0-493">493</a></span>
+<span class="normal"><a href="#__codelineno-0-494">494</a></span>
+<span class="normal"><a href="#__codelineno-0-495">495</a></span>
+<span class="normal"><a href="#__codelineno-0-496">496</a></span>
+<span class="normal"><a href="#__codelineno-0-497">497</a></span>
+<span class="normal"><a href="#__codelineno-0-498">498</a></span>
+<span class="normal"><a href="#__codelineno-0-499">499</a></span>
+<span class="normal"><a href="#__codelineno-0-500">500</a></span>
+<span class="normal"><a href="#__codelineno-0-501">501</a></span>
+<span class="normal"><a href="#__codelineno-0-502">502</a></span>
+<span class="normal"><a href="#__codelineno-0-503">503</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">class</span><span class="w"> </span><span class="nc">ModifierDefinition</span><span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">):</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Definition of a modifier.</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>
@@ -7717,231 +7820,259 @@
 <a id="__codelineno-0-248" name="__codelineno-0-248"></a>            <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 <a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="p">)</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="p">,</span> <span class="n">StructuredDocumentation</span><span class="p">):</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252"></a>            <span class="k">return</span> <span class="p">(</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253"></a>                <span class="s2">&quot;/// &quot;</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">///&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256"></a>                <span class="o">+</span> <span class="n">ret</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257"></a>            <span class="p">)</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259"></a>            <span class="k">return</span> <span class="p">(</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260"></a>                <span class="s2">&quot;/// &quot;</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">///&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263"></a>                <span class="o">+</span> <span class="n">ret</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264"></a>            <span class="p">)</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="k">return</span> <span class="n">ret</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Block</span><span class="p">]:</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272"></a><span class="sd">            Body of the modifier, if any.</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275"></a>
-<a id="__codelineno-0-276" name="__codelineno-0-276"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="sd">            `True` if the modifier [body][wake.ir.declarations.modifier_definition.ModifierDefinition.body] is not `None`, `False` otherwise.</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implemented</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterList</span><span class="p">:</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">            Parameter list describing the modifier parameters.</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291"></a>
-<a id="__codelineno-0-292" name="__codelineno-0-292"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">            `True` if the modifier is virtual, `False` otherwise.</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_virtual</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299"></a>
-<a id="__codelineno-0-300" name="__codelineno-0-300"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Visibility</span><span class="p">:</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">            Visibility of the modifier.</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visibility</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307"></a>
-<a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">base_modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">            `B.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313"></a>
-<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="sd">            `C.mod` on lines 12-14 lists only `B.mod` on lines 6-8 as a base modifier.</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">            abstract contract A {</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="sd">                modifier mod virtual;</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">            }</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="k">def</span><span class="w"> </span><span class="nf">resolve_documentation_line</span><span class="p">(</span><span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>            <span class="k">if</span> <span class="s2">&quot;@inheritdoc&quot;</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ContractDefinition</span><span class="p">):</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>                <span class="n">contract_name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@inheritdoc&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>                <span class="n">queue</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>                <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>                    <span class="n">mod</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>                    <span class="k">if</span> <span class="p">(</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ContractDefinition</span><span class="p">)</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a>                        <span class="ow">and</span> <span class="n">mod</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">contract_name</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>                        <span class="ow">and</span> <span class="n">mod</span><span class="o">.</span><span class="n">documentation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>                    <span class="p">):</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a>                        <span class="n">t</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a>                            <span class="n">mod</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">text</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">documentation</span><span class="p">,</span> <span class="n">StructuredDocumentation</span><span class="p">)</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>                            <span class="k">else</span> <span class="n">mod</span><span class="o">.</span><span class="n">documentation</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a>                        <span class="p">)</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a>                        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">///&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>                    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a>                        <span class="n">queue</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">base_modifiers</span><span class="p">)</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>            <span class="k">return</span> <span class="n">line</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="p">,</span> <span class="n">StructuredDocumentation</span><span class="p">):</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>            <span class="k">return</span> <span class="p">(</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>                <span class="s2">&quot;/// &quot;</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">///&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277"></a>                    <span class="n">resolve_documentation_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278"></a>                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279"></a>                <span class="p">)</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>                <span class="o">+</span> <span class="n">ret</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a>            <span class="p">)</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a>            <span class="k">return</span> <span class="p">(</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a>                <span class="s2">&quot;/// &quot;</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">///&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a>                    <span class="n">resolve_documentation_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a>                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a>                <span class="p">)</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a>                <span class="o">+</span> <span class="n">ret</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a>            <span class="p">)</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>            <span class="k">return</span> <span class="n">ret</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Block</span><span class="p">]:</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="sd">            Body of the modifier, if any.</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">implemented</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">            `True` if the modifier [body][wake.ir.declarations.modifier_definition.ModifierDefinition.body] is not `None`, `False` otherwise.</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implemented</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterList</span><span class="p">:</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a><span class="sd">            Parameter list describing the modifier parameters.</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319"></a>
-<a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">            contract B is A {</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">                modifier mod virtual override {</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">                }</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">            }</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325"></a>
-<a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">            contract C is B {</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">                modifier mod override {</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">                }</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">            }</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">            `B1.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">            `True` if the modifier is virtual, `False` otherwise.</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_virtual</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327"></a>
+<a id="__codelineno-0-328" name="__codelineno-0-328"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Visibility</span><span class="p">:</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="sd">            Visibility of the modifier.</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visibility</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335"></a>
-<a id="__codelineno-0-336" name="__codelineno-0-336"></a><span class="sd">            `B2.mod` on lines 12-14 lists `A.mod` on line 2 as a base modifier.</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337"></a>
-<a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="sd">            `C.mod` on lines 18-20 lists `B1.mod` on lines 6-8 and `B2.mod` on lines 12-14 as base modifiers.</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">            abstract contract A {</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341"></a><span class="sd">                modifier mod virtual;</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">            }</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343"></a>
-<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="sd">            contract B1 is A {</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="sd">                modifier mod virtual override {</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347"></a><span class="sd">                }</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">            }</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">            contract B2 is A {</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">                modifier mod virtual override {</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-353" name="__codelineno-0-353"></a><span class="sd">                }</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">            }</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355"></a>
-<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">            contract C is B1, B2 {</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">                modifier mod override(B1, B2) {</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">                }</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360"></a><span class="sd">            }</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="sd">            List of base modifiers overridden by this modifier.</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366"></a>        <span class="n">base_modifiers</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367"></a>        <span class="k">for</span> <span class="n">base_modifier_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_modifiers</span><span class="p">:</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368"></a>            <span class="n">base_modifier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">resolve_node</span><span class="p">(</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369"></a>                <span class="n">base_modifier_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_unit</span><span class="o">.</span><span class="n">cu_hash</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370"></a>            <span class="p">)</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371"></a>            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_modifier</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">)</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a>            <span class="n">base_modifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_modifier</span><span class="p">)</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_modifiers</span><span class="p">)</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374"></a>
-<a id="__codelineno-0-375" name="__codelineno-0-375"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">child_modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]:</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="sd">            Modifiers that list this modifier in their [base_modifiers][wake.ir.declarations.modifier_definition.ModifierDefinition.base_modifiers] property.</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">m</span><span class="p">())</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_modifiers</span><span class="p">)</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382"></a>
-<a id="__codelineno-0-383" name="__codelineno-0-383"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386"></a><span class="sd">        Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387"></a>
-<a id="__codelineno-0-388" name="__codelineno-0-388"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="sd">            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OverrideSpecifier</span><span class="p">]:</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396"></a><span class="sd">        Returns override specifier as present in the source code.</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397"></a><span class="sd">        !!! example</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398"></a><span class="sd">            `A.mod` on line 2 does not have an override specifier.</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399"></a>
-<a id="__codelineno-0-400" name="__codelineno-0-400"></a><span class="sd">            `B1.mod` on lines 6-8 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401"></a>
-<a id="__codelineno-0-402" name="__codelineno-0-402"></a><span class="sd">            `B2.mod` on lines 12-14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403"></a>
-<a id="__codelineno-0-404" name="__codelineno-0-404"></a><span class="sd">            `C.mod` on lines 18-20 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg two items referencing the contracts `B1` and `B2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
-<a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">            abstract contract A {</span>
-<a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">                modifier mod virtual;</span>
-<a id="__codelineno-0-408" name="__codelineno-0-408"></a><span class="sd">            }</span>
-<a id="__codelineno-0-409" name="__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410"></a><span class="sd">            contract B1 is A {</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411"></a><span class="sd">                modifier mod virtual override {</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="sd">                }</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">            }</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">base_modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339"></a><span class="sd">        !!! example</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340"></a><span class="sd">            `B.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341"></a>
+<a id="__codelineno-0-342" name="__codelineno-0-342"></a><span class="sd">            `C.mod` on lines 12-14 lists only `B.mod` on lines 6-8 as a base modifier.</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344"></a><span class="sd">            abstract contract A {</span>
+<a id="__codelineno-0-345" name="__codelineno-0-345"></a><span class="sd">                modifier mod virtual;</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346"></a><span class="sd">            }</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348"></a><span class="sd">            contract B is A {</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349"></a><span class="sd">                modifier mod virtual override {</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351"></a><span class="sd">                }</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352"></a><span class="sd">            }</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353"></a>
+<a id="__codelineno-0-354" name="__codelineno-0-354"></a><span class="sd">            contract C is B {</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355"></a><span class="sd">                modifier mod override {</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357"></a><span class="sd">                }</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358"></a><span class="sd">            }</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360"></a>
+<a id="__codelineno-0-361" name="__codelineno-0-361"></a><span class="sd">        !!! example</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362"></a><span class="sd">            `B1.mod` on lines 6-8 lists `A.mod` on line 2 as a base modifier.</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363"></a>
+<a id="__codelineno-0-364" name="__codelineno-0-364"></a><span class="sd">            `B2.mod` on lines 12-14 lists `A.mod` on line 2 as a base modifier.</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365"></a>
+<a id="__codelineno-0-366" name="__codelineno-0-366"></a><span class="sd">            `C.mod` on lines 18-20 lists `B1.mod` on lines 6-8 and `B2.mod` on lines 12-14 as base modifiers.</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368"></a><span class="sd">            abstract contract A {</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369"></a><span class="sd">                modifier mod virtual;</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370"></a><span class="sd">            }</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371"></a>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="sd">            contract B1 is A {</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373"></a><span class="sd">                modifier mod virtual override {</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375"></a><span class="sd">                }</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376"></a><span class="sd">            }</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377"></a>
+<a id="__codelineno-0-378" name="__codelineno-0-378"></a><span class="sd">            contract B2 is A {</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379"></a><span class="sd">                modifier mod virtual override {</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381"></a><span class="sd">                }</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382"></a><span class="sd">            }</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383"></a>
+<a id="__codelineno-0-384" name="__codelineno-0-384"></a><span class="sd">            contract C is B1, B2 {</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385"></a><span class="sd">                modifier mod override(B1, B2) {</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387"></a><span class="sd">                }</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388"></a><span class="sd">            }</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390"></a>
+<a id="__codelineno-0-391" name="__codelineno-0-391"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392"></a><span class="sd">            List of base modifiers overridden by this modifier.</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394"></a>        <span class="n">base_modifiers</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395"></a>        <span class="k">for</span> <span class="n">base_modifier_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_modifiers</span><span class="p">:</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396"></a>            <span class="n">base_modifier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_resolver</span><span class="o">.</span><span class="n">resolve_node</span><span class="p">(</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397"></a>                <span class="n">base_modifier_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_unit</span><span class="o">.</span><span class="n">cu_hash</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398"></a>            <span class="p">)</span>
+<a id="__codelineno-0-399" name="__codelineno-0-399"></a>            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_modifier</span><span class="p">,</span> <span class="n">ModifierDefinition</span><span class="p">)</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400"></a>            <span class="n">base_modifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_modifier</span><span class="p">)</span>
+<a id="__codelineno-0-401" name="__codelineno-0-401"></a>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">base_modifiers</span><span class="p">)</span>
+<a id="__codelineno-0-402" name="__codelineno-0-402"></a>
+<a id="__codelineno-0-403" name="__codelineno-0-403"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-404" name="__codelineno-0-404"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">child_modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">ModifierDefinition</span><span class="p">]:</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">            Modifiers that list this modifier in their [base_modifiers][wake.ir.declarations.modifier_definition.ModifierDefinition.base_modifiers] property.</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409"></a>        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">m</span><span class="p">())</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_modifiers</span><span class="p">)</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410"></a>
+<a id="__codelineno-0-411" name="__codelineno-0-411"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">documentation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StructuredDocumentation</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<a id="__codelineno-0-413" name="__codelineno-0-413"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-414" name="__codelineno-0-414"></a><span class="sd">        Of [StructuredDocumentation][wake.ir.meta.structured_documentation.StructuredDocumentation] type since Solidity 0.6.3.</span>
 <a id="__codelineno-0-415" name="__codelineno-0-415"></a>
-<a id="__codelineno-0-416" name="__codelineno-0-416"></a><span class="sd">            contract B2 is A {</span>
-<a id="__codelineno-0-417" name="__codelineno-0-417"></a><span class="sd">                modifier mod virtual override {</span>
-<a id="__codelineno-0-418" name="__codelineno-0-418"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419"></a><span class="sd">                }</span>
-<a id="__codelineno-0-420" name="__codelineno-0-420"></a><span class="sd">            }</span>
-<a id="__codelineno-0-421" name="__codelineno-0-421"></a>
-<a id="__codelineno-0-422" name="__codelineno-0-422"></a><span class="sd">            contract C is B1, B2 {</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423"></a><span class="sd">                modifier mod override(B1, B2) {</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424"></a><span class="sd">                    _;</span>
-<a id="__codelineno-0-425" name="__codelineno-0-425"></a><span class="sd">                }</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426"></a><span class="sd">            }</span>
-<a id="__codelineno-0-427" name="__codelineno-0-427"></a><span class="sd">            ```</span>
-<a id="__codelineno-0-428" name="__codelineno-0-428"></a>
-<a id="__codelineno-0-429" name="__codelineno-0-429"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-430" name="__codelineno-0-430"></a><span class="sd">            Override specifier, if any.</span>
-<a id="__codelineno-0-431" name="__codelineno-0-431"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-432" name="__codelineno-0-432"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overrides</span>
-<a id="__codelineno-0-433" name="__codelineno-0-433"></a>
-<a id="__codelineno-0-434" name="__codelineno-0-434"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-435" name="__codelineno-0-435"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ControlFlowGraph</span><span class="p">:</span>
-<a id="__codelineno-0-437" name="__codelineno-0-437"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">        Raises:</span>
-<a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">            ValueError: If the modifier is not implemented.</span>
-<a id="__codelineno-0-440" name="__codelineno-0-440"></a>
-<a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-442" name="__codelineno-0-442"></a><span class="sd">            Control flow graph of the modifier.</span>
-<a id="__codelineno-0-443" name="__codelineno-0-443"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-444" name="__codelineno-0-444"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">wake.analysis.cfg</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControlFlowGraph</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445"></a>
-<a id="__codelineno-0-446" name="__codelineno-0-446"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implemented</span><span class="p">:</span>
-<a id="__codelineno-0-447" name="__codelineno-0-447"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot create CFG for unimplemented modifier&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-448" name="__codelineno-0-448"></a>
-<a id="__codelineno-0-449" name="__codelineno-0-449"></a>        <span class="k">return</span> <span class="n">ControlFlowGraph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-<a id="__codelineno-0-450" name="__codelineno-0-450"></a>
-<a id="__codelineno-0-451" name="__codelineno-0-451"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-452" name="__codelineno-0-452"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">references</span><span class="p">(</span>
-<a id="__codelineno-0-453" name="__codelineno-0-453"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-454" name="__codelineno-0-454"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">]]:</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-456" name="__codelineno-0-456"></a><span class="sd">        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457"></a><span class="sd">        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.</span>
-<a id="__codelineno-0-458" name="__codelineno-0-458"></a>
-<a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="sd">        Returns:</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460"></a><span class="sd">            Set of all IR nodes referencing this modifier.</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-462" name="__codelineno-0-462"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.identifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identifier</span>
-<a id="__codelineno-0-463" name="__codelineno-0-463"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..meta.identifier_path</span><span class="w"> </span><span class="kn">import</span> <span class="n">IdentifierPathPart</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464"></a>
-<a id="__codelineno-0-465" name="__codelineno-0-465"></a>        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">r</span><span class="p">())</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="p">]</span>
-<a id="__codelineno-0-466" name="__codelineno-0-466"></a>
-<a id="__codelineno-0-467" name="__codelineno-0-467"></a>        <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-468" name="__codelineno-0-468"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-<a id="__codelineno-0-469" name="__codelineno-0-469"></a>                <span class="n">ref</span>
-<a id="__codelineno-0-470" name="__codelineno-0-470"></a>                <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span>
-<a id="__codelineno-0-471" name="__codelineno-0-471"></a>                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="p">(</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">))</span>
-<a id="__codelineno-0-472" name="__codelineno-0-472"></a>            <span class="p">)</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473"></a>            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected reference type: </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-474" name="__codelineno-0-474"></a>        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-<a id="__codelineno-0-475" name="__codelineno-0-475"></a>            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span>  <span class="c1"># pyright: ignore reportGeneralTypeIssues</span>
+<a id="__codelineno-0-416" name="__codelineno-0-416"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417"></a><span class="sd">            [NatSpec](https://docs.soliditylang.org/en/latest/natspec-format.html) documentation string, if any.</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-419" name="__codelineno-0-419"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_documentation</span>
+<a id="__codelineno-0-420" name="__codelineno-0-420"></a>
+<a id="__codelineno-0-421" name="__codelineno-0-421"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-422" name="__codelineno-0-422"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OverrideSpecifier</span><span class="p">]:</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424"></a><span class="sd">        Returns override specifier as present in the source code.</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425"></a><span class="sd">        !!! example</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426"></a><span class="sd">            `A.mod` on line 2 does not have an override specifier.</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427"></a>
+<a id="__codelineno-0-428" name="__codelineno-0-428"></a><span class="sd">            `B1.mod` on lines 6-8 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429"></a>
+<a id="__codelineno-0-430" name="__codelineno-0-430"></a><span class="sd">            `B2.mod` on lines 12-14 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property empty.</span>
+<a id="__codelineno-0-431" name="__codelineno-0-431"></a>
+<a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="sd">            `C.mod` on lines 18-20 has an override specifier with the [overrides][wake.ir.meta.override_specifier.OverrideSpecifier.overrides] property containg two items referencing the contracts `B1` and `B2` ([ContractDefinition][wake.ir.declarations.contract_definition.ContractDefinition]).</span>
+<a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="sd">            ```solidity linenums=&quot;1&quot;</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434"></a><span class="sd">            abstract contract A {</span>
+<a id="__codelineno-0-435" name="__codelineno-0-435"></a><span class="sd">                modifier mod virtual;</span>
+<a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="sd">            }</span>
+<a id="__codelineno-0-437" name="__codelineno-0-437"></a>
+<a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">            contract B1 is A {</span>
+<a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">                modifier mod virtual override {</span>
+<a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="sd">                }</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442"></a><span class="sd">            }</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443"></a>
+<a id="__codelineno-0-444" name="__codelineno-0-444"></a><span class="sd">            contract B2 is A {</span>
+<a id="__codelineno-0-445" name="__codelineno-0-445"></a><span class="sd">                modifier mod virtual override {</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="sd">                }</span>
+<a id="__codelineno-0-448" name="__codelineno-0-448"></a><span class="sd">            }</span>
+<a id="__codelineno-0-449" name="__codelineno-0-449"></a>
+<a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="sd">            contract C is B1, B2 {</span>
+<a id="__codelineno-0-451" name="__codelineno-0-451"></a><span class="sd">                modifier mod override(B1, B2) {</span>
+<a id="__codelineno-0-452" name="__codelineno-0-452"></a><span class="sd">                    _;</span>
+<a id="__codelineno-0-453" name="__codelineno-0-453"></a><span class="sd">                }</span>
+<a id="__codelineno-0-454" name="__codelineno-0-454"></a><span class="sd">            }</span>
+<a id="__codelineno-0-455" name="__codelineno-0-455"></a><span class="sd">            ```</span>
+<a id="__codelineno-0-456" name="__codelineno-0-456"></a>
+<a id="__codelineno-0-457" name="__codelineno-0-457"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-458" name="__codelineno-0-458"></a><span class="sd">            Override specifier, if any.</span>
+<a id="__codelineno-0-459" name="__codelineno-0-459"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-460" name="__codelineno-0-460"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overrides</span>
+<a id="__codelineno-0-461" name="__codelineno-0-461"></a>
+<a id="__codelineno-0-462" name="__codelineno-0-462"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-463" name="__codelineno-0-463"></a>    <span class="nd">@weak_self_lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<a id="__codelineno-0-464" name="__codelineno-0-464"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ControlFlowGraph</span><span class="p">:</span>
+<a id="__codelineno-0-465" name="__codelineno-0-465"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466"></a><span class="sd">        Raises:</span>
+<a id="__codelineno-0-467" name="__codelineno-0-467"></a><span class="sd">            ValueError: If the modifier is not implemented.</span>
+<a id="__codelineno-0-468" name="__codelineno-0-468"></a>
+<a id="__codelineno-0-469" name="__codelineno-0-469"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-470" name="__codelineno-0-470"></a><span class="sd">            Control flow graph of the modifier.</span>
+<a id="__codelineno-0-471" name="__codelineno-0-471"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-472" name="__codelineno-0-472"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">wake.analysis.cfg</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControlFlowGraph</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473"></a>
+<a id="__codelineno-0-474" name="__codelineno-0-474"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implemented</span><span class="p">:</span>
+<a id="__codelineno-0-475" name="__codelineno-0-475"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot create CFG for unimplemented modifier&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-476" name="__codelineno-0-476"></a>
+<a id="__codelineno-0-477" name="__codelineno-0-477"></a>        <span class="k">return</span> <span class="n">ControlFlowGraph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<a id="__codelineno-0-478" name="__codelineno-0-478"></a>
+<a id="__codelineno-0-479" name="__codelineno-0-479"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-480" name="__codelineno-0-480"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">references</span><span class="p">(</span>
+<a id="__codelineno-0-481" name="__codelineno-0-481"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenSet</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">]]:</span>
+<a id="__codelineno-0-483" name="__codelineno-0-483"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-484" name="__codelineno-0-484"></a><span class="sd">        Until Solidity 0.8.0, modifiers were referenced in [ModifierInvocations][wake.ir.meta.modifier_invocation.ModifierInvocation]</span>
+<a id="__codelineno-0-485" name="__codelineno-0-485"></a><span class="sd">        using [Identifiers][wake.ir.expressions.identifier.Identifier]. Version 0.8.0 started using [IdentifierPaths][wake.ir.meta.identifier_path.IdentifierPath] instead.</span>
+<a id="__codelineno-0-486" name="__codelineno-0-486"></a>
+<a id="__codelineno-0-487" name="__codelineno-0-487"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-488" name="__codelineno-0-488"></a><span class="sd">            Set of all IR nodes referencing this modifier.</span>
+<a id="__codelineno-0-489" name="__codelineno-0-489"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-490" name="__codelineno-0-490"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..expressions.identifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identifier</span>
+<a id="__codelineno-0-491" name="__codelineno-0-491"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">..meta.identifier_path</span><span class="w"> </span><span class="kn">import</span> <span class="n">IdentifierPathPart</span>
+<a id="__codelineno-0-492" name="__codelineno-0-492"></a>
+<a id="__codelineno-0-493" name="__codelineno-0-493"></a>        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">is_not_none</span><span class="p">(</span><span class="n">r</span><span class="p">())</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_references</span><span class="p">]</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494"></a>
+<a id="__codelineno-0-495" name="__codelineno-0-495"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-496" name="__codelineno-0-496"></a>            <span class="n">ref</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+<a id="__codelineno-0-497" name="__codelineno-0-497"></a>                <span class="n">ref</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498"></a>                <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499"></a>                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="p">(</span><span class="n">Identifier</span><span class="p">,</span> <span class="n">IdentifierPathPart</span><span class="p">))</span>
+<a id="__codelineno-0-500" name="__codelineno-0-500"></a>            <span class="p">)</span>
+<a id="__codelineno-0-501" name="__codelineno-0-501"></a>            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected reference type: </span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502"></a>        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+<a id="__codelineno-0-503" name="__codelineno-0-503"></a>            <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span>  <span class="c1"># pyright: ignore reportGeneralTypeIssues</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
