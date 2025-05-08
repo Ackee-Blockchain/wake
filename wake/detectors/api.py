@@ -881,8 +881,11 @@ def print_detection(
     file_link: bool = True,
 ) -> None:
     from rich.panel import Panel
+    from rich.style import Style
     from rich.syntax import Syntax
     from rich.tree import Tree
+
+    from wake.ir import DeclarationAbc
 
     def print_result(
         info: Union[DetectorResult, Detection],
@@ -895,9 +898,15 @@ def print_detection(
             detection = info
 
         source_unit = detection.ir_node.source_unit
-        line, col = source_unit.get_line_col_from_byte_offset(
-            detection.ir_node.byte_location[0]
-        )
+
+        if detection.lsp_range is not None:
+            location = detection.lsp_range
+        elif isinstance(detection.ir_node, DeclarationAbc):
+            location = detection.ir_node.name_location
+        else:
+            location = detection.ir_node.byte_location
+
+        line, col = source_unit.get_line_col_from_byte_offset(location[0])
         assert source_unit._lines_index is not None
         line -= 1
         source = ""
@@ -944,15 +953,26 @@ def print_detection(
             else:
                 title += f" \[{detector_id}]"  # pyright: ignore reportInvalidStringEscapeSequence
 
+        syntax = Syntax(
+            source[:-1] if source.endswith("\n") else source,
+            "solidity",
+            theme=theme,
+            line_numbers=True,
+            start_line=start_line_index + 1,
+            highlight_lines={line + 1},
+        )
+        end_line, end_col = source_unit.get_line_col_from_byte_offset(location[1])
+        if end_line > end_line_index:
+            end_line = end_line_index
+            end_col = len(source_unit._lines_index[end_line - 1][0])
+
+        syntax.stylize_range(
+            Style(color="red"),
+            (line - start_line_index + 1, col - 1),
+            (end_line - start_line_index, end_col - 1),
+        )
         panel = Panel.fit(
-            Syntax(
-                source.rstrip(),
-                "solidity",
-                theme=theme,
-                line_numbers=True,
-                start_line=start_line_index + 1,
-                highlight_lines={line + 1},
-            ),
+            syntax,
             title=title,
             title_align="left",
             subtitle=subtitle,
