@@ -88,6 +88,7 @@ nav:
                       - Unsafe ERC-20 call: "static-analysis/detectors/unsafe-erc20-call.md"
                       - Unsafe delegatecall: "static-analysis/detectors/unsafe-delegatecall.md"
                       - Unused contract: "static-analysis/detectors/unused-contract.md"
+                      - Unused error: "static-analysis/detectors/unused-error.md"
                       - Unused event: "static-analysis/detectors/unused-event.md"
                       - Unused function: "static-analysis/detectors/unused-function.md"
                       - Unused import: "static-analysis/detectors/unused-import.md"
