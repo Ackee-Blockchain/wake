@@ -331,6 +331,8 @@ class FunctionDefinition(DeclarationAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
+        from .contract_definition import ContractDefinition
+
         if self.kind == FunctionKind.CONSTRUCTOR:
             ret = "constructor"
         elif self.kind == FunctionKind.FALLBACK:
@@ -379,17 +381,46 @@ class FunctionDefinition(DeclarationAbc):
             else ""
         )
 
+        def resolve_documentation_line(line: str) -> str:
+            if "@inheritdoc" in line and isinstance(self.parent, ContractDefinition):
+                contract_name = line.split("@inheritdoc")[-1].split()[0]
+                queue: List[FunctionDefinition] = [self]
+                while queue:
+                    func = queue.pop()
+                    if (
+                        isinstance(func.parent, ContractDefinition)
+                        and func.parent.name == contract_name
+                        and func.documentation is not None
+                    ):
+                        t = (
+                            func.documentation.text
+                            if isinstance(func.documentation, StructuredDocumentation)
+                            else func.documentation
+                        )
+                        print(t)
+                        return "\n///".join(line for line in t.splitlines())
+                    else:
+                        queue.extend(func.base_functions)
+
+            return line
+
         if isinstance(self.documentation, StructuredDocumentation):
             return (
                 "/// "
-                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n///".join(
+                    resolve_documentation_line(line)
+                    for line in self.documentation.text.splitlines()
+                )
                 + "\n"
                 + ret
             )
         elif isinstance(self.documentation, str):
             return (
                 "/// "
-                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n///".join(
+                    resolve_documentation_line(line)
+                    for line in self.documentation.splitlines()
+                )
                 + "\n"
                 + ret
             )

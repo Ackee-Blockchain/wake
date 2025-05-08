@@ -377,10 +377,36 @@ class VariableDeclaration(DeclarationAbc):
             else ""
         )
 
+        def resolve_documentation_line(line: str) -> str:
+            if "@inheritdoc" in line and isinstance(self.parent, ContractDefinition):
+                contract_name = line.split("@inheritdoc")[-1].split()[0]
+                queue: List[FunctionDefinition] = list(self.base_functions)
+                while queue:
+                    func = queue.pop()
+                    if (
+                        isinstance(func.parent, ContractDefinition)
+                        and func.parent.name == contract_name
+                        and func.documentation is not None
+                    ):
+                        t = (
+                            func.documentation.text
+                            if isinstance(func.documentation, StructuredDocumentation)
+                            else func.documentation
+                        )
+                        print(t)
+                        return "\n///".join(line for line in t.splitlines())
+                    else:
+                        queue.extend(func.base_functions)
+
+            return line
+
         if self.documentation is not None:
             return (
                 "/// "
-                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n///".join(
+                    resolve_documentation_line(line)
+                    for line in self.documentation.text.splitlines()
+                )
                 + "\n"
                 + ret
             )
