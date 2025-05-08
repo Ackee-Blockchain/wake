@@ -248,17 +248,45 @@ class ModifierDefinition(DeclarationAbc):
             else ""
         )
 
+        def resolve_documentation_line(line: str) -> str:
+            if "@inheritdoc" in line and isinstance(self.parent, ContractDefinition):
+                contract_name = line.split("@inheritdoc")[-1].split()[0]
+                queue: List[ModifierDefinition] = [self]
+                while queue:
+                    mod = queue.pop()
+                    if (
+                        isinstance(mod.parent, ContractDefinition)
+                        and mod.parent.name == contract_name
+                        and mod.documentation is not None
+                    ):
+                        t = (
+                            mod.documentation.text
+                            if isinstance(mod.documentation, StructuredDocumentation)
+                            else mod.documentation
+                        )
+                        return "\n///".join(line for line in t.splitlines())
+                    else:
+                        queue.extend(mod.base_modifiers)
+
+            return line
+
         if isinstance(self.documentation, StructuredDocumentation):
             return (
                 "/// "
-                + "\n///".join(line for line in self.documentation.text.splitlines())
+                + "\n///".join(
+                    resolve_documentation_line(line)
+                    for line in self.documentation.text.splitlines()
+                )
                 + "\n"
                 + ret
             )
         elif isinstance(self.documentation, str):
             return (
                 "/// "
-                + "\n///".join(line for line in self.documentation.splitlines())
+                + "\n///".join(
+                    resolve_documentation_line(line)
+                    for line in self.documentation.splitlines()
+                )
                 + "\n"
                 + ret
             )
