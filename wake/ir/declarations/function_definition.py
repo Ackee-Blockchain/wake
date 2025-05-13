@@ -397,7 +397,6 @@ class FunctionDefinition(DeclarationAbc):
                             if isinstance(func.documentation, StructuredDocumentation)
                             else func.documentation
                         )
-                        print(t)
                         return "\n///".join(line for line in t.splitlines())
                     else:
                         queue.extend(func.base_functions)
