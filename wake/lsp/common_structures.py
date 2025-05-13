@@ -977,6 +977,7 @@ class WorkspaceSymbol(LspModel):
     tags: Optional[List[SymbolTag]] = None
     location: Union[Location, WorkspaceSymbolUriLocation]
     container_name: Optional[str] = None
+    data: Optional[Any] = None
 
 
 class ConfigurationItem(LspModel):
