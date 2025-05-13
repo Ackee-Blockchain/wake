@@ -1,7 +1,12 @@
 import asyncio
 from typing import List
 
-from wake.ir import ContractDefinition
+from wake.ir import (
+    ContractDefinition,
+    DeclarationAbc,
+    FunctionDefinition,
+    ModifierDefinition,
+)
 from wake.lsp.common_structures import (
     Location,
     WorkspaceSymbol,
@@ -19,7 +24,7 @@ async def workspace_symbol(
     context: LspContext, params: WorkspaceSymbolParams
 ) -> List[WorkspaceSymbol]:
     query = params.query.lower()
-    declarations = []
+    declarations: List[DeclarationAbc] = []
 
     await next(
         asyncio.as_completed(
@@ -63,10 +68,15 @@ async def workspace_symbol(
 
     symbols = []
     for decl in declarations:
+        if isinstance(decl, (FunctionDefinition, ModifierDefinition)):
+            name = f"{decl.name}({','.join(param.type_name.type_string for param in decl.parameters.parameters)})"
+        else:
+            name = decl.name
+
         symbols.append(
             (
                 WorkspaceSymbol(
-                    name=decl.name,
+                    name=name,
                     kind=declaration_to_symbol_kind(decl),
                     container_name=decl.parent.name
                     if isinstance(decl.parent, ContractDefinition)
@@ -74,6 +84,7 @@ async def workspace_symbol(
                     location=WorkspaceSymbolUriLocation(
                         uri=path_to_uri(decl.source_unit.file)
                     ),
+                    data=decl.canonical_name,
                 ),
                 decl.source_unit.source_unit_name,
             )
@@ -91,9 +102,14 @@ async def workspace_symbol_resolve(
 
     path = uri_to_path(symbol.location.uri)
 
-    await next(asyncio.as_completed(
-        [context.compiler.compilation_ready.wait(), context.compiler.cache_ready.wait()]
-    ))
+    await next(
+        asyncio.as_completed(
+            [
+                context.compiler.compilation_ready.wait(),
+                context.compiler.cache_ready.wait(),
+            ]
+        )
+    )
 
     forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
     cache_checked = False
@@ -107,15 +123,7 @@ async def workspace_symbol_resolve(
         for decl in context.compiler.last_compilation_source_units[
             path
         ].declarations_iter():
-            if decl.name != symbol.name:
-                continue
-
-            parent_name = (
-                decl.parent.name
-                if isinstance(decl.parent, ContractDefinition)
-                else None
-            )
-            if parent_name != symbol.container_name:
+            if decl.canonical_name != symbol.data:
                 continue
 
             new_byte_start = (
@@ -139,15 +147,7 @@ async def workspace_symbol_resolve(
 
     if path in context.compiler.source_units:
         for decl in context.compiler.source_units[path].declarations_iter():
-            if decl.name != symbol.name:
-                continue
-
-            parent_name = (
-                decl.parent.name
-                if isinstance(decl.parent, ContractDefinition)
-                else None
-            )
-            if parent_name != symbol.container_name:
+            if decl.canonical_name != symbol.data:
                 continue
 
             symbol.location = Location(
@@ -159,7 +159,7 @@ async def workspace_symbol_resolve(
             return symbol
 
     if cache_checked:
-        raise LspError(ErrorCodes.InvalidParams, f"Unknown symbol {symbol.name}")
+        raise LspError(ErrorCodes.InvalidParams, f"Unknown symbol {symbol.data}")
 
     await context.compiler.cache_ready.wait()
     forward_changes = context.compiler.get_last_compilation_forward_changes(path, path)
@@ -172,15 +172,7 @@ async def workspace_symbol_resolve(
         for decl in context.compiler.last_compilation_source_units[
             path
         ].declarations_iter():
-            if decl.name != symbol.name:
-                continue
-
-            parent_name = (
-                decl.parent.name
-                if isinstance(decl.parent, ContractDefinition)
-                else None
-            )
-            if parent_name != symbol.container_name:
+            if decl.canonical_name != symbol.data:
                 continue
 
             new_byte_start = (
