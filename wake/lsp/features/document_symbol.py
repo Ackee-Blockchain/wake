@@ -253,25 +253,6 @@ async def document_symbol(
 
     path = uri_to_path(params.text_document.uri).resolve()
 
-    await next(
-        asyncio.as_completed(
-            [
-                context.compiler.compilation_ready.wait(),
-                context.compiler.cache_ready.wait(),
-            ]
-        )
-    )
-
-    if (
-        path not in context.compiler.source_units
-        or not context.compiler.compilation_ready.is_set()
-    ):
-        try:
-            await context.compiler.cache_ready.wait()
-            return _get_document_symbol_from_cache(path, context)
-        except Exception:
-            pass
-
     await context.compiler.compilation_ready.wait()
 
     if path in context.compiler.source_units:
@@ -297,5 +278,9 @@ async def document_symbol(
         return _generate_symbols(
             context.compiler.source_units[path], declaration_to_symbol
         )
-
-    return None
+    else:
+        try:
+            await context.compiler.cache_ready.wait()
+            return _get_document_symbol_from_cache(path, context)
+        except Exception:
+            return None
