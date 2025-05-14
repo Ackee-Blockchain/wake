@@ -353,6 +353,8 @@ class VariableDeclaration(DeclarationAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
+        from .contract_definition import ContractDefinition
+
         ret = self.type_name.source
         ret += f" {self.visibility}" if self.is_state_variable else ""
         ret += f" {self.mutability}" if self.mutability != Mutability.MUTABLE else ""
