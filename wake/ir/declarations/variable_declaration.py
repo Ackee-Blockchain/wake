@@ -353,6 +353,8 @@ class VariableDeclaration(DeclarationAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
+        from .contract_definition import ContractDefinition
+
         ret = self.type_name.source
         ret += f" {self.visibility}" if self.is_state_variable else ""
         ret += f" {self.mutability}" if self.mutability != Mutability.MUTABLE else ""
@@ -393,7 +395,6 @@ class VariableDeclaration(DeclarationAbc):
                             if isinstance(func.documentation, StructuredDocumentation)
                             else func.documentation
                         )
-                        print(t)
                         return "\n///".join(line for line in t.splitlines())
                     else:
                         queue.extend(func.base_functions)
