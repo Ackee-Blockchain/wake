@@ -966,11 +966,37 @@ def print_detection(
             end_line = end_line_index
             end_col = len(source_unit._lines_index[end_line - 1][0])
 
-        syntax.stylize_range(
-            Style(color="red"),
-            (line - start_line_index + 1, col - 1),
-            (end_line - start_line_index, end_col - 1),
-        )
+        # Apply styling line by line to avoid underlining leading/trailing whitespace
+        for i in range(line - start_line_index, end_line - start_line_index):
+            line_content = source_unit._lines_index[i + start_line_index][0].decode(
+                "utf-8"
+            )
+
+            # Find first and last non-whitespace character for every line
+            first_non_ws = len(line_content) - len(line_content.lstrip())
+            last_non_ws = len(line_content.rstrip())
+
+            # Calculate start column for this line
+            start_col = max(
+                first_non_ws, col - 1 if i == line - start_line_index else 0
+            )
+
+            # Calculate end column for this line
+            finish_col = min(
+                last_non_ws,
+                end_col - 1
+                if i == end_line - start_line_index - 1
+                else len(line_content),
+            )
+
+            # Only apply style if there's actual content to highlight
+            if start_col < finish_col:
+                syntax.stylize_range(
+                    Style(underline=True),
+                    (i + 1, start_col),
+                    (i + 1, finish_col),
+                )
+
         panel = Panel.fit(
             syntax,
             title=title,
