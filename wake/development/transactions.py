@@ -41,6 +41,7 @@ from .core import (
     Account,
     Address,
     Chain,
+    SignedAuthorization,
     Wei,
     get_contract_from_fqn,
     get_contracts_by_fqn,
@@ -64,6 +65,7 @@ class TransactionTypeEnum(IntEnum):
     LEGACY = 0
     EIP2930 = 1
     EIP1559 = 2
+    EIP7702 = 4
 
 
 def _fetch_tx_data(f):
@@ -116,6 +118,11 @@ class ChainTransactions:
             "gas": int(tx_data["gas"], 16),
             "value": int(tx_data["value"], 16),
             "data": bytes.fromhex(tx_data["input"][2:]),
+            "chainId": (
+                self._chain.forked_chain_id
+                if self._chain.forked_chain_id is not None
+                else self._chain.chain_id
+            ),
         }
 
         if "to" in tx_data and tx_data["to"] is not None:
@@ -123,9 +130,11 @@ class ChainTransactions:
             try:
                 fqn = get_fqn_from_address(
                     Address(tx_params["to"]),
-                    int(tx_data["blockNumber"], 16) - 1
-                    if "blockNumber" in tx_data
-                    else "latest",
+                    (
+                        int(tx_data["blockNumber"], 16) - 1
+                        if "blockNumber" in tx_data
+                        else "latest"
+                    ),
                     self._chain,
                 )
                 module_name, attrs = get_contract_from_fqn(
@@ -173,14 +182,20 @@ class ChainTransactions:
         elif type == 1:
             tx_params["gasPrice"] = int(tx_data["gasPrice"], 16)
             tx_params["accessList"] = tx_data["accessList"]
-            tx_params["chainId"] = 1
             tx = Eip2930Transaction(key, tx_params, abi, return_type, self._chain)
         elif type == 2:
             tx_params["maxFeePerGas"] = int(tx_data["maxFeePerGas"], 16)
             tx_params["maxPriorityFeePerGas"] = int(tx_data["maxPriorityFeePerGas"], 16)
             tx_params["accessList"] = tx_data["accessList"]
-            tx_params["chainId"] = 2
             tx = Eip1559Transaction(key, tx_params, abi, return_type, self._chain)
+        elif type == 3:
+            raise NotImplementedError("Tx type 3 is not supported")
+        elif type == 4:
+            tx_params["maxFeePerGas"] = int(tx_data["maxFeePerGas"], 16)
+            tx_params["maxPriorityFeePerGas"] = int(tx_data["maxPriorityFeePerGas"], 16)
+            tx_params["accessList"] = tx_data["accessList"]
+            tx_params["authorizationList"] = tx_data["authorizationList"]
+            tx = Eip7702Transaction(key, tx_params, abi, return_type, self._chain)
         else:
             raise ValueError(f"Unknown transaction type {type}")
 
@@ -234,6 +249,11 @@ class TransactionAbc(ABC, Generic[T]):
     @property
     def chain(self) -> Chain:
         return self._chain
+
+    @property
+    def chain_id(self) -> int:
+        assert "chainId" in self._tx_params
+        return self._tx_params["chainId"]
 
     @property
     @_fetch_tx_receipt
@@ -705,11 +725,6 @@ class Eip2930Transaction(TransactionAbc[T]):
 
 class Eip1559Transaction(TransactionAbc[T]):
     @property
-    def chain_id(self) -> int:
-        assert "chainId" in self._tx_params
-        return self._tx_params["chainId"]
-
-    @property
     def max_fee_per_gas(self) -> Wei:
         if "maxFeePerGas" not in self._tx_params:
             if self._tx_data is None:
@@ -751,6 +766,65 @@ class Eip1559Transaction(TransactionAbc[T]):
     def type(self) -> TransactionTypeEnum:
         assert "type" in self._tx_params and self._tx_params["type"] == 2
         return TransactionTypeEnum.EIP1559
+
+
+class Eip7702Transaction(TransactionAbc[T]):
+    @property
+    def max_fee_per_gas(self) -> Wei:
+        if "maxFeePerGas" not in self._tx_params:
+            if self._tx_data is None:
+                self._tx_data = self._chain.chain_interface.get_transaction(
+                    self.tx_hash
+                )
+            return Wei(int(self._tx_data["maxFeePerGas"], 16))
+        return Wei(self._tx_params["maxFeePerGas"])
+
+    @property
+    def max_priority_fee_per_gas(self) -> Wei:
+        if "maxPriorityFeePerGas" not in self._tx_params:
+            if self._tx_data is None:
+                self._tx_data = self._chain.chain_interface.get_transaction(
+                    self.tx_hash
+                )
+            return Wei(int(self._tx_data["maxPriorityFeePerGas"], 16))
+        return Wei(self._tx_params["maxPriorityFeePerGas"])
+
+    @property
+    def access_list(self) -> Dict[Account, List[int]]:
+        assert "accessList" in self._tx_params
+        ret = {}
+        for entry in self._tx_params["accessList"]:
+            account = Account(entry[0])
+            if account not in ret:
+                ret[account] = []
+            ret[account].append(entry[1])
+        return ret
+
+    @property
+    def authorization_list(self) -> List[SignedAuthorization]:
+        return [
+            SignedAuthorization(
+                address=a["address"],
+                chainId=int(a["chainId"], 16),
+                nonce=int(a["nonce"], 16),
+                r=int(a["r"], 16),
+                s=int(a["s"], 16),
+                yParity=int(a["yParity"], 16),
+            )
+            for a in self._tx_params.get("authorizationList", [])
+        ]
+
+    @property
+    @_fetch_tx_data
+    def y_parity(self) -> bool:
+        return bool(
+            int(self._tx_data["v"], 16) & 1  # pyright: ignore reportOptionalSubscript
+        )
+
+    @property
+    def type(self) -> TransactionTypeEnum:
+        assert "type" in self._tx_params and self._tx_params["type"] == 4
+        return TransactionTypeEnum.EIP7702
 
 
 @dataclass

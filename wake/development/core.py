@@ -62,6 +62,7 @@ from .chain_interfaces import (
     GanacheChainInterface,
     GethLikeChainInterfaceAbc,
     HardhatChainInterface,
+    SignedAuthorization,
     TxParams,
 )
 from .globals import (
@@ -245,7 +246,6 @@ class Chain(ABC):
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
     _default_access_list_account: Optional[Account]
-    _default_tx_type: int
     _default_tx_confirmations: int
     _deployed_libraries: DefaultDict[bytes, List[Library]]
     _single_source_errors: Set[bytes]
@@ -419,33 +419,6 @@ class Chain(ABC):
                         forked_chain_interface.close()
                 else:
                     self._forked_chain_id = None
-
-                hardfork = info["hardFork"]
-                if hardfork in {
-                    "FRONTIER",
-                    "Frontier",
-                    "HOMESTEAD",
-                    "Homestead",
-                    "TANGERINE",
-                    "Tangerine",
-                    "SPURIOUS_DRAGON",
-                    "SpuriousDragon",
-                    "BYZANTIUM",
-                    "Byzantium",
-                    "CONSTANTINOPLE",
-                    "Constantinople",
-                    "PETERSBURG",
-                    "Petersburg",
-                    "ISTANBUL",
-                    "Istanbul",
-                    "MUIR_GLACIER",
-                    "MuirGlacier",
-                }:
-                    self._default_tx_type = 0
-                elif hardfork in {"BERLIN", "Berlin"}:
-                    self._default_tx_type = 1
-                else:
-                    self._default_tx_type = 2
             elif isinstance(
                 self._chain_interface,
                 (GethLikeChainInterfaceAbc, HardhatChainInterface),
@@ -461,37 +434,6 @@ class Chain(ABC):
                         self._forked_chain_id = metadata["forkedNetwork"]["chainId"]
                     else:
                         self._forked_chain_id = None
-
-                if self._chain_id in {56, 97}:
-                    # BSC clients do not fail on the calls below
-                    self._default_tx_type = 1
-                else:
-                    # TODO this is not the correct flow for Hermez:
-                    # EIP-1559 txs should be supported
-                    # access lists should not be supported
-                    # `type` field in txs should not be used
-                    # because Hermez does not implement eth_maxPriorityFeePerGas, fallback to legacy txs
-                    try:
-                        self._chain_interface.call(
-                            {
-                                "type": 2,
-                                "maxPriorityFeePerGas": 0,
-                                "to": "0x0000000000000000000000000000000000000000",
-                            }
-                        )
-                        self._default_tx_type = 2
-                    except JsonRpcError:
-                        try:
-                            self._chain_interface.call(
-                                {
-                                    "type": 1,
-                                    "accessList": [],
-                                    "to": "0x0000000000000000000000000000000000000000",
-                                }
-                            )
-                            self._default_tx_type = 1
-                        except JsonRpcError:
-                            self._default_tx_type = 0
             elif isinstance(self._chain_interface, GanacheChainInterface):
                 if fork is not None:
                     forked_chain_interface = ChainInterfaceAbc.connect(
@@ -503,8 +445,6 @@ class Chain(ABC):
                         forked_chain_interface.close()
                 else:
                     self._forked_chain_id = None
-
-                self._default_tx_type = 0
             else:
                 raise NotImplementedError(
                     f"Unknown chain interface type: {type(self._chain_interface)}"
@@ -706,18 +646,6 @@ class Chain(ABC):
 
     @property
     @check_connected
-    def default_tx_type(self) -> int:
-        return self._default_tx_type
-
-    @default_tx_type.setter
-    @check_connected
-    def default_tx_type(self, value: int) -> None:
-        if value not in {0, 1, 2}:
-            raise ValueError("Invalid transaction type")
-        self._default_tx_type = value
-
-    @property
-    @check_connected
     def default_tx_confirmations(self) -> int:
         return self._default_tx_confirmations
 
@@ -844,7 +772,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -869,7 +796,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -894,7 +820,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -919,7 +844,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -944,7 +868,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -968,7 +891,6 @@ class Chain(ABC):
         access_list: Optional[
             Union[Dict[Union[Account, Address, str], List[int]], Literal["auto"]]
         ] = None,
-        type: Optional[int] = None,
         block: Optional[
             Union[int, Literal["latest", "pending", "earliest", "safe", "finalized"]]
         ] = None,
@@ -1465,7 +1387,7 @@ class Chain(ABC):
                         raise e from None
             elif key is not None:
                 signed_tx = bytes(
-                    eth_account.Account.sign_transaction(tx_params, key).rawTransaction
+                    eth_account.Account.sign_transaction(tx_params, key).raw_transaction
                 )
                 try:
                     tx_hash = self._chain_interface.send_raw_transaction(signed_tx)
@@ -1605,6 +1527,10 @@ class Chain(ABC):
             from wake.development.transactions import Eip1559Transaction
 
             tx_type = Eip1559Transaction[return_type]
+        elif tx_params["type"] == 4:
+            from wake.development.transactions import Eip7702Transaction
+
+            tx_type = Eip7702Transaction[return_type]
         else:
             raise ValueError(f"Unknown transaction type {tx_params['type']}")
 

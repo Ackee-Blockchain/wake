@@ -8,8 +8,7 @@ import dataclasses
 from typing import List, Dict, Optional, overload, Union, Callable, Tuple
 from typing_extensions import Literal
 
-from wake.development.core import Contract, Library, Address, Account, Chain, RequestType
-from wake.development.core import RequestType, Chain
+from wake.development.core import Contract, Library, Address, Account, Chain, RequestType, SignedAuthorization
 from wake.development.primitive_types import *
 from wake.development.transactions import TransactionAbc, RevertError
 """
