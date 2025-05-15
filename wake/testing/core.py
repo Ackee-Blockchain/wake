@@ -106,7 +106,6 @@ class Chain(wake.development.core.Chain):
         snapshot_id = self._chain_interface.snapshot()
 
         self._snapshots[snapshot_id] = {
-            "nonces": self._nonces.copy(),
             "accounts": self._accounts.copy(),
             "default_call_account": self._default_call_account,
             "default_tx_account": self._default_tx_account,
@@ -141,7 +140,6 @@ class Chain(wake.development.core.Chain):
             raise RevertToSnapshotFailedError()
 
         snapshot = self._snapshots[snapshot_id]
-        self._nonces = snapshot["nonces"]
         self._accounts = snapshot["accounts"]
         self._default_call_account = snapshot["default_call_account"]
         self._default_tx_account = snapshot["default_tx_account"]
@@ -254,8 +252,8 @@ class Chain(wake.development.core.Chain):
             ]
             params["data"] += Abi.encode(types, arguments)
 
+        # intentionally not setting nonce, will be set in _send_transaction if needed
         tx: TxParams = {
-            "nonce": self._nonces[Address(sender)],
             "from": sender,
             "value": params["value"] if "value" in params else 0,
             "data": params["data"],
