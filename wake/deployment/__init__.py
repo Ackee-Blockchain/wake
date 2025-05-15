@@ -6,6 +6,7 @@ from wake.development.primitive_types import *
 from wake.development.transactions import (
     Eip1559Transaction,
     Eip2930Transaction,
+    Eip7702Transaction,
     Error,
     LegacyTransaction,
     Panic,

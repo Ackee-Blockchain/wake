@@ -118,7 +118,6 @@ class Chain(wake.development.core.Chain):
             "accounts_set": self._accounts_set.copy(),
             "default_estimate_account": self._default_estimate_account,
             "default_access_list_account": self._default_access_list_account,
-            "default_tx_type": self._default_tx_type,
             "default_tx_confirmations": self._default_tx_confirmations,
             "deployed_libraries": self._deployed_libraries,
             "single_source_errors": self._single_source_errors.copy(),
@@ -155,7 +154,6 @@ class Chain(wake.development.core.Chain):
         self._accounts_set = snapshot["accounts_set"]
         self._default_estimate_account = snapshot["default_estimate_account"]
         self._default_access_list_account = snapshot["default_access_list_account"]
-        self._default_tx_type = snapshot["default_tx_type"]
         self._default_tx_confirmations = snapshot["default_tx_confirmations"]
         self._deployed_libraries = snapshot["deployed_libraries"]
         self._single_source_errors = snapshot["single_source_errors"]
@@ -210,26 +208,16 @@ class Chain(wake.development.core.Chain):
         arguments: Iterable,
         abi: Optional[Dict],
     ) -> TxParams:
-        tx_type = params.get("type", self._default_tx_type)
-        if tx_type not in {0, 1, 2}:
-            raise ValueError("Invalid transaction type")
-
-        if tx_type == 0 and (
-            "accessList" in params
-            or "maxFeePerGas" in params
-            or "maxPriorityFeePerGas" in params
-        ):
-            raise ValueError(
-                "Cannot specify accessList, maxFeePerGas, or maxPriorityFeePerGas for type 0 transaction"
-            )
-        elif tx_type == 1 and (
-            "maxFeePerGas" in params or "maxPriorityFeePerGas" in params
-        ):
-            raise ValueError(
-                "Cannot specify maxFeePerGas or maxPriorityFeePerGas for type 1 transaction"
-            )
-        elif tx_type == 2 and "gasPrice" in params:
-            raise ValueError("Cannot specify gasPrice for type 2 transaction")
+        if "authorizationList" in params and len(params["authorizationList"]) > 0:
+            tx_type = 4
+        elif "blobs" in params or "blobVersionedHashes" in params:
+            raise NotImplementedError("Type 3 transactions are not supported")
+        elif "accessList" in params:
+            tx_type = 2
+        elif "maxFeePerGas" in params or "maxPriorityFeePerGas" in params:
+            tx_type = 1
+        else:
+            tx_type = 0
 
         if "from" in params:
             sender = params["from"]
@@ -282,19 +270,11 @@ class Chain(wake.development.core.Chain):
                 params["gasPrice"] if "gasPrice" in params else self._gas_price
             )
         elif tx_type == 1:
-            if "accessList" not in params:
-                tx["accessList"] = []
-            elif params["accessList"] != "auto":
-                tx["accessList"] = params["accessList"]
             tx["chainId"] = self._chain_id
             tx["gasPrice"] = (
                 params["gasPrice"] if "gasPrice" in params else self._gas_price
             )
-        elif tx_type == 2:
-            if "accessList" not in params:
-                tx["accessList"] = []
-            elif params["accessList"] != "auto":
-                tx["accessList"] = params["accessList"]
+        elif tx_type >= 2:
             tx["chainId"] = self._chain_id
             tx["maxPriorityFeePerGas"] = (
                 params["maxPriorityFeePerGas"]
@@ -314,6 +294,27 @@ class Chain(wake.development.core.Chain):
                         tx["maxPriorityFeePerGas"] + self._initial_base_fee_per_gas
                     )
 
+        if tx_type == 4:
+            if "authorizationList" in params:
+                tx["authorizationList"] = params["authorizationList"]
+            else:
+                tx["authorizationList"] = []
+
+        if tx_type >= 1:
+            if "accessList" not in params:
+                tx["accessList"] = []
+            elif params["accessList"] != "auto":
+                tx["accessList"] = params["accessList"]
+            else:
+                try:
+                    response = self._chain_interface.create_access_list(tx)
+                    tx["accessList"] = response["accessList"]
+
+                    if "gas" in params and params["gas"] == "auto":
+                        tx["gas"] = int(response["gasUsed"], 16)
+                except JsonRpcError as e:
+                    raise self._process_call_revert(e) from None
+
         if "gas" not in params:
             # use "max" when unset
             tx["gas"] = self._block_gas_limit
@@ -327,20 +328,6 @@ class Chain(wake.development.core.Chain):
                 raise self._process_call_revert(e) from None
         else:
             raise ValueError(f"Invalid gas value: {params['gas']}")
-
-        if (
-            tx_type in {1, 2}
-            and "accessList" in params
-            and params["accessList"] == "auto"
-        ):
-            try:
-                response = self._chain_interface.create_access_list(tx)
-                tx["accessList"] = response["accessList"]
-
-                if "gas" in params and params["gas"] == "auto":
-                    tx["gas"] = int(response["gasUsed"], 16)
-            except JsonRpcError as e:
-                raise self._process_call_revert(e) from None
 
         return tx
 
