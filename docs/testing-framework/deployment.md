@@ -12,7 +12,7 @@
 Most information about testing is applicable to deployment as well. However, there are a few key differences.
 The behavior depends on whether `wake.testing` or `wake.deployment` is imported.
 
-`wake.deployment` should be used when interacting with a live chain (testnet or mainnet). `wake.testing` should be used when interacting with a local development chain (like Anvil, Ganache, or Hardhat).
+`wake.deployment` should be used when interacting with a live chain (testnet or mainnet). `wake.testing` should be used when interacting with a local development chain (like Anvil or Hardhat).
 
 ```python
 # use wake.deployment when interacting with a live chain
@@ -51,11 +51,11 @@ To protect your private keys, it should be encrypted and stored in a file. To do
 
 ```console
 $ wake accounts --help
-                                                                           
- Usage: wake accounts [OPTIONS] COMMAND [ARGS]...                          
-                                                                           
- Run Wake accounts manager.                                                
-                                                                           
+
+ Usage: wake accounts [OPTIONS] COMMAND [ARGS]...
+
+ Run Wake accounts manager.
+
 ╭─ Options ───────────────────────────────────────────────────────────────╮
 │ --help      Show this message and exit.                                 │
 ╰─────────────────────────────────────────────────────────────────────────╯

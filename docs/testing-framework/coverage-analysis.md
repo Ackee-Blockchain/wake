@@ -47,7 +47,7 @@ There are some limitations to this coverage analysis:
 
 - code coverage can be inaccurate when analyzing a project with the solc optimizer enabled,
 - multiple executions of the same function in the same transaction/call are counted as a single execution,
-- `call` requests (default for `pure` and `view` functions) are not included in the coverage analysis with Ganache and Hardhat,
+- `call` requests (default for `pure` and `view` functions) are not included in the coverage analysis with Hardhat,
 - code coverage introduces a significant overhead in the execution time of the tests.
 
 By enabling the coverage collection, a `wake-coverage.cov` file is generated in the current directory.
