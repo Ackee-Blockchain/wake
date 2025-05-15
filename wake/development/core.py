@@ -241,7 +241,6 @@ class Chain(ABC):
     _chain_interface: ChainInterfaceAbc
     _accounts: List[Account]
     _accounts_set: Set[Account]  # for faster lookup
-    _nonces: KeyedDefaultDict[Address, int]  # pyright: ignore reportGeneralTypeIssues
     _default_call_account: Optional[Account]
     _default_tx_account: Optional[Account]
     _default_estimate_account: Optional[Account]
@@ -477,11 +476,6 @@ class Chain(ABC):
                 _test_accounts_generated_count = len(self._accounts)
 
             self._accounts_set = set(self._accounts)
-            self._nonces = KeyedDefaultDict(
-                lambda addr: self._chain_interface.get_transaction_count(  # pyright: ignore reportGeneralTypeIssues
-                    str(addr)
-                )
-            )
             self._snapshots = {}
             self._deployed_libraries = defaultdict(list)
 
@@ -923,9 +917,6 @@ class Chain(ABC):
             revert_on_failure,
         )
 
-    def _update_nonce(self, address: Address, nonce: int) -> None:
-        self._nonces[address] = nonce
-
     def _convert_to_web3_type(self, value: Any) -> Any:
         if dataclasses.is_dataclass(value):
             return tuple(
@@ -1346,14 +1337,11 @@ class Chain(ABC):
         self, tx_params: TxParams, from_: Optional[Union[Account, Address, str]]
     ) -> str:
         assert "from" in tx_params
-        assert "nonce" in tx_params
 
         if self._chain_id in {56, 97}:
             # BSC doesn't support access lists and tx type
             tx_params.pop("type", None)
             tx_params.pop("accessList", None)
-
-        self._confirm_transaction(tx_params)
 
         if self.require_signed_txs:
             if isinstance(from_, (Account, Address)):
@@ -1363,10 +1351,16 @@ class Chain(ABC):
             else:
                 key = None
 
+            tx_params["nonce"] = self._chain_interface.get_transaction_count(
+                str(tx_params["from"])
+            )
+
             tx_params["from"] = eth_utils.address.to_checksum_address(tx_params["from"])
 
             if "to" in tx_params:
                 tx_params["to"] = eth_utils.address.to_checksum_address(tx_params["to"])
+
+            self._confirm_transaction(tx_params)
 
             if Account(tx_params["from"], self) in self._accounts_set:
                 try:
@@ -1391,7 +1385,6 @@ class Chain(ABC):
                 raise ValueError(
                     f"Private key for account {tx_params['from']} not known and is not owned by the connected client either."
                 )
-            self._update_nonce(Address(tx_params["from"]), tx_params["nonce"] + 1)
         else:
             if isinstance(self.chain_interface, AnvilChainInterface):
                 try:
@@ -1401,9 +1394,12 @@ class Chain(ABC):
                         tx_hash = e.args[0]["data"]["txHash"]
                     except Exception:
                         raise e
-                self._update_nonce(Address(tx_params["from"]), tx_params["nonce"] + 1)
             else:
                 sender = Account(tx_params["from"], self)
+
+                tx_params["nonce"] = self._chain_interface.get_transaction_count(
+                    str(tx_params["from"])
+                )
 
                 with _signer_account(sender):
                     try:
@@ -1413,7 +1409,6 @@ class Chain(ABC):
                             tx_hash = e.args[0]["data"]["txHash"]
                         except Exception:
                             raise e
-                    self._update_nonce(sender.address, tx_params["nonce"] + 1)
 
         self._txs.register_tx(tx_hash)
 
