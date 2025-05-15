@@ -59,7 +59,6 @@ from .blocks import ChainBlocks
 from .chain_interfaces import (
     AnvilChainInterface,
     ChainInterfaceAbc,
-    GanacheChainInterface,
     GethLikeChainInterfaceAbc,
     HardhatChainInterface,
     SignedAuthorization,
@@ -432,25 +431,12 @@ class Chain(ABC):
                         self._forked_chain_id = metadata["forkedNetwork"]["chainId"]
                     else:
                         self._forked_chain_id = None
-            elif isinstance(self._chain_interface, GanacheChainInterface):
-                if fork is not None:
-                    forked_chain_interface = ChainInterfaceAbc.connect(
-                        get_config(), fork.split("@")[0]
-                    )
-                    try:
-                        self._forked_chain_id = forked_chain_interface.get_chain_id()
-                    finally:
-                        forked_chain_interface.close()
-                else:
-                    self._forked_chain_id = None
             else:
                 raise NotImplementedError(
                     f"Unknown chain interface type: {type(self._chain_interface)}"
                 )
 
-            if block_base_fee_per_gas is not None and not isinstance(
-                self._chain_interface, GanacheChainInterface
-            ):
+            if block_base_fee_per_gas is not None:
                 try:
                     self._chain_interface.set_next_block_base_fee_per_gas(
                         block_base_fee_per_gas
@@ -1310,11 +1296,6 @@ class Chain(ABC):
             ):
                 revert_data = e.data["data"]
             elif (
-                isinstance(self._chain_interface, GanacheChainInterface)
-                and e.data["code"] == -32000
-            ):
-                revert_data = e.data["data"]
-            elif (
                 isinstance(self._chain_interface, HardhatChainInterface)
                 and e.data["code"] == -32603
             ):
@@ -1557,9 +1538,6 @@ def _signer_account(sender: Account):
         account_created = False
         if isinstance(chain_interface, (AnvilChainInterface, HardhatChainInterface)):
             chain_interface.impersonate_account(str(sender))
-        elif isinstance(chain_interface, GanacheChainInterface):
-            chain_interface.add_account(str(sender), "")
-            chain.update_accounts()
         else:
             raise NotImplementedError()
 

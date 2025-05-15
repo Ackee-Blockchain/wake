@@ -406,13 +406,16 @@ class TestingConfig(WakeConfigModel):
     """
     cmd: str = "anvil"
     """
-    Which development chain to use for testing. Should be one of `anvil`, `ganache` or `hardhat`.
+    Which development chain to use for testing. Should be either `anvil` or `hardhat`.
     """
     anvil: AnvilConfig = Field(default_factory=AnvilConfig)
     """
     Anvil-specific config options.
     """
-    ganache: GanacheConfig = Field(default_factory=GanacheConfig)
+    ganache: GanacheConfig = Field(
+        default_factory=GanacheConfig,
+        deprecated="Ganache support was dropped. This field will be removed in a future version.",
+    )
     """
     Ganache-specific config options.
     """

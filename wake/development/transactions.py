@@ -32,7 +32,6 @@ if TYPE_CHECKING:
 from .call_trace import CallTrace
 from .chain_interfaces import (
     AnvilChainInterface,
-    GanacheChainInterface,
     GethLikeChainInterfaceAbc,
     HardhatChainInterface,
     TxParams,
@@ -392,9 +391,7 @@ class TransactionAbc(ABC, Generic[T]):
             self._fetch_trace_transaction()
             assert self._trace_transaction is not None
             return self._chain._process_console_logs(self._trace_transaction)
-        elif isinstance(
-            chain_interface, (GanacheChainInterface, HardhatChainInterface)
-        ):
+        elif isinstance(chain_interface, HardhatChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
             return self._chain._process_console_logs_from_debug_trace(
@@ -504,7 +501,7 @@ class TransactionAbc(ABC, Generic[T]):
             if output.startswith("0x"):
                 output = output[2:]
             revert_data = bytes.fromhex(output)
-        elif isinstance(chain_interface, (AnvilChainInterface, GanacheChainInterface)):
+        elif isinstance(chain_interface, AnvilChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None
 
@@ -591,18 +588,6 @@ class TransactionAbc(ABC, Generic[T]):
             if o.startswith("0x"):
                 o = o[2:]
             output = bytes.fromhex(o)
-        elif isinstance(chain_interface, GanacheChainInterface):
-            self._fetch_debug_trace_transaction()
-            assert self._debug_trace_transaction is not None
-
-            if len(self._debug_trace_transaction["structLogs"]) == 0 or self._debug_trace_transaction["structLogs"][-1]["op"] != "RETURN":  # type: ignore
-                output = b""
-            else:
-                trace: Any = self._debug_trace_transaction["structLogs"][-1]  # type: ignore
-                offset = int(trace["stack"][-1], 16)
-                length = int(trace["stack"][-2], 16)
-
-                output = read_from_memory(offset, length, trace["memory"])
         elif isinstance(chain_interface, HardhatChainInterface):
             self._fetch_debug_trace_transaction()
             assert self._debug_trace_transaction is not None

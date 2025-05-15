@@ -98,9 +98,6 @@ Wake can be configured using configuration options loaded from multiple sources 
     [testing.anvil]
     cmd_args = "--prune-history 100 --transaction-block-keeper 10 --steps-tracing --silent"
 
-    [testing.ganache]
-    cmd_args = "-k istanbul -q"
-
     [testing.hardhat]
     cmd_args = ""
     ```
@@ -315,19 +312,13 @@ The following settings mainly apply to LSP printers that are run automatically b
 
 | Option    | Description                                                                      |
 |:----------|:---------------------------------------------------------------------------------|
-| `cmd`     | Development chain implementation to use. May be `anvil`, `hardhat` or `ganache`. |
+| `cmd`     | Development chain implementation to use. May be either `anvil` or `hardhat`. |
 
 ### `testing.anvil` namespace
 
 | Option     | Description                                                                |
 |:-----------|:---------------------------------------------------------------------------|
 | `cmd_args` | Command line arguments passed to the `anvil` executable when launching it. |
-
-### `testing.ganache` namespace
-
-| Option     | Description                                                                  |
-|:-----------|:-----------------------------------------------------------------------------|
-| `cmd_args` | Command line arguments passed to the `ganache` executable when launching it. |
 
 ### `testing.hardhat` namespace
 

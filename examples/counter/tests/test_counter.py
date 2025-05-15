@@ -7,7 +7,7 @@ from pytypes.contracts.Gateway import Gateway
 
 def tx_callback(tx: TransactionAbc):
     print(tx.tx_hash)
-    # console logs are not currently supported with Ganache and Hardhat
+    # console logs are not currently supported with Hardhat
     print(tx.console_logs)
     print(tx.call_trace)
 
@@ -29,7 +29,7 @@ def tx_callback(tx: TransactionAbc):
             print(target, data, destination_chain)
 
 
-# launch a development chain (Anvil, Hardhat or Ganache - depending on the configuration)
+# launch a development chain (Anvil or Hardhat - depending on the configuration)
 @default_chain.connect()
 # or connect to a running chain
 # @default_chain.connect("ws://localhost:8545")
@@ -55,7 +55,6 @@ def test_counter():
 
     # execute multiple transactions in the same block
     # temporarily disable chain automine to achieve this
-    # Ganache does not support disabling automine
     with default_chain.change_automine(False):
         # for each transaction, gas_limit can be specified with "max" as the default value
         # "max" uses default_chain.block_gas_limit as the gas limit

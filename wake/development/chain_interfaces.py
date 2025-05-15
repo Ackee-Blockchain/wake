@@ -134,9 +134,6 @@ class ChainInterfaceAbc(ABC):
         if config.testing.cmd == "anvil":
             args = ["anvil"] + config.testing.anvil.cmd_args.split()
             constructor = AnvilChainInterface
-        elif config.testing.cmd == "ganache":
-            args = ["ganache"] + config.testing.ganache.cmd_args.split()
-            constructor = GanacheChainInterface
         elif config.testing.cmd == "hardhat":
             if (
                 accounts is not None
@@ -212,15 +209,11 @@ class ChainInterfaceAbc(ABC):
         if chain_id is not None and not chain_id_set:
             if config.testing.cmd == "anvil":
                 args += ["--chain-id", str(chain_id)]
-            elif config.testing.cmd == "ganache":
-                args += ["--chain.chainId", str(chain_id)]
         if fork is not None and not fork_set:
             args += ["-f", fork]
         if hardfork is not None and not hardfork_set:
             if config.testing.cmd == "anvil":
                 args += ["--hardfork", hardfork]
-            elif config.testing.cmd == "ganache":
-                args += ["-k", hardfork]
 
         console.print(f"Launching {' '.join(args)}")
         try:
@@ -273,8 +266,6 @@ class ChainInterfaceAbc(ABC):
                 return AnvilChainInterface(config, communicator)
             elif "hardhat" in client_version:
                 return HardhatChainInterface(config, communicator)
-            elif "ethereumjs" in client_version:
-                return GanacheChainInterface(config, communicator)
             elif client_version.startswith(("geth", "bor")):
                 return GethChainInterface(config, communicator)
             elif client_version.startswith("erigon"):
@@ -731,81 +722,6 @@ class AnvilChainInterface(ChainInterfaceAbc):
 
     def load_state(self, state: str) -> None:
         self._communicator.send_request("anvil_loadState", [state])
-
-
-class GanacheChainInterface(ChainInterfaceAbc):
-    @property
-    def type(self) -> str:
-        return "ganache"
-
-    def get_accounts(self) -> List[str]:
-        return self._communicator.send_request("eth_accounts")
-
-    def set_balance(self, address: str, value: int) -> None:
-        self._communicator.send_request("evm_setAccountBalance", [address, hex(value)])
-
-    def add_account(self, address: str, passphrase: str) -> bool:
-        return self._communicator.send_request(
-            "evm_addAccount", [address, passphrase]
-        ) and self._communicator.send_request(
-            "personal_unlockAccount", [address, passphrase, hex(0)]
-        )
-
-    def set_block_gas_limit(self, gas_limit: int) -> None:
-        raise NotImplementedError("Ganache does not support setting block gas limit")
-
-    def reset(self, options: Optional[Dict] = None) -> None:
-        raise NotImplementedError("Ganache does not support resetting the chain")
-
-    def set_coinbase(self, address: str) -> None:
-        raise NotImplementedError("Ganache does not support setting coinbase")
-
-    def get_automine(self) -> bool:
-        raise NotImplementedError("Ganache does not support automine")
-
-    def set_automine(self, value: bool) -> None:
-        raise NotImplementedError("Ganache does not support automine")
-
-    def set_code(self, address: str, value: bytes) -> None:
-        self._communicator.send_request(
-            "evm_setAccountCode", [address, "0x" + value.hex()]
-        )
-
-    def set_nonce(self, address: str, value: int) -> None:
-        self._communicator.send_request("evm_setAccountNonce", [address, hex(value)])
-
-    def set_next_block_timestamp(self, timestamp: int) -> None:
-        raise NotImplementedError(
-            "Ganache does not support setting next block timestamp"
-        )
-
-    def send_unsigned_transaction(self, params: TxParams) -> str:
-        raise NotImplementedError(
-            "Ganache does not support sending unsigned transactions"
-        )
-
-    def set_next_block_base_fee_per_gas(self, value: int) -> None:
-        raise NotImplementedError(
-            "Ganache does not support setting next block base fee per gas"
-        )
-
-    def set_min_gas_price(self, value: int) -> None:
-        self._communicator.send_request("miner_setGasPrice", [hex(value)])
-
-    def set_storage_at(self, address: str, position: int, value: bytes) -> None:
-        self._communicator.send_request(
-            "evm_setAccountStorageAt", [address, hex(position), "0x" + value.hex()]
-        )
-
-    def mine_many(self, num_blocks: int, timestamp_change: Optional[int]) -> None:
-        if timestamp_change is not None:
-            raise NotImplementedError(
-                "Ganache does not support timestamp intervals when mining multiple blocks"
-            )
-        self._communicator.send_request(
-            "evm_mine",
-            [{"blocks": num_blocks}],
-        )
 
 
 class GethLikeChainInterfaceAbc(ChainInterfaceAbc, ABC):

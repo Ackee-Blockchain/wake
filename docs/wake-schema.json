@@ -195,7 +195,7 @@
       "properties": {
         "cmd": {
           "type": "string",
-          "enum": ["anvil", "ganache", "hardhat"],
+          "enum": ["anvil", "hardhat"],
           "default": "anvil",
           "description": "Which development chain to use for testing"
         },
@@ -217,7 +217,8 @@
               "default": "-k istanbul -q",
               "description": "Arguments for the Ganache command"
             }
-          }
+          },
+          "deprecated": true
         },
         "hardhat": {
           "type": "object",
