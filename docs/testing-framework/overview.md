@@ -20,4 +20,3 @@ The currently supported development chains are:
 
 - [Anvil](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) (recommended)
 - [Hardhat](https://github.com/NomicFoundation/hardhat)
-- [Ganache](https://github.com/trufflesuite/ganache)

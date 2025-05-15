@@ -194,10 +194,6 @@ def write_config(config: WakeConfig) -> None:
         f.write(f'cmd_args = "{config.testing.anvil.cmd_args}"\n')
         f.write("\n")
 
-        f.write("[testing.ganache]\n")
-        f.write(f'cmd_args = "{config.testing.ganache.cmd_args}"\n')
-        f.write("\n")
-
         f.write("[testing.hardhat]\n")
         f.write(f'cmd_args = "{config.testing.hardhat.cmd_args}"')
 
