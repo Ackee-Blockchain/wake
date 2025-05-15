@@ -19,6 +19,20 @@ from .json_rpc.communicator import JsonRpcCommunicator, JsonRpcError
 
 logger = get_logger(__name__)
 
+
+SignedAuthorization = TypedDict(
+    "SignedAuthorization",
+    {
+        "address": str,
+        "chainId": int,
+        "nonce": int,
+        "r": int,
+        "s": int,
+        "yParity": int,
+    },
+)
+
+
 TxParams = TypedDict(
     "TxParams",
     {
@@ -33,6 +47,7 @@ TxParams = TypedDict(
         "maxPriorityFeePerGas": int,
         "maxFeePerGas": int,
         "accessList": Union[List, Literal["auto"]],
+        "authorizationList": List[SignedAuthorization],
         "chainId": int,
     },
     total=False,
@@ -81,6 +96,18 @@ class ChainInterfaceAbc(ABC):
         if "accessList" in transaction:
             assert transaction["accessList"] != "auto"
             tx["accessList"] = transaction["accessList"]
+        if "authorizationList" in transaction:
+            tx["authorizationList"] = [
+                {
+                    "address": a["address"],
+                    "chainId": hex(a["chainId"]),
+                    "nonce": hex(a["nonce"]),
+                    "r": hex(a["r"]),
+                    "s": hex(a["s"]),
+                    "yParity": hex(a["yParity"]),
+                }
+                for a in transaction["authorizationList"]
+            ]
         if "chainId" in transaction:
             tx["chainId"] = hex(transaction["chainId"])
         return tx
