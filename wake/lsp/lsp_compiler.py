@@ -1745,8 +1745,9 @@ class LspCompiler:
                 self.__ir_reference_resolver.clear_indexed_nodes([deleted_file])
                 source_unit = self.__source_units.pop(deleted_file)
                 self.__interval_trees.pop(deleted_file)
-                self.__compilation_errors.pop(deleted_file, None)
                 self.__cu_counter[source_unit.cu_hash] -= 1
+
+            self.__compilation_errors.pop(deleted_file, None)
 
         logging_buffer = []
         handler = LspLoggingHandler(logging_buffer)
