@@ -23,19 +23,19 @@ logger = get_logger(__name__)
 
 
 class SolcBuildInfo(BaseModel):
-    path: str
+    path: Optional[str] = None
     version: SolidityVersion
-    build: str
-    long_version: SolidityVersion = Field(alias="longVersion")
-    keccak256: str
+    build: Optional[str] = None
+    long_version: Optional[SolidityVersion] = Field(default=None, alias="longVersion")
+    keccak256: Optional[str] = None
     sha256: str
-    urls: List[str]
+    urls: Optional[List[str]] = None
 
 
 class SolcBuilds(BaseModel):
     builds: List[SolcBuildInfo]
     releases: Dict[SolidityVersion, str]
-    latest_release: str = Field(alias="latestRelease")
+    latest_release: Optional[str] = Field(default=None, alias="latestRelease")
 
 
 class SolcVersionManager(CompilerVersionManagerAbc):
@@ -50,10 +50,14 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
     BINARIES_URL: str = "https://binaries.soliditylang.org"
     GITHUB_URL: str = "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages"
+    NIKITA_LINUX_AARCH64_URL: str = (
+        "https://raw.githubusercontent.com/nikitastupin/solc/main"
+    )
     INSTALL_RETRY_COUNT: int = 5
 
     __platform: str
     __solc_list_urls: List[str]
+    __solc_download_urls: List[str]
     __compilers_path: Path
     __solc_list_path: Path
     __solc_builds: Optional[SolcBuilds]
@@ -67,6 +71,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         if system == "Linux" and machine in amd64:
             self.__platform = "linux-amd64"
+        elif system == "Linux" and machine in arm64:
+            self.__platform = "linux-aarch64"
         elif system == "Darwin" and machine in amd64.union(arm64):
             self.__platform = "macosx-amd64"
         elif system == "Windows" and machine in amd64.union(arm64):
@@ -76,10 +82,22 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 f"Solidity compiler binaries are not available for {system}-{machine}."
             )
 
-        self.__solc_list_urls = [
-            f"{self.BINARIES_URL}/{self.__platform}/list.json",
-            f"{self.GITHUB_URL}/{self.__platform}/list.json",
-        ]
+        if self.__platform == "linux-aarch64":
+            self.__solc_list_urls = [
+                f"{self.NIKITA_LINUX_AARCH64_URL}/linux/aarch64/list.json",
+            ]
+            self.__solc_download_urls = [
+                f"{self.NIKITA_LINUX_AARCH64_URL}/linux/aarch64/",
+            ]
+        else:
+            self.__solc_list_urls = [
+                f"{self.BINARIES_URL}/{self.__platform}/list.json",
+                f"{self.GITHUB_URL}/{self.__platform}/list.json",
+            ]
+            self.__solc_download_urls = [
+                f"{self.BINARIES_URL}/{self.__platform}/",
+                f"{self.GITHUB_URL}/{self.__platform}/",
+            ]
         self.__compilers_path = wake_config.global_data_path / "compilers"
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
@@ -145,9 +163,8 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
         for retry in range(self.INSTALL_RETRY_COUNT):
             download_url = (
-                f"{self.BINARIES_URL}/{self.__platform}/{filename}"
-                if retry % 2 == 0
-                else f"{self.GITHUB_URL}/{self.__platform}/{filename}"
+                self.__solc_download_urls[retry % len(self.__solc_download_urls)]
+                + filename
             )
 
             logger.debug(f"Downloading solc {version} from {download_url}")
@@ -346,14 +363,16 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         if sha256.startswith("0x"):
             sha256 = sha256[2:]
 
-        keccak256 = build_info.keccak256
-        if keccak256.startswith("0x"):
-            keccak256 = keccak256[2:]
-
         if not self.__verify_sha256(local_path, sha256):
             return False
-        if not self.__verify_keccak256(local_path, keccak256):
-            return False
+
+        keccak256 = build_info.keccak256
+        if keccak256 is not None:
+            if keccak256.startswith("0x"):
+                keccak256 = keccak256[2:]
+            if not self.__verify_keccak256(local_path, keccak256):
+                return False
+
         return True
 
     def __verify_sha256(self, path: Path, expected: str) -> bool:
