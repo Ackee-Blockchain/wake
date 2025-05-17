@@ -1,0 +1,9 @@
+/target
+/venv
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.DS_Store
+tags
+*.py[cod]
+*$py.class

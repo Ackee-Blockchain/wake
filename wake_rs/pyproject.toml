@@ -1,0 +1,20 @@
+[project]
+name = "wake_rs"
+version = "0.1.0"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[tool.poetry]
+name = "wake_rs"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
