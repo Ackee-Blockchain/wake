@@ -171,6 +171,53 @@ generators_map = {
 }
 
 
+def _generate_integer(max_bits: int, signed: bool = False) -> int:
+    # Special values we always want to test
+    special_values = {
+        0,  # Zero
+        1,  # One
+        2**max_bits - 1,  # Maximum unsigned
+        1 << (max_bits - 1),  # High bit set
+        (1 << (max_bits - 1)) - 1,  # All bits except high
+    }
+    if signed:
+        special_values.update(
+            {
+                -1,
+                -(1 << (max_bits - 1)),  # Minimum signed
+                (1 << (max_bits - 1)) - 1,  # Maximum signed
+            }
+        )
+
+    # 5% chance for special values
+    if random.random() < 0.05:
+        return random.choice(list(special_values))
+
+    # 95% pure random with better bit distribution
+    else:
+        # Generate random number of bits to make
+        num_bits = random.randint(1, max_bits)
+
+        if random.random() < 0.3:
+            # Generate number with specific number of bits set
+            num_ones = random.randint(1, num_bits)
+            bits = random.sample(range(num_bits), num_ones)
+            value = sum(1 << bit for bit in bits)
+        else:
+            # Random bits up to num_bits
+            value = random.getrandbits(num_bits)
+        if signed:
+            value = _to_signed(value, max_bits)
+        return value
+
+
+def _to_signed(val: int, bits: int) -> int:
+    # Converts an unsigned int to signed int of given bit width
+    if val >= 2 ** (bits - 1):
+        val -= 2**bits
+    return val
+
+
 def generate(t: Type):
     min_len = 0
     max_len = 64
@@ -189,12 +236,12 @@ def generate(t: Type):
                     for _ in range(random.randint(min_len, max_len))
                 ]
         elif isinstance(t, type) and issubclass(t, Integer):
-            return random.randint(t.min, t.max)
+            return _generate_integer(t.bits, t.signed)
         elif isinstance(t, type) and issubclass(t, FixedSizeBytes):
             return random_bytes(t.length, t.length)
         elif t is int:
             # fallback for int used directly
-            return random.randint(-(2**255), 2**255 - 1)
+            return _generate_integer(256, True)
         elif t is bytes:
             return random_bytes(min_len, max_len)
         elif t is bytearray:
