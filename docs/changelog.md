@@ -6,6 +6,19 @@ small.label {
 }
 </style>
 
+## 4.18.1 <small>(May 20, 2025)</small> { id="4.18.1" }
+
+Fixes & improvements:
+
+- fixed missing import when accessing `VariableDeclaration.declaration_string`, which mainly manifested as language server crashes <small class="label">[core]</small>
+- removed mistakenly leftover debugging prints from the IR <small class="label">[core]</small>
+- LSP document symbols and workspace symbols now use function declarations with parameter types to avoid deduplication on the LSP client side <small class="label">[language server]</small>
+- fixed LSP document symbols' last changed declaration not being propagated due to aggressive caching <small class="label">[language server]</small>
+- fixed LSP compilation errors not being cleared for deleted files <small class="label">[language server]</small>
+- changed command-line relevant code highlighting from color to underline <small class="label">[static analysis]</small>
+- added missing `burn_erc1155` import to `wake.testing` <small class="label">[testing framework]</small>
+- fixed `ValueError` occurring on failing chain connections <small class="label">[testing framework]</small>
+
 ## 4.18.0 <small>(May 8, 2025)</small> { id="4.18.0" }
 
 Features & improvements:
