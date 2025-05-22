@@ -96,7 +96,7 @@ impl DB {
         }
     }
 
-    pub(crate) fn revert(&mut self, snapshot_id: usize) {
+    pub(crate) fn revert(&mut self, snapshot_id: usize) -> usize {
         match self {
             DB::EmptyDB(db) => db.revert_snapshot(snapshot_id),
             DB::ForkDB(db) => db.revert_snapshot(snapshot_id),
