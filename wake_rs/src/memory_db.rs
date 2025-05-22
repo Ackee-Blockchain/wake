@@ -293,7 +293,7 @@ impl<ExtDB: DatabaseRef> CacheDB<ExtDB> {
         // last_block_number saved and restored from chain.rs
     }
 
-    pub fn revert_snapshot(&mut self, snapshot: usize) {
+    pub fn revert_snapshot(&mut self, snapshot: usize) -> usize {
         self.accounts.truncate(snapshot + 1);
         self.storage.truncate(snapshot + 1);
         assert!(self.accounts.len() >= 2);
@@ -302,6 +302,8 @@ impl<ExtDB: DatabaseRef> CacheDB<ExtDB> {
         self.journal.truncate(journal_index);
         self.snapshot_journal_indexes.truncate(snapshot - 1);
         assert!(self.accounts.len() == self.snapshot_journal_indexes.len() + 2);
+
+        journal_index
     }
 
     pub fn set_balance(&mut self, address: Address, balance: U256) -> Result<(), ExtDB::Error> {

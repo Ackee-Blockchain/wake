@@ -31,7 +31,7 @@ pub struct TransactionAbc {
     cached_error: Option<PyErr>,
     cached_return_value: Option<PyObject>,
     cached_call_trace: Option<PyObject>,
-    journal_index: usize, // used for EVM DB journal rollbacks; index into DB journal before this tx happened
+    pub(crate) journal_index: usize, // used for EVM DB journal rollbacks; index into DB journal before this tx happened
     tx_env: TxEnv,
 }
 

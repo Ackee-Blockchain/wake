@@ -218,8 +218,6 @@ impl Chain {
                 tx_callback: None,
             },
         )?;
-        chain.borrow_mut(py).blocks = Some(Py::new(py, Blocks::new(chain.clone_ref(py)))?);
-        chain.borrow_mut(py).txs = Some(Py::new(py, Txs::new())?);
         chain.borrow_mut(py).chain_interface =
             Some(Py::new(py, ChainInterface::new(chain.clone_ref(py)))?);
         Ok(chain)
@@ -449,7 +447,7 @@ impl Chain {
         let last_block_number = block_env.number - 1;
 
         let evm = borrowed.get_evm_mut()?;
-        evm.db().revert(snapshot_id);
+        let journal_index = evm.db().revert(snapshot_id);
         evm.db().set_last_block_number(last_block_number);
         evm.cfg = cfg_env;
         evm.block = block_env;
@@ -459,6 +457,9 @@ impl Chain {
         blocks.remove_blocks(last_block_number);
 
         drop(blocks);
+
+        borrowed.txs.as_mut().unwrap().borrow_mut(py).remove_txs(py, journal_index);
+
         drop(borrowed);
         let latest_block_env = slf
             .borrow()
@@ -686,6 +687,9 @@ impl Chain {
         evm.cfg.disable_eip3607 = true;
         evm.block.gas_limit = 30000000_u64;
         evm.tx.chain_id = Some(evm.cfg.chain_id);
+
+        slf_.blocks = Some(Py::new(py, Blocks::new(slf.clone_ref(py), slf_.forked_block))?);
+        slf_.txs = Some(Py::new(py, Txs::new())?);
 
         let _ = slf_.mine(py)?; // mine one block
 
