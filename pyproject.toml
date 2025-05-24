@@ -12,11 +12,25 @@ keywords = ["ethereum", "solidity", "security", "testing", "development", "stati
 packages = [
     { include = "wake" },
     { include = "wake_detectors" },
-    { include = "wake_printers" }
+    { include = "wake_printers" },
+    { include = "wake_rs" }
 ]
 include = [
     { path = "examples", format = ["sdist", "wheel"] },
-    { path = "contracts/wake", format = ["sdist", "wheel"] }
+    { path = "contracts/wake", format = ["sdist", "wheel"] },
+    { path = "wake_rs/**/*.so", format = "wheel" },
+    { path = "wake_rs/**/*.pyd", format = "wheel" },
+    { path = "wake_rs/**/*.pyi", format = ["wheel", "sdist"] },
+    { path = "wake_rs/src/**/*", format = "sdist" },
+    { path = "wake_rs/Cargo.*", format = "sdist" },
+    { path = "wake_rs/build.py", format = "sdist" },
+    { path = "wake_rs/pyproject.toml", format = "sdist" }
+]
+exclude = [
+    "wake_rs/src/**/*",
+    "wake_rs/Cargo.*",
+    "wake_rs/build.py",
+    "wake_rs/pyproject.toml"
 ]
 
 [tool.poetry.plugins."wake.plugins.detectors"]
@@ -92,7 +106,7 @@ wake-solc = "wake.cli.__main__:wake_solc"
 "VS Code Extension" = "https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "maturin>=1.5,<2.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
@@ -114,3 +128,6 @@ markers = [
     "platform_dependent: platform-dependent test that will need to run on all CIs",
     "slow: slow tests that will not run in git hooks",
 ]
+
+[tool.poetry.build]
+script = "wake_rs/build.py"
