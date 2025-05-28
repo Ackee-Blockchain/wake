@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use alloy::rpc::types::Header;
 use alloy::signers::local::coins_bip39::{ChineseSimplified, ChineseTraditional, Czech, English, French, Italian, Japanese, Korean, Mnemonic, Portuguese, Spanish};
+use blake2::digest::consts::U32;
+use blake2::{Blake2b, Digest};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use num_bigint::{BigInt, BigUint};
@@ -12,9 +14,16 @@ use alloy::primitives::keccak256 as alloy_keccak256;
 use rand::rngs::OsRng;
 use revm::context::BlockEnv;
 use revm::context_interface::block::BlobExcessGasAndPrice;
-use revm::primitives::{Address as RevmAddress, I256, U256};
+use revm::primitives::{Address as RevmAddress, Bytes, I256, U256};
 
 use crate::enums::AddressEnum;
+
+// Type alias for a creation code segment
+pub type CreationCodeSegment = (usize, Vec<u8>);
+
+// Type alias for a creation code entry
+pub type CreationCodeEntry = (Vec<CreationCodeSegment>, String);
+
 static mut PY_FUNCTIONS: GILOnceCell<PyObjects> = GILOnceCell::new();
 
 #[allow(static_mut_refs)]
@@ -208,6 +217,13 @@ pub(crate) fn get_py_objects(py: Python<'_>) -> &mut PyObjects {
                 .downcast_into::<PyDict>()
                 .unwrap()
                 .unbind(),
+            wake_init_code_index: py
+                .import("wake.development.core")
+                .unwrap()
+                .getattr("creation_code_index")
+                .unwrap()
+                .extract::<Vec<CreationCodeEntry>>()
+                .unwrap(),
             wake_get_class_that_defined_method: py
                 .import("wake.utils")
                 .unwrap()
@@ -312,6 +328,7 @@ pub(crate) struct PyObjects {
     pub wake_fixed_list_map: Py<PyDict>,
     pub wake_new_fixed_list: Py<PyFunction>,
     pub wake_contracts_by_metadata: Py<PyDict>,
+    pub wake_init_code_index: Vec<CreationCodeEntry>,
     pub wake_get_class_that_defined_method: Py<PyFunction>,
     pub wake_detect_default_chain: Py<PyFunction>,
     pub wake_random: Py<PyAny>,
@@ -383,6 +400,49 @@ pub(crate) fn header_to_block_env(header: Header) -> BlockEnv {
         prevrandao: Some(header.mix_hash), // TODO!!
         blob_excess_gas_and_price: blob_info,
     }
+}
+
+pub fn get_fqn_from_creation_code(init_code: &Bytes, init_code_index: &Vec<CreationCodeEntry>) -> Option<String> {
+    let mut hasher: Blake2b<U32> = Blake2b::new();
+
+    for (segments, fqn) in init_code_index.iter() {
+        let (length, hash) = segments.first().unwrap();
+        if *length > init_code.len() {
+            continue;
+        }
+
+        Digest::update(&mut hasher, init_code.slice(0..*length));
+        if Digest::finalize_reset(&mut hasher).as_slice() != hash {
+            continue;
+        }
+
+        let mut found = true;
+        let mut offset = *length;
+
+        for (length, hash) in segments.iter().skip(1) {
+            if offset + *length > init_code.len() - offset {
+                found = false;
+                break;
+            }
+
+            Digest::update(
+                &mut hasher,
+                init_code.slice(offset + 20..offset + 20 + *length),
+            );
+            if Digest::finalize_reset(&mut hasher).as_slice() != hash {
+                found = false;
+                break;
+            }
+
+            offset += *length;
+        }
+
+        if found {
+            return Some(fqn.clone());
+        }
+    }
+
+    None
 }
 
 #[pyfunction]

@@ -7,17 +7,27 @@ use revm::{
         CallInputs, CallOutcome, CreateInputs, CreateOutcome, EOFCreateInputs, InstructionResult,
         Interpreter,
     },
-    primitives::{Address, Log},
+    primitives::{Address, Bytes, Log},
     state::Bytecode,
     Inspector,
 };
 
-pub struct EventMetadata {
+pub enum EventMetadata {
+    Create(Bytes),
+    Call(CallEventMetadata),
+}
+
+pub struct CallEventMetadata {
     pub metadata: Vec<u8>,
     pub bytecode_address: Option<Address>,
 }
 
-pub struct ErrorMetadata {
+pub enum ErrorMetadata {
+    Create(Bytes),
+    Call(CallErrorMetadata),
+}
+
+pub struct CallErrorMetadata {
     pub metadata: Vec<u8>,
     pub bytecode_address: Address,
 }
@@ -32,6 +42,11 @@ pub struct FqnInspector {
     /// Since CREATE / EOFCREATE can only be performed with local (not forked) contracts,
     /// we can use None in create subcalls
     bytecode_addresses: Vec<Option<Address>>,
+
+    /// Stack of init code.
+    ///
+    /// Used to resolve events (logs) emitted during a CREATE / EOFCREATE.
+    init_code_stack: Vec<Option<Bytes>>,
 }
 
 impl FqnInspector {
@@ -40,6 +55,7 @@ impl FqnInspector {
             events_metadata: HashMap::new(),
             errors_metadata: HashMap::new(),
             bytecode_addresses: Vec::new(),
+            init_code_stack: Vec::new(),
         }
     }
 
@@ -90,31 +106,48 @@ impl FqnInspector {
 
 impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
     fn log(&mut self, interp: &mut Interpreter, _context: &mut CTX, log: Log) {
-        let bytecode = interp.bytecode.original_byte_slice();
-        if bytecode.len() >= 2 {
-            let metadata = self.extract_metadata(bytecode).unwrap_or_default();
+        if let Some(init_code) = self.init_code_stack.last().unwrap() {
             self.events_metadata.insert(
                 log.clone(),
-                EventMetadata {
-                    metadata: metadata.to_vec(),
-                    bytecode_address: self.bytecode_addresses.last().unwrap().clone(),
-                },
+                EventMetadata::Create(init_code.clone()),
             );
+        } else {
+            let bytecode = interp.bytecode.original_byte_slice();
+            if bytecode.len() >= 2 {
+                let metadata = self.extract_metadata(bytecode).unwrap_or_default();
+                self.events_metadata.insert(
+                    log.clone(),
+                    EventMetadata::Call(CallEventMetadata {
+                        metadata: metadata.to_vec(),
+                        bytecode_address: self.bytecode_addresses.last().unwrap().clone(),
+                    }),
+                );
+            }
         }
     }
 
-    fn create(&mut self, _context: &mut CTX, _inputs: &mut CreateInputs) -> Option<CreateOutcome> {
+    fn create(&mut self, _context: &mut CTX, inputs: &mut CreateInputs) -> Option<CreateOutcome> {
         self.bytecode_addresses.push(None);
+        self.init_code_stack.push(Some(inputs.init_code.clone()));
         None
     }
 
     fn create_end(
         &mut self,
         _context: &mut CTX,
-        _inputs: &CreateInputs,
-        _outcome: &mut CreateOutcome,
+        inputs: &CreateInputs,
+        outcome: &mut CreateOutcome,
     ) {
         self.bytecode_addresses.pop();
+        self.init_code_stack.pop();
+
+        if outcome.result.result == InstructionResult::Revert && outcome.result.output.len() >= 4 {
+            let selector: [u8; 4] = (&outcome.result.output[..4]).try_into().unwrap();
+
+            self.errors_metadata
+                .entry(selector)
+                .or_insert(ErrorMetadata::Create(inputs.init_code.clone()));
+        }
     }
 
     fn eofcreate(
@@ -123,7 +156,7 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
         _inputs: &mut EOFCreateInputs,
     ) -> Option<CreateOutcome> {
         self.bytecode_addresses.push(None);
-        None
+        todo!();
     }
 
     fn eofcreate_end(
@@ -133,15 +166,19 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
         _outcome: &mut CreateOutcome,
     ) {
         self.bytecode_addresses.pop();
+        self.init_code_stack.pop();
     }
 
     fn call(&mut self, _context: &mut CTX, inputs: &mut CallInputs) -> Option<CallOutcome> {
         self.bytecode_addresses.push(Some(inputs.bytecode_address));
+        self.init_code_stack.push(None);
+
         None
     }
 
     fn call_end(&mut self, context: &mut CTX, inputs: &CallInputs, outcome: &mut CallOutcome) {
         self.bytecode_addresses.pop();
+        self.init_code_stack.pop();
 
         if outcome.result.result == InstructionResult::Revert && outcome.result.output.len() >= 4 {
             let selector: [u8; 4] = (&outcome.result.output[..4]).try_into().unwrap();
@@ -152,10 +189,10 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
                     let metadata = self.extract_metadata(code.as_ref()).unwrap_or_default();
                     self.errors_metadata
                         .entry(selector)
-                        .or_insert(ErrorMetadata {
+                        .or_insert(ErrorMetadata::Call(CallErrorMetadata {
                             metadata: metadata.to_vec(),
                             bytecode_address: inputs.bytecode_address,
-                        });
+                        }));
                 }
             }
         }
