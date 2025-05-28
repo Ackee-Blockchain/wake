@@ -1,6 +1,5 @@
 use std::{collections::HashMap, sync::Mutex, time::Duration};
 
-use blake2::{digest::consts::U32, Blake2b, Digest};
 use lazy_static::lazy_static;
 use pyo3::sync::GILOnceCell;
 use pyo3::{prelude::*, types::PyFunction};
@@ -11,16 +10,11 @@ use revm::interpreter::{
     CallInputs, CallOutcome, CreateInputs, CreateOutcome, EOFCreateInputs, Interpreter,
 };
 use revm::primitives::Log;
-use revm::{primitives::Bytes, Inspector};
+use revm::Inspector;
 use rust_lapper::{Interval, Lapper};
 
 use super::fqn_inspector::FqnInspector;
-
-// Type alias for a creation code segment
-type CreationCodeSegment = (usize, Vec<u8>);
-
-// Type alias for a creation code entry
-type CreationCodeEntry = (Vec<CreationCodeSegment>, String);
+use crate::utils::{get_fqn_from_creation_code, CreationCodeEntry};
 
 type AstId = (u32, u32);
 
@@ -123,7 +117,7 @@ pub(crate) fn get_coverage_helpers(py: Python<'_>) -> &'static CoverageHelpers {
                 .unwrap()
                 .getattr("creation_code_index")
                 .unwrap()
-                .extract::<Vec<(Vec<CreationCodeSegment>, String)>>()
+                .extract::<Vec<CreationCodeEntry>>()
                 .unwrap();
 
             let pc_map = py
@@ -246,49 +240,6 @@ impl CoverageInspector {
         ret
     }
 
-    fn get_fqn_from_creation_code(&self, init_code: &Bytes) -> Option<String> {
-        let mut hasher: Blake2b<U32> = Blake2b::new();
-
-        for (segments, fqn) in self.coverage_helpers.init_code_index.iter() {
-            let (length, hash) = segments.first().unwrap();
-            if *length > init_code.len() {
-                continue;
-            }
-
-            Digest::update(&mut hasher, init_code.slice(0..*length));
-            if Digest::finalize_reset(&mut hasher).as_slice() != hash {
-                continue;
-            }
-
-            let mut found = true;
-            let mut offset = *length;
-
-            for (length, hash) in segments.iter().skip(1) {
-                if offset + *length > init_code.len() - offset {
-                    found = false;
-                    break;
-                }
-
-                Digest::update(
-                    &mut hasher,
-                    init_code.slice(offset + 20..offset + 20 + *length),
-                );
-                if Digest::finalize_reset(&mut hasher).as_slice() != hash {
-                    found = false;
-                    break;
-                }
-
-                offset += *length;
-            }
-
-            if found {
-                return Some(fqn.clone());
-            }
-        }
-
-        None
-    }
-
     pub fn update_coverage(&mut self, py: Python<'_>) -> PyResult<()> {
         let mut guard = STATEMENT_COVERAGE.lock().unwrap();
 
@@ -350,7 +301,7 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for CoverageInspector {
     }
 
     fn create(&mut self, context: &mut CTX, inputs: &mut CreateInputs) -> Option<CreateOutcome> {
-        let fqn = self.get_fqn_from_creation_code(&inputs.init_code);
+        let fqn = get_fqn_from_creation_code(&inputs.init_code, &self.coverage_helpers.init_code_index);
         match &fqn {
             Some(fqn) => {
                 self.fqn_stack.push(Some(fqn.clone()));

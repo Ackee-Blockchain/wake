@@ -13,9 +13,9 @@ use crate::{
     address::Address,
     chain::Chain,
     contract::Contract,
-    inspectors::fqn_inspector::{ErrorMetadata, EventMetadata},
+    inspectors::fqn_inspector::{CallErrorMetadata, CallEventMetadata, ErrorMetadata, EventMetadata},
     tx::TransactionAbc,
-    utils::PyObjects,
+    utils::{get_fqn_from_creation_code, PyObjects},
 };
 
 pub(crate) fn decode_and_normalize(
@@ -49,7 +49,7 @@ fn external_or_unknown_error(
     data: &[u8],
     chain: &Py<Chain>,
     tx: Option<&Bound<TransactionAbc>>,
-    metadata: &ErrorMetadata,
+    metadata: &CallErrorMetadata,
     py_objects: &mut PyObjects,
 ) -> PyResult<PyObject> {
     let chain = chain.bind(py).borrow();
@@ -148,14 +148,26 @@ pub(crate) fn resolve_error(
         let fqn = if selector == [0x08, 0xc3, 0x79, 0xa0] || selector == [0x4e, 0x48, 0x7b, 0x71] {
             PyString::new(py, "").into_any()
         } else if let Some(metadata) = errors_metadata.get(&selector) {
-            if let Some(fqn) = py_objects
-                .wake_contracts_by_metadata
-                .bind(py)
-                .get_item(PyBytes::new(py, &metadata.metadata))?
-            {
-                fqn
-            } else {
-                return external_or_unknown_error(py, data, chain, tx, metadata, py_objects);
+            match metadata {
+                ErrorMetadata::Create(init_code) => {
+                    if let Some(fqn) = get_fqn_from_creation_code(init_code, &py_objects.wake_init_code_index) {
+                        PyString::new(py, &fqn).into_any()
+                    } else {
+                        // e.g. forked contract factory creating an unknown contract
+                        return new_unknown_error(py, data, tx, py_objects);
+                    }
+                }
+                ErrorMetadata::Call(call_metadata) => {
+                    if let Some(fqn) = py_objects
+                        .wake_contracts_by_metadata
+                        .bind(py)
+                        .get_item(PyBytes::new(py, &call_metadata.metadata))?
+                    {
+                        fqn
+                    } else {
+                        return external_or_unknown_error(py, data, chain, tx, call_metadata, py_objects);
+                    }
+                }
             }
         } else {
             return new_unknown_error(py, data, tx, py_objects);
@@ -193,7 +205,15 @@ pub(crate) fn resolve_error(
         Ok(err)
     } else {
         if let Some(metadata) = errors_metadata.get(&data[..4]) {
-            return external_or_unknown_error(py, data, chain, tx, metadata, py_objects);
+            match metadata {
+                ErrorMetadata::Create(_) => {
+                    // e.g. forked contract factory creating an unknown contract
+                    return new_unknown_error(py, data, tx, py_objects);
+                }
+                ErrorMetadata::Call(call_metadata) => {
+                    return external_or_unknown_error(py, data, chain, tx, call_metadata, py_objects);
+                }
+            }
         } else {
             return new_unknown_error(py, data, tx, py_objects);
         }
@@ -247,7 +267,7 @@ pub(crate) fn external_or_unknown_event(
     py: Python,
     log: &Log,
     chain: &Py<Chain>,
-    metadata: &EventMetadata,
+    metadata: &CallEventMetadata,
     py_objects: &mut PyObjects,
 ) -> PyResult<PyObject> {
     if let Some(bytecode_address) = metadata.bytecode_address {
@@ -395,21 +415,39 @@ pub(crate) fn resolve_event(
     if let Some(events) = events {
         let events = events.downcast_into::<PyDict>()?;
 
-        let fqn = if let Some(fqn) = py_objects
-            .wake_contracts_by_metadata
-            .bind(py)
-            .get_item(PyBytes::new(py, &metadata.metadata))?
-        {
-            fqn
-        } else {
-            return external_or_unknown_event(py, log, chain, metadata, py_objects);
+        let fqn = match metadata {
+            EventMetadata::Create(init_code) => {
+                if let Some(fqn) = get_fqn_from_creation_code(init_code, &py_objects.wake_init_code_index) {
+                    PyString::new(py, &fqn).into_any()
+                } else {
+                    return new_unknown_event(py, log, chain, py_objects);
+                }
+            }
+            EventMetadata::Call(call_metadata) => {
+                if let Some(fqn) = py_objects
+                    .wake_contracts_by_metadata
+                    .bind(py)
+                    .get_item(PyBytes::new(py, &call_metadata.metadata))?
+                {
+                    fqn
+                } else {
+                    return external_or_unknown_event(py, log, chain, call_metadata, py_objects);
+                }
+            }
         };
 
         let tmp = match events.get_item(fqn)? {
             Some(item) => item.downcast_into::<PyTuple>()?,
             None => {
-                // see https://github.com/ethereum/solidity/issues/15752
-                return external_or_unknown_event(py, log, chain, metadata, py_objects);
+                match metadata {
+                    EventMetadata::Create(_) => {
+                        return new_unknown_event(py, log, chain, py_objects);
+                    }
+                    EventMetadata::Call(call_metadata) => {
+                        // see https://github.com/ethereum/solidity/issues/15752
+                        return external_or_unknown_event(py, log, chain, call_metadata, py_objects);
+                    }
+                }
             }
         };
 
@@ -442,7 +480,14 @@ pub(crate) fn resolve_event(
         )?;
         Ok(event)
     } else {
-        external_or_unknown_event(py, log, chain, metadata, py_objects)
+        match metadata {
+            EventMetadata::Create(_) => {
+                new_unknown_event(py, log, chain, py_objects)
+            }
+            EventMetadata::Call(call_metadata) => {
+                external_or_unknown_event(py, log, chain, call_metadata, py_objects)
+            }
+        }
     }
 }
 
