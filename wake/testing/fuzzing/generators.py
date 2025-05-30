@@ -197,15 +197,8 @@ def _generate_integer(max_bits: int, signed: bool = False) -> int:
     else:
         # Generate random number of bits to make
         num_bits = random.randint(1, max_bits)
+        value = random.getrandbits(num_bits)
 
-        if random.random() < 0.3:
-            # Generate number with specific number of bits set
-            num_ones = random.randint(1, num_bits)
-            bits = random.sample(range(num_bits), num_ones)
-            value = sum(1 << bit for bit in bits)
-        else:
-            # Random bits up to num_bits
-            value = random.getrandbits(num_bits)
         if signed:
             value = _to_signed(value, max_bits)
         return value
