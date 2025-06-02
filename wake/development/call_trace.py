@@ -1975,7 +1975,6 @@ class CallTrace:
                 function_is_special=is_special,
             )
         else:
-            breakpoint()
             call_trace = CallTrace(
                 contract=None,
                 contract_name=None,
