@@ -20,6 +20,7 @@ from urllib.error import HTTPError
 
 import rich.traceback
 import rich_click
+from rich import print as rich_print
 from ipdb.__main__ import _init_pdb
 
 from wake.config import WakeConfig
@@ -27,6 +28,7 @@ from wake.core import get_logger
 from wake.development.chain_interfaces import ChainInterfaceAbc
 from wake.development.json_rpc import JsonRpcError
 from wake.utils.file_utils import is_relative_to
+from wake.utils.pdb_handler import default_handler
 
 if TYPE_CHECKING:
     from wake.testing.coverage import CoverageHandler
@@ -147,6 +149,7 @@ def attach_debugger(
         commands.append(f"wake_random_seed = bytes.fromhex('{seed.hex()}')")
 
     p = _init_pdb(commands=commands)
+    p.default = lambda line: default_handler(p, line)
     p.reset()
     p.interaction(None, tb)
 
