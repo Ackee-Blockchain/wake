@@ -46,9 +46,15 @@ def excepthook(attach: bool, type, value, traceback):
     )
 
     if attach:
-        import ipdb
+        from ipdb.__main__ import _init_pdb, wrap_sys_excepthook
 
-        ipdb.pm()
+        from wake.utils.pdb_handler import default_handler
+
+        wrap_sys_excepthook()
+        p = _init_pdb()
+        p.default = lambda line: default_handler(p, line)
+        p.reset()
+        p.interaction(None, traceback)
 
 
 click.rich_click.COMMAND_GROUPS = {
@@ -205,7 +211,7 @@ def main(
             ThreadedChildWatcher()  # pyright: ignore reportUnboundVariable
         )
 
-    os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
+    os.environ["PYTHONBREAKPOINT"] = "wake.utils.pdb_handler.breakpoint_handler"
 
     if silent:
         from wake.utils.null_file import NullFile
