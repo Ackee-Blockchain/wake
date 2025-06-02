@@ -651,6 +651,10 @@ impl Chain {
                     }
                 );
 
+                for account in slf_.accounts.iter() {
+                    evm.db().set_code(account.borrow(py).address.borrow(py).0, vec![])?;
+                }
+
                 evm.cfg.chain_id = chain_id.unwrap_or(forked_chain_id);
                 evm.block.number = forked_block.header.number + 1;
                 evm.block.timestamp = forked_block.header.timestamp + 1;
