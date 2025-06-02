@@ -74,7 +74,7 @@ impl<ExtDB: DatabaseRef> CacheDB<ExtDB> {
         let mut reader = io::BufReader::new(file);
         let disk_cache: DiskCache =
             bincode::options()
-            .with_limit(10_000_000)
+            .with_limit(10_000_000_000) // 10GB
             .with_fixint_encoding()
             .deserialize_from(&mut reader).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
