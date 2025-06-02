@@ -219,7 +219,7 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for TraceInspector {
         let trace = NativeTrace {
             metadata: self.get_metadata(inputs.bytecode_address, context),
             input: inputs.input.to_vec(),
-            target_address: inputs.target_address.into(),
+            target_address: inputs.bytecode_address.into(),
             kind: call_scheme_to_string(inputs.scheme),
             value: match inputs.value {
                 CallValue::Transfer(value) => BigUint::from_bytes_le(value.as_le_slice()),
