@@ -8,6 +8,7 @@ from .lsp_control_flow_graph import LspControlFlowGraphPrinter
 from .lsp_inheritance_graph import LspInheritanceGraphPrinter
 from .lsp_linearized_inheritance_graph import LspLinearizedInheritanceGraphPrinter
 from .lsp_openzeppelin_docs import LspOpenzeppelinDocsPrinter
+from .lsp_public_functions import LspPublicFunctionsPrinter
 from .lsp_references import LspReferencesPrinter
 from .lsp_selectors import LspSelectorsPrinter
 from .lsp_yul_definitions import LspYulDefinitionsPrinter
