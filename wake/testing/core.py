@@ -85,6 +85,11 @@ class Chain(wake.development.core.Chain):
         else:
             self.gas_price = self._chain_interface.get_gas_price()
 
+        if self._fork is not None:
+            for acc in self._accounts:
+                # unset possible EIP-7702 delegations
+                acc.code = b""
+
     def _connect_finalize(self) -> None:
         try:
             connected_chains.remove(self)
