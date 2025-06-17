@@ -6,6 +6,13 @@ small.label {
 }
 </style>
 
+## 4.19.0 <small>(Jun 17, 2025)</small> { id="4.19.0" }
+
+Features & improvements:
+
+- added new `lsp-public-functions` printer that lists all public functions of a contract when triggered from the code lens button <small class="label">[language server]</small>
+- EIP-7702 code delegations are now automatically unset for chain testing accounts on forking <small class="label">[testing framework]</small>
+
 ## 4.18.1 <small>(May 20, 2025)</small> { id="4.18.1" }
 
 Fixes & improvements:
