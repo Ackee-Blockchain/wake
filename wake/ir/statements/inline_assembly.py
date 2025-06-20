@@ -11,11 +11,7 @@ from intervaltree import IntervalTree
 from wake.ir.abc import IrAbc, SolidityAbc, is_not_none
 from wake.ir.ast import AstNodeId, ExternalReferenceModel, SolcInlineAssembly
 from wake.ir.declarations.variable_declaration import VariableDeclaration
-from wake.ir.enums import (
-    InlineAssemblyEvmVersion,
-    InlineAssemblyFlag,
-    InlineAssemblySuffix,
-)
+from wake.ir.enums import InlineAssemblyEvmVersion, InlineAssemblySuffix
 from wake.ir.reference_resolver import CallbackParams, ReferenceResolver
 from wake.ir.statements.abc import StatementAbc
 from wake.ir.utils import IrInitTuple
@@ -246,7 +242,7 @@ class InlineAssembly(StatementAbc):
     _yul_block: YulBlock
     _evm_version: InlineAssemblyEvmVersion
     _external_references: IntervalTree
-    _flags: Set[InlineAssemblyFlag]
+    _flags: Set[str]
 
     def __init__(
         self,
@@ -263,7 +259,7 @@ class InlineAssembly(StatementAbc):
         self._flags = set()
         if inline_assembly.flags is not None:
             for flag in inline_assembly.flags:
-                self._flags.add(InlineAssemblyFlag(flag))
+                self._flags.add(flag)
         for external_reference in inline_assembly.external_references:
             start = external_reference.src.byte_offset
             end = start + external_reference.src.byte_length
@@ -321,7 +317,7 @@ class InlineAssembly(StatementAbc):
         return self._evm_version
 
     @property
-    def flags(self) -> FrozenSet[InlineAssemblyFlag]:
+    def flags(self) -> FrozenSet[str]:
         """
         !!! example
             ```solidity
