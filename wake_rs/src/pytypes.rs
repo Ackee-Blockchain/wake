@@ -144,10 +144,11 @@ pub(crate) fn resolve_error(
     if let Some(errors) = errors {
         let errors = errors.downcast_into::<PyDict>()?;
         let selector: [u8; 4] = data[..4].try_into().unwrap();
+        let metadata = errors_metadata.get(&selector);
 
         let fqn = if selector == [0x08, 0xc3, 0x79, 0xa0] || selector == [0x4e, 0x48, 0x7b, 0x71] {
             PyString::new(py, "").into_any()
-        } else if let Some(metadata) = errors_metadata.get(&selector) {
+        } else if let Some(metadata) = metadata {
             match metadata {
                 ErrorMetadata::Create(init_code) => {
                     if let Some(fqn) = get_fqn_from_creation_code(init_code, &py_objects.wake_init_code_index) {
@@ -173,7 +174,23 @@ pub(crate) fn resolve_error(
             return new_unknown_error(py, data, tx, py_objects);
         };
 
-        let tmp = errors.get_item(fqn)?.unwrap().downcast_into::<PyTuple>()?;
+        let tmp = match errors.get_item(fqn)? {
+            Some(item) => item.downcast_into::<PyTuple>()?,
+            None => {
+                // e.g. when lib defines an error, doesn't syntatically use it
+                // (because it reverts using a constant from assembly) and a contract uses the lib
+                // https://github.com/ethereum/solidity/issues/13149
+                match metadata {
+                    Some(ErrorMetadata::Call(call_metadata)) => {
+                        return external_or_unknown_error(py, data, chain, tx, call_metadata, py_objects);
+                    }
+                    _ => {
+                        return new_unknown_error(py, data, tx, py_objects);
+                    }
+                }
+            }
+        };
+
         let module_name = tmp.get_item(0)?.downcast_into::<PyString>()?;
         let path = tmp.get_item(1)?.downcast_into::<PyTuple>()?;
 
