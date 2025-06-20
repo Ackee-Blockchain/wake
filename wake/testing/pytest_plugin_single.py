@@ -43,6 +43,7 @@ from wake.testing.coverage import (
     export_merged_ide_coverage,
     write_coverage,
 )
+from wake.testing.utils import print_fuzzing_stats
 
 
 class PytestWakePluginSingle:
@@ -297,16 +298,7 @@ class PytestWakePluginSingle:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
 
-        for name, stats in sorted(get_fuzz_test_stats().items(), key=lambda x: x[0]):
-            terminalreporter.write_line(f"Fuzz test '{name}':")
-
-            for flow, rets in sorted(stats.items(), key=lambda x: x[0]):
-                terminalreporter.write_line(f"  {flow}:")
-                terminalreporter.write_line(f"    Success: {rets.pop(None, 0)}")
-                for ret, count in sorted(rets.items(), key=lambda x: x[0] or ""):
-                    terminalreporter.write_line(f"    {ret}: {count}")
-
-            terminalreporter.write_line("")
+        print_fuzzing_stats(terminalreporter)
 
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
         if get_is_fuzzing():
