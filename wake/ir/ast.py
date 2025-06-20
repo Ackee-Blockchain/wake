@@ -747,7 +747,7 @@ class SolcInlineAssembly(SolidityNode):
     external_references: List[ExternalReferenceModel]
     # optional
     documentation: Optional[StrictStr] = None
-    flags: Optional[List[InlineAssemblyFlag]] = None
+    flags: Optional[List[StrictStr]] = None
 
 
 class SolcPlaceholderStatement(SolidityNode):

@@ -328,10 +328,6 @@ class InlineAssemblySuffix(StrEnum):
     SELECTOR = "selector"
 
 
-class InlineAssemblyFlag(StrEnum):
-    MEMORY_SAFE = "memory-safe"
-
-
 class FunctionTypeKind(StrEnum):
     """
     Kind of a [Function][wake.ir.types.Function] type.
