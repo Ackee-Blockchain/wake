@@ -44,6 +44,7 @@ from wake.development.globals import (
 )
 from wake.testing.coverage import CoverageHandler, export_coverage, prepare_info
 from wake.testing.native_coverage import NativeCoverageHandler
+from wake.testing.utils import print_fuzzing_stats
 
 
 def export_thread(queue: SimpleQueue, build: ProjectBuild):
@@ -339,16 +340,7 @@ class PytestWakePluginSingle:
     def pytest_terminal_summary(self, terminalreporter, exitstatus, config):
         terminalreporter.section("Wake")
 
-        for name, stats in sorted(get_fuzz_test_stats().items(), key=lambda x: x[0]):
-            terminalreporter.write_line(f"Fuzz test '{name}':")
-
-            for flow, rets in sorted(stats.items(), key=lambda x: x[0]):
-                terminalreporter.write_line(f"  {flow}:")
-                terminalreporter.write_line(f"    Success: {rets.pop(None, 0)}")
-                for ret, count in sorted(rets.items(), key=lambda x: x[0] or ""):
-                    terminalreporter.write_line(f"    {ret}: {count}")
-
-            terminalreporter.write_line("")
+        print_fuzzing_stats(terminalreporter)
 
         terminalreporter.write_line("Random seed: " + self._random_seeds[0].hex())
         if get_is_fuzzing():
