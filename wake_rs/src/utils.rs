@@ -420,7 +420,7 @@ pub fn get_fqn_from_creation_code(init_code: &Bytes, init_code_index: &Vec<Creat
         let mut offset = *length;
 
         for (length, hash) in segments.iter().skip(1) {
-            if offset + *length > init_code.len() - offset {
+            if offset + *length + 20 > init_code.len() {
                 found = false;
                 break;
             }
@@ -429,12 +429,13 @@ pub fn get_fqn_from_creation_code(init_code: &Bytes, init_code_index: &Vec<Creat
                 &mut hasher,
                 init_code.slice(offset + 20..offset + 20 + *length),
             );
-            if Digest::finalize_reset(&mut hasher).as_slice() != hash {
+            let hash_final = Digest::finalize_reset(&mut hasher);
+            if hash_final.as_slice() != hash {
                 found = false;
                 break;
             }
 
-            offset += *length;
+            offset += *length + 20;
         }
 
         if found {
