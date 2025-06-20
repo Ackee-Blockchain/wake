@@ -1459,6 +1459,7 @@ class Chain(ABC):
     _forked_chain_id: Optional[int]
     _debug_trace_call_supported: bool
     _client_version: str
+    _optimistic_events_processing: bool
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1891,6 +1892,16 @@ class Chain(ABC):
     @check_connected
     def require_signed_txs(self, value: bool) -> None:
         self._require_signed_txs = value
+
+    @property
+    @check_connected
+    def optimistic_events_processing(self) -> bool:
+        return self._optimistic_events_processing
+
+    @optimistic_events_processing.setter
+    @check_connected
+    def optimistic_events_processing(self, value: bool) -> None:
+        self._optimistic_events_processing = value
 
     @property
     @check_connected
@@ -2454,8 +2465,11 @@ class Chain(ABC):
                             break
 
                 if len(candidates) != 1:
-                    generated_events.append(unknown_event)
-                    continue
+                    if self._optimistic_events_processing:
+                        fqn = list(events[selector].keys())[0]
+                    else:
+                        generated_events.append(unknown_event)
+                        continue
                 else:
                     fqn = candidates[0]
             else:
