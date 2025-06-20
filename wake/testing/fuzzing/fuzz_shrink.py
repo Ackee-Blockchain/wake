@@ -935,64 +935,43 @@ def single_fuzz_test(
 
                 test_instance._flow_num = j
                 set_executing_flow_num(j)
-                flow_exit_reasons = {}
 
-                while True:
-                    if len(valid_flows) == 0:
-                        max_times_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "max_times")
-                            and flows_counter[f] >= getattr(f, "max_times")
-                        ]
-                        precondition_flows = [
-                            f
-                            for f in flows
-                            if hasattr(f, "precondition")
-                            and not getattr(f, "precondition")(test_instance)
-                        ]
-                        raise Exception(
-                            f"Could not find a valid flow to run.\n"
-                            f"Flows that have reached their max_times: {max_times_flows}\n"
-                            f"Flows that do not satisfy their precondition: {precondition_flows}\n"
-                            f"Flows that terminated with failure: {flow_exit_reasons}"
-                        )
-
-                    # Pick a flow and generate the parameters
-                    flow = random.choices(valid_flows, weights=weights)[0]
-                    flow_params = [
-                        generate(v)
-                        for k, v in get_type_hints(flow, include_extras=True).items()
-                        if k != "return"
+                if len(valid_flows) == 0:
+                    max_times_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "max_times")
+                        and flows_counter[f] >= getattr(f, "max_times")
                     ]
+                    precondition_flows = [
+                        f
+                        for f in flows
+                        if hasattr(f, "precondition")
+                        and not getattr(f, "precondition")(test_instance)
+                    ]
+                    raise Exception(
+                        f"Could not find a valid flow to run.\n"
+                        f"Flows that have reached their max_times: {max_times_flows}\n"
+                        f"Flows that do not satisfy their precondition: {precondition_flows}\n"
+                    )
 
-                    test_instance.pre_flow(flow)
-                    ret = flow(test_instance, *flow_params)  # Execute the selected flow
-                    test_instance.post_flow(flow)
+                # Pick a flow and generate the parameters
+                flow = random.choices(valid_flows, weights=weights)[0]
+                flow_params = [
+                    generate(v)
+                    for k, v in get_type_hints(flow, include_extras=True).items()
+                    if k != "return"
+                ]
 
-                    if isinstance(ret, tuple):
-                        assert (
-                            len(ret) == 2
-                        ), "Return value must be a tuple of (exit_reason: Optional[str], count_flow: bool)"
-                        flow_stats[flow.__name__][ret[0]] += 1
-                        if ret[1]:
-                            flows_counter[flow] += 1
-                            break
-                        else:
-                            index = valid_flows.index(flow)
-                            valid_flows.pop(index)
-                            weights.pop(index)
-                            flow_exit_reasons[flow] = ret[0]
-                    elif isinstance(ret, str):
-                        flow_stats[flow.__name__][ret] += 1
-                        index = valid_flows.index(flow)
-                        valid_flows.pop(index)
-                        weights.pop(index)
-                        flow_exit_reasons[flow] = ret
-                    else:
-                        flow_stats[flow.__name__][None] += 1
-                        flows_counter[flow] += 1
-                        break
+                test_instance.pre_flow(flow)
+                ret = flow(test_instance, *flow_params)  # Execute the selected flow
+                test_instance.post_flow(flow)
+
+                if isinstance(ret, str):
+                    flow_stats[flow.__name__][ret] += 1
+                else:
+                    flow_stats[flow.__name__][None] += 1
+                    flows_counter[flow] += 1
 
                 if not dry_run:
                     test_instance.pre_invariants()
