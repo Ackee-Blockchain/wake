@@ -41,7 +41,7 @@ class StorageLayoutSpecifier(SolidityAbc):
 
     def __iter__(self) -> Iterator[IrAbc]:
         yield self
-        yield self._base_slot_expression
+        yield from self._base_slot_expression
 
     @property
     def parent(self) -> ContractDefinition:
