@@ -50,6 +50,7 @@ from typing_extensions import (
     get_origin,
     get_type_hints,
 )
+
 from wake_rs import Abi, Account, Address, Contract, Library, abi
 
 from ..utils import StrEnum
@@ -1547,7 +1548,10 @@ def _signer_account(sender: Account):
 
 
 def get_fqn_from_creation_code(creation_code: bytes) -> Tuple[str, int]:
+    original_creation_code = creation_code
+
     for creation_code_segments, fqn in creation_code_index:
+        creation_code = original_creation_code
 
         length, h = creation_code_segments[0]
         if length > len(creation_code):
