@@ -2,12 +2,14 @@ import logging
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict, List, Optional, Set, Union
+from typing import DefaultDict, List, Optional, Set, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir import (
     BinaryOperation,
     DeclarationAbc,
+    EnumDefinition,
+    EnumValue,
     ExternalReference,
     FunctionDefinition,
     Identifier,
@@ -15,8 +17,11 @@ from wake.ir import (
     IdentifierPathPart,
     IrAbc,
     MemberAccess,
+    ParameterList,
+    StructDefinition,
     UnaryOperation,
     UserDefinedTypeName,
+    VariableDeclaration,
     YulIdentifier,
 )
 from wake.lsp.common_structures import (
@@ -85,6 +90,135 @@ def _generate_reference_location(
     return context.compiler.get_range_from_byte_offsets(path, location)
 
 
+def _find_nearest_comment_blocks(declaration: DeclarationAbc) -> List[Tuple[int, int]]:
+    """
+    Find the nearest NatSpec comment blocks immediately preceding the declaration.
+
+    Returns:
+        List of (start_byte_offset, end_byte_offset) tuples for comment blocks.
+    """
+    source_code = declaration.source_unit.file_source
+    declaration_start = declaration.byte_location[0]
+    code_before_declaration = source_code[:declaration_start]
+    code_str = code_before_declaration.decode("utf-8", errors="ignore")
+
+    comment_blocks = []
+
+    # Function to check if all non-comment content after `end` is only whitespace
+    def is_followed_only_by_whitespace(end_pos: int) -> bool:
+        return code_str[end_pos:].strip() == ""
+
+    # Match /// comments
+    single_line_pattern = r"(///[^\n]*\n?)+"
+    single_line_matches = list(re.finditer(single_line_pattern, code_str))
+    for i in reversed(range(len(single_line_matches))):
+        match = single_line_matches[i]
+        if is_followed_only_by_whitespace(match.end()):
+            comment_blocks.insert(0, (match.start(), match.end()))
+            # Continue collecting consecutive comment blocks backwards
+            current_end = match.start()
+            for j in range(i - 1, -1, -1):
+                prev_match = single_line_matches[j]
+                between = code_str[prev_match.end() : current_end]
+                if between.strip() == "":
+                    comment_blocks.insert(0, (prev_match.start(), prev_match.end()))
+                    current_end = prev_match.start()
+                else:
+                    break
+            break  # Stop after collecting the nearest block
+
+    # Match /** */ style comments
+    multi_line_pattern = r"/\*\*.*?\*/"
+    multi_line_matches = list(re.finditer(multi_line_pattern, code_str, re.DOTALL))
+    if multi_line_matches:
+        last = multi_line_matches[-1]
+        if is_followed_only_by_whitespace(last.end()):
+            comment_blocks.append((last.start(), last.end()))
+
+    return comment_blocks
+
+
+def _find_natspec_patterns_in_comments(
+    comment_blocks: List[Tuple[int, int]], declaration_name: str, source_code: bytes
+) -> List[Tuple[int, int]]:
+    """
+    Search for @param and @return references to the declaration name within comment blocks.
+
+    Args:
+        comment_blocks: List of (start_byte_offset, end_byte_offset) tuples for comment blocks
+        declaration_name: Name of the declaration to search for
+        source_code: Full source code as bytes
+
+    Returns:
+        List of (start_byte_offset, end_byte_offset) tuples for NatSpec references
+    """
+    natspec_references = []
+    code_str = source_code.decode("utf-8", errors="ignore")
+
+    # Pattern to match @param and @return tags followed by the declaration name
+    # Capture only the declaration name part, not the entire tag
+    param_pattern = rf"@param\s+({re.escape(declaration_name)})\b"
+    return_pattern = rf"@return\s+({re.escape(declaration_name)})\b"
+
+    for comment_start, comment_end in comment_blocks:
+        comment_text = code_str[comment_start:comment_end]
+
+        # Check for @param references
+        param_matches = re.finditer(param_pattern, comment_text)
+        for param_match in param_matches:
+            # Use the captured group (the declaration name only)
+            param_start = comment_start + param_match.start(1)
+            param_end = comment_start + param_match.end(1)
+            natspec_references.append((param_start, param_end))
+
+        # Check for @return references
+        return_matches = re.finditer(return_pattern, comment_text)
+        for return_match in return_matches:
+            # Use the captured group (the declaration name only)
+            return_start = comment_start + return_match.start(1)
+            return_end = comment_start + return_match.end(1)
+            natspec_references.append((return_start, return_end))
+
+    return natspec_references
+
+
+def _find_natspec_references(declaration: DeclarationAbc) -> List[Tuple[int, int]]:
+    """
+    Find all NatSpec @param and @return references to the declaration name
+    in the nearest comment blocks preceding the declaration.
+
+    Returns:
+        List of (start_byte_offset, end_byte_offset) tuples for NatSpec references
+    """
+    source_code = declaration.source_unit.file_source
+    declaration_name = declaration.name
+
+    if (
+        isinstance(declaration, VariableDeclaration)
+        and isinstance(declaration.parent, ParameterList)
+        and isinstance(declaration.parent.parent, DeclarationAbc)
+    ):
+        declaration = declaration.parent.parent
+    elif isinstance(declaration, VariableDeclaration) and isinstance(
+        declaration.parent, StructDefinition
+    ):
+        declaration = declaration.parent
+    elif isinstance(declaration, EnumValue) and isinstance(
+        declaration.parent, EnumDefinition
+    ):
+        declaration = declaration.parent
+    else:
+        return []
+
+    # Find the nearest comment blocks
+    comment_blocks = _find_nearest_comment_blocks(declaration)
+
+    # Search for NatSpec patterns within those comments
+    return _find_natspec_patterns_in_comments(
+        comment_blocks, declaration_name, source_code
+    )
+
+
 def _generate_workspace_edit(
     declaration: Union[DeclarationAbc, Set[FunctionDefinition]],
     new_name: str,
@@ -96,8 +230,26 @@ def _generate_workspace_edit(
     if isinstance(declaration, set):
         for func in declaration:
             all_references.update(func.get_all_references(True))
+            for natspec_offsets in _find_natspec_references(func):
+                changes_by_file[func.source_unit.file].append(
+                    TextEdit(
+                        range=context.compiler.get_range_from_byte_offsets(
+                            func.source_unit.file, natspec_offsets
+                        ),
+                        new_text=new_name,
+                    )
+                )
     else:
         all_references.update(declaration.get_all_references(True))
+        for natspec_offsets in _find_natspec_references(declaration):
+            changes_by_file[declaration.source_unit.file].append(
+                TextEdit(
+                    range=context.compiler.get_range_from_byte_offsets(
+                        declaration.source_unit.file, natspec_offsets
+                    ),
+                    new_text=new_name,
+                )
+            )
 
     for reference in all_references:
         if not isinstance(reference, (UnaryOperation, BinaryOperation)):
