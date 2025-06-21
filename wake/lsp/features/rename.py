@@ -127,9 +127,6 @@ def _generate_workspace_edit(
     )
 
 
-IDENTIFIER_RE = re.compile(r"^[a-zA-Z$_][a-zA-Z0-9$_]*$")
-
-
 async def rename(
     context: LspContext,
     params: RenameParams,
@@ -140,10 +137,6 @@ async def rename(
     logger.debug(
         f"Requested rename for file {params.text_document.uri} at {params.position}"
     )
-
-    match = IDENTIFIER_RE.match(params.new_name)
-    if not match:
-        raise LspError(ErrorCodes.InvalidRequest, "Invalid identifier name")
 
     logger.debug(f"Waiting for compiler")
 
