@@ -101,10 +101,6 @@ contracts_by_fqn: Dict[str, Any] = {}
 contracts_by_metadata: Dict[bytes, str] = {}
 # contract_fqn => tuple of linearized base contract fqns
 contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
-# contract_fqn => set of REVERT opcode PCs belonging to a revert statement for contract deployment/constructor
-contracts_revert_constructor_index: Dict[str, Set[int]] = {}
-# contract_fqn => set of REVERT opcode PCs belonging to a revert statement
-contracts_revert_index: Dict[str, Set[int]] = {}
 # list of pairs of (creation code segments, contract_fqn)
 # where creation code segments is a tuple of (length, BLAKE2b hash)
 creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
@@ -2991,7 +2987,10 @@ def process_debug_trace_for_revert(
     addresses: List[Optional[Address]] = [tx.to.address if tx.to is not None else None]
     fqns: List[Optional[str]] = [origin]
     trace_is_create: List[bool] = [tx.to is None]
+
+    # select latest the most nested revert origin
     last_revert_origin = None
+    last_revert_depth = 0
 
     for i, trace in enumerate(debug_trace["structLogs"]):
         if i > 0:
@@ -3027,25 +3026,18 @@ def process_debug_trace_for_revert(
             fqns.append(get_fqn_from_creation_code(creation_code)[0])
             fqn_overrides.maps.insert(0, {})
         elif trace["op"] in {"INVALID", "REVERT"}:
-            pc = trace["pc"]
+            depth = len(fqns)
             fqn_overrides.maps.pop(0)
             fqn = fqns.pop()
             addresses.pop()
-            is_create = trace_is_create.pop()
 
-            if trace["op"] == "REVERT":
-                if (
-                    is_create
-                    and fqn in contracts_revert_constructor_index
-                    and pc in contracts_revert_constructor_index[fqn]
-                ):
+            if trace["op"] == "REVERT" and depth >= last_revert_depth:
+                offset = int(trace["stack"][-1], 16)
+                length = int(trace["stack"][-2], 16)
+                data = read_from_memory(offset, length, trace["memory"])
+                if data == tx.raw_error.data:
                     last_revert_origin = fqn
-                elif (
-                    not is_create
-                    and fqn in contracts_revert_index
-                    and pc in contracts_revert_index[fqn]
-                ):
-                    last_revert_origin = fqn
+                    last_revert_depth = depth
         elif trace["op"] in {"RETURN", "STOP", "SELFDESTRUCT"}:
             if len(fqn_overrides.maps) > 1:
                 fqn_overrides.maps[1].update(fqn_overrides.maps[0])
