@@ -171,8 +171,6 @@ class TypeGenerator:
     __user_defined_value_types_index: Dict[str, str]
     __contracts_by_metadata_index: Dict[bytes, str]
     __contracts_inheritance_index: Dict[str, Tuple[str, ...]]
-    __contracts_revert_constructor_index: Dict[str, Set[int]]
-    __contracts_revert_index: Dict[str, Set[int]]
     __creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]]
     __line_indexes: Dict[Path, List[Tuple[bytes, int]]]
     # source unit name -> other source unit names in the cycle
@@ -201,8 +199,6 @@ class TypeGenerator:
         self.__user_defined_value_types_index = {}
         self.__contracts_by_metadata_index = {}
         self.__contracts_inheritance_index = {}
-        self.__contracts_revert_constructor_index = {}
-        self.__contracts_revert_index = {}
         self.__creation_code_index = []
         self.__line_indexes = {}
         self.__cyclic_source_units = defaultdict(set)
@@ -465,44 +461,6 @@ class TypeGenerator:
                 2, 'raise Exception("Cannot get creation code of an interface")', 1
             )
 
-    def _process_opcodes_for_revert(
-        self,
-        contract: ContractDefinition,
-        fqn: str,
-        parsed_opcodes,
-        pc_map,
-        index: Dict[str, Set[int]],
-    ) -> None:
-        for pc, op, size, argument in parsed_opcodes:
-            if op == "REVERT" and pc in pc_map:
-                start, end, file_id, _ = pc_map[pc]
-                if file_id == -1:
-                    continue
-                try:
-                    path = self.__reference_resolver.resolve_source_file_id(
-                        file_id, contract.source_unit.cu_hash
-                    )
-                except KeyError:
-                    continue
-
-                intervals = self.__interval_trees[path].envelop(start, end)
-                nodes: List = sorted(
-                    [interval.data for interval in intervals],
-                    key=lambda n: n.ast_tree_depth,
-                )
-
-                if len(nodes) > 0:
-                    node = nodes[0]
-                    if isinstance(node, FunctionCall) and isinstance(
-                        node.parent, RevertStatement
-                    ):
-                        func_called = node.function_called
-                        assert isinstance(func_called, ErrorDefinition)
-
-                        if fqn not in index:
-                            index[fqn] = set()
-                        index[fqn].add(pc)
-
     def generate_contract_template(
         self, contract: ContractDefinition, base_names: str
     ) -> None:
@@ -537,20 +495,6 @@ class TypeGenerator:
         assert compilation_info.evm.deployed_bytecode.source_map is not None
 
         fqn = f"{contract.parent.source_unit_name}:{contract.name}"
-
-        for bytecode, index in [
-            (compilation_info.evm.bytecode, self.__contracts_revert_constructor_index),
-            (compilation_info.evm.deployed_bytecode, self.__contracts_revert_index),
-        ]:
-            parsed_opcodes = _parse_opcodes(bytecode.opcodes)
-            pc_map = _parse_source_map(bytecode.source_map, parsed_opcodes)
-            self._process_opcodes_for_revert(
-                contract,
-                fqn,
-                parsed_opcodes,
-                pc_map,
-                index,
-            )
 
         config = next(
             (
@@ -1895,8 +1839,6 @@ class TypeGenerator:
                 contracts_by_fqn=self.__contracts_index,
                 contracts_by_metadata=self.__contracts_by_metadata_index,
                 contracts_inheritance=self.__contracts_inheritance_index,
-                contracts_revert_constructor_index=self.__contracts_revert_constructor_index,
-                contracts_revert_index=self.__contracts_revert_index,
                 creation_code_index=self.__creation_code_index,
                 user_defined_value_types_index=self.__user_defined_value_types_index,
             )
