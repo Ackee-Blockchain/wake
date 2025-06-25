@@ -9,6 +9,7 @@ from .chainlink_deprecated_function import ChainlinkDeprecatedFunctionDetector
 from .complex_struct_getter import ComplexStructGetterDetector
 from .empty_byte_array_copy_bug import EmptyByteArrayCopyBugDetector
 from .incorrect_interface import IncorrectInterfaceDetector
+from .invalid_memory_safe_assembly import InvalidMemorySafeAssemblyDetector
 from .missing_return import MissingReturnDetector
 from .msg_value_nonpayable_function import MsgValueNonpayableFunctionDetector
 from .reentrancy import ReentrancyDetector
