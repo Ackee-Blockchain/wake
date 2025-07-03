@@ -17,6 +17,7 @@ class AbiPrinter(Printer):
     _names: Set[str]
     _out: Optional[Path]
     _skip_empty: bool
+    _keep_folders: bool
     _abi: Dict[ir.ContractDefinition, List]
 
     def __init__(self):
@@ -34,8 +35,10 @@ class AbiPrinter(Printer):
                 )
                 self.console.print_json(data=abi)
             else:
-                if len([c for c in self._abi.keys() if c.name == contract.name]) > 1:
+                if self._keep_folders or len([c for c in self._abi.keys() if c.name == contract.name]) > 1:
                     source_unit_name_path = Path(contract.parent.source_unit_name)
+                    if self._keep_folders:
+                        source_unit_name_path = source_unit_name_path.parent
                     if source_unit_name_path.is_absolute():
                         self.logger.warning(
                             f"Cannot generate ABI for duplicate contract [link={self.generate_link(contract)}]{contract.name}[/link] with absolute source unit name {contract.parent.source_unit_name}"
@@ -90,12 +93,20 @@ class AbiPrinter(Printer):
         default=False,
         help="Skip contracts with empty ABI",
     )
-    def cli(self, names: Tuple[str, ...], out: Optional[str], skip_empty: bool) -> None:
+    @click.option(
+        "-k",
+        "--keep-folders",
+        is_flag=True,
+        default=False,
+        help="Preserve the original folder hierarchy",
+    )
+    def cli(self, names: Tuple[str, ...], out: Optional[str], skip_empty: bool, keep_folders: bool) -> None:
         """
         Print ABI of contracts.
         """
         self._names = set(names)
         self._skip_empty = skip_empty
+        self._keep_folders = keep_folders
         if out is not None:
             self._out = Path(out)
             self._out.mkdir(parents=True, exist_ok=True)
