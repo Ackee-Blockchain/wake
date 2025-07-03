@@ -25,3 +25,4 @@ from .unused_event import UnusedEventDetector
 from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector
 from .unused_modifier import UnusedModifierDetector
+from .nullyfying_instead_deleting import NullifyingInsteadDeletingDetector
