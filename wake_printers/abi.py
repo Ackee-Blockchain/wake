@@ -36,9 +36,7 @@ class AbiPrinter(Printer):
                 self.console.print_json(data=abi)
             else:
                 if self._keep_folders or len([c for c in self._abi.keys() if c.name == contract.name]) > 1:
-                    source_unit_name_path = Path(contract.parent.source_unit_name)
-                    if self._keep_folders:
-                        source_unit_name_path = source_unit_name_path.parent
+                    source_unit_name_path = Path(contract.parent.source_unit_name).parent
                     if source_unit_name_path.is_absolute():
                         self.logger.warning(
                             f"Cannot generate ABI for duplicate contract [link={self.generate_link(contract)}]{contract.name}[/link] with absolute source unit name {contract.parent.source_unit_name}"
