@@ -1,113 +1,118 @@
-[tool.poetry]
+[project]
 name = "eth-wake"
 version = "4.20.0"
 description = "Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors."
-license = "ISC"
-authors = ["Ackee Blockchain"]
+license = {text = "ISC"}
+authors = [{name = "Ackee Blockchain"}]
 readme = "README.md"
-homepage = "https://getwake.io"
-repository = "https://github.com/Ackee-Blockchain/wake"
-documentation = "https://ackee.xyz/wake/docs/latest"
 keywords = ["ethereum", "solidity", "security", "testing", "development", "static analysis", "framework", "audit"]
-packages = [
-    { include = "wake" },
-    { include = "wake_detectors" },
-    { include = "wake_printers" },
-    { include = "wake_rs" }
+requires-python = ">=3.8"
+urls = {Homepage = "https://getwake.io", Repository = "https://github.com/Ackee-Blockchain/wake", Documentation = "https://ackee.xyz/wake/docs/latest", "VS Code Extension" = "https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity"}
+
+dependencies = [
+    "pydantic>=2.7,<3",
+    "typing-extensions>=4.12",
+    "aiohttp>=3.8,<4; python_version<'3.12'",
+    "aiohttp>=3.9.0b1,<4; python_version>='3.12'",
+    "aiofiles>=0.8,<1",
+    "tomli>=2,<3",
+    "networkx>=2.5,<3",
+    "click>=8,<9",
+    "rich-click>=1.7.1,<2",
+    "rich>=13.3.2,<14",
+    "pathvalidate>=2.5,<3",
+    "intervaltree>=3.1,<4",
+    "graphviz>=0.19,<1",
+    "tblib>=1.7,<2",
+    "eth-account>=0.13.7,<1",
+    "eth-utils>=2.1,<3",
+    "eth-abi>=4.0.0b2,<5",
+    "parsimonious>=0.9,<1",
+    "pycryptodome>=3.19.0",
+    "websocket-client>=1.4,<2",
+    "pywin32>=302; platform_system=='Windows'",
+    "watchdog>=4,<5",
+    "pytest>=7,<8",
+    "ipdb>=0.13.9,<1",
+    "abch_tree_sitter>=1.1.2,<2",
+    "abch_tree_sitter_solidity>=1.3.0,<2",
+    "lazy-import>=0.2.2,<1",
+    "importlib-metadata>=4.13,<5; python_version<'3.10'",
+    "packaging>=22.0",
+    "sarif-om>=1.0.4,<2",
+    "jschema-to-python>=1.2.3,<2",
+    "tomli-w>=1.0.0,<2",
+    "certifi>=2024.2.2; platform_system=='Darwin'",
 ]
-include = [
-    { path = "examples", format = ["sdist", "wheel"] },
-    { path = "contracts/wake", format = ["sdist", "wheel"] },
-    { path = "wake_rs/**/*.so", format = "wheel" },
-    { path = "wake_rs/**/*.pyd", format = "wheel" },
-    { path = "wake_rs/**/*.pyi", format = ["wheel", "sdist"] },
-    { path = "wake_rs/src/**/*", format = "sdist" },
-    { path = "wake_rs/Cargo.*", format = "sdist" },
-    { path = "wake_rs/build.py", format = "sdist" },
-    { path = "wake_rs/pyproject.toml", format = "sdist" }
+
+[project.optional-dependencies]
+tests = ["pytest-asyncio>=0.17,<1", "GitPython>=3.1.20,<4"]
+dev = [
+    "black>=22,<23",
+    "mkdocs-material>=9.5.17,<10",
+    "mkdocstrings>=0.26,<1",
+    "mkdocstrings-python>=1.11,<2",
+    "pymdown-extensions>=10,<11",
+    "pygments>=2,<3",
+    "mike>=2.0.0,<3",
+    "isort>=5,<6",
+    "pillow>=9,<10; python_version<'3.12'",
+    "pillow>=10.1,<11; python_version>='3.12'",
+    "cairosvg>=2.7,<3",
 ]
-exclude = [
-    "wake_rs/src/**/*",
-    "wake_rs/Cargo.*",
-    "wake_rs/build.py",
-    "wake_rs/pyproject.toml"
-]
 
-[tool.poetry.plugins."wake.plugins.detectors"]
-wake-detectors = "wake_detectors"
-
-[tool.poetry.plugins."wake.plugins.printers"]
-wake-printers = "wake_printers"
-
-[tool.poetry.dependencies]
-python = "^3.8"
-pydantic = "^2.7"
-typing-extensions = ">=4.12"
-aiohttp = [
-    { version = "^3.8", python = "<3.12" },
-    { version = ">=3.9.0b1", python = ">=3.12" }
-]
-aiofiles = "^0.8"
-tomli = "^2"
-networkx = "^2.5"
-click = "^8"
-rich-click = "^1.7.1"
-rich = "^13.3.2"
-pathvalidate = "^2.5"
-intervaltree = "^3.1"
-graphviz = "^0.19"
-tblib = "^1.7"
-eth-account = "^0.13.7"
-eth-utils = "^2.1"
-eth-abi = { version = "^4.0.0b2", allow-prereleases = true }
-parsimonious = "^0.9"
-pycryptodome = ">=3.19.0"
-websocket-client = "^1.4"
-pywin32 = { version = ">= 302", platform = "win32" }
-watchdog = "^4"
-pytest = "^7"
-ipdb = "^0.13.9"
-abch_tree_sitter = "^1.1.2"
-abch_tree_sitter_solidity = "^1.3.0"
-lazy-import = "^0.2.2"
-importlib-metadata = { version = "^4.13", python = "<3.10" }
-packaging = ">=22.0"
-sarif-om = "^1.0.4"
-jschema-to-python = "^1.2.3"
-tomli-w = "^1.0.0"
-certifi = { version = ">=2024.2.2", platform = "darwin" }
-
-pytest-asyncio = { version = "^0.17", optional = true }
-GitPython = { version = "^3.1.20", optional = true }
-
-black = { version = "^22", optional = true }
-mkdocs-material = { version = "^9.5.17", optional = true }
-mkdocstrings = { version = "^0.26", optional = true }
-mkdocstrings-python = { version = "^1.11", optional = true }
-pymdown-extensions = { version = "^10", optional = true }
-pygments = { version = "^2", optional = true }
-mike = { version = "^2.0.0", optional = true }
-isort = { version = "^5", optional = true }
-pillow = [
-    { version = "^9", optional = true, python = "<3.12" },
-    { version = "^10.1", optional = true, python = ">=3.12" }
-]
-cairosvg = { version = "^2.7", optional = true }
-
-[tool.poetry.extras]
-tests = ["pytest-asyncio", "GitPython"]
-dev = ["black", "mkdocs-material", "mkdocstrings", "mkdocstrings-python", "pymdown-extensions", "pygments", "mike", "isort", "pillow", "cairosvg"]
-
-[tool.poetry.scripts]
+[project.scripts]
 wake = "wake.cli.__main__:main"
 wake-solc = "wake.cli.__main__:wake_solc"
 
-[tool.poetry.urls]
-"VS Code Extension" = "https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity"
+[project.entry-points."wake.plugins.detectors"]
+wake-detectors = "wake_detectors"
+
+[project.entry-points."wake.plugins.printers"]
+wake-printers = "wake_printers"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "maturin>=1.5,<2.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.21.0", "maturin>=1.5,<2.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wake", "wake_detectors", "wake_printers", "wake_rs"]
+artifacts = [
+    "wake_rs/*.so",
+    "wake_rs/*.pyd",
+]
+include = [
+    "examples",
+    "contracts/wake",
+    "wake_rs/__init__.py",
+    "wake_rs/*.pyi",
+]
+exclude = [
+    "wake_rs/target/**",
+    "wake_rs/src/**",
+    "wake_rs/Cargo.*",
+    "wake_rs/build.py",
+    "wake_rs/pyproject.toml",
+    "wake_rs/.gitignore",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "examples",
+    "contracts/wake",
+    "wake_rs/__init__.py",
+    "wake_rs/*.pyi",
+    "wake_rs/src/**/*",
+    "wake_rs/Cargo.*",
+    "wake_rs/build.py",
+    "wake_rs/pyproject.toml",
+]
+exclude = [
+    "wake_rs/target/**",
+]
+
+[tool.hatch.build.hooks.custom]
+path = "wake_rs/build.py"
 
 [tool.black]
 target-version = ["py37"]
@@ -128,6 +133,3 @@ markers = [
     "platform_dependent: platform-dependent test that will need to run on all CIs",
     "slow: slow tests that will not run in git hooks",
 ]
-
-[tool.poetry.build]
-script = "wake_rs/build.py"
