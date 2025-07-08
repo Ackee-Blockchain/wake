@@ -148,8 +148,21 @@ async def open_address(
             )
             return
 
-    with console.status(f"Fetching {address} from explorer..."):
-        info, source = get_info_from_explorer(address, chain_id, config, force=force)
+    try:
+        with console.status(f"Fetching {address} from explorer..."):
+            info, source = get_info_from_explorer(address, chain_id, config, force=force)
+    except Exception as e:
+        # Import AbiNotFound here to check the exception type
+        from wake.development.utils import AbiNotFound
+        
+        if isinstance(e, AbiNotFound):
+            console.print(f"[red]Contract {address} not found on {e.method}[/red]")
+            if e.api_key_name:
+                console.print(f"[yellow]Hint: Make sure you have a valid {e.api_key_name} API key configured[/yellow]")
+            return
+        else:
+            # Re-raise other exceptions
+            raise
 
     if source == "sourcify":
         version = SolidityVersion.fromstring(info["compilation"]["compilerVersion"])
