@@ -653,7 +653,9 @@ def run_init(
     update_gitignore(config.project_root_path / ".gitignore")
 
     # load foundry config, if foundry.toml exists
-    if (config.project_root_path / "foundry.toml").exists():
+    if (not config.local_config_path.exists() or force) and (
+        config.project_root_path / "foundry.toml"
+    ).exists():
         config_toml = subprocess.run(
             ["forge", "config"], capture_output=True
         ).stdout.decode("utf-8")
@@ -697,7 +699,9 @@ def run_init(
             )
         )
 
-        if not (config.project_root_path / "foundry.toml").exists():
+        if (not config.local_config_path.exists() or force) and not (
+            config.project_root_path / "foundry.toml"
+        ).exists():
             # check contract size limit & stack too deep and update accordingly
             update_compilation_config(config, compiler, errors, sol_files, incremental)
 
