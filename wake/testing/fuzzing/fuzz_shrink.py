@@ -34,7 +34,7 @@ from wake.development.globals import (
     set_sequence_initial_internal_state,
 )
 from wake.development.transactions import Error, Panic
-from wake.testing.core import default_chain as global_default_chain
+from wake.testing.core import chain as global_default_chain
 from wake.utils.file_utils import is_relative_to
 
 from ..core import get_connected_chains

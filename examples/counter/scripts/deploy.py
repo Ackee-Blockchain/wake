@@ -5,9 +5,9 @@ from pytypes.contracts.Counter import Counter
 NODE_URL = "YOUR_NODE_URL"
 
 
-@default_chain.connect(NODE_URL)
+@chain.connect(NODE_URL)
 def main():
-    default_chain.set_default_accounts(Account.from_alias("deployment"))
+    chain.set_default_accounts(Account.from_alias("deployment"))
 
     counter = Counter.deploy()
     counter.setCount(10)

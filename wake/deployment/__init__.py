@@ -28,6 +28,4 @@ from wake.development.utils import (
     read_storage_variable,
 )
 
-from .core import Chain, default_chain
-
-chain = default_chain
+from .core import Chain, chain
