@@ -150,8 +150,10 @@ pub(crate) fn resolve_error(
             PyString::new(py, "").into_any()
         } else if let Some(metadata) = metadata {
             match metadata {
-                ErrorMetadata::Create(init_code) => {
-                    if let Some(fqn) = get_fqn_from_creation_code(init_code, &py_objects.wake_init_code_index) {
+                ErrorMetadata::Create(create_metadata) => {
+                    if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
+                        fqn.bind(py).clone().into_any()
+                    } else if let Some(fqn) = get_fqn_from_creation_code(&create_metadata.init_code, &py_objects.wake_init_code_index) {
                         PyString::new(py, &fqn).into_any()
                     } else {
                         // e.g. forked contract factory creating an unknown contract
@@ -159,7 +161,9 @@ pub(crate) fn resolve_error(
                     }
                 }
                 ErrorMetadata::Call(call_metadata) => {
-                    if let Some(fqn) = py_objects
+                    if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
+                        fqn.bind(py).clone().into_any()
+                    } else if let Some(fqn) = py_objects
                         .wake_contracts_by_metadata
                         .bind(py)
                         .get_item(PyBytes::new(py, &call_metadata.metadata))?
@@ -287,63 +291,61 @@ pub(crate) fn external_or_unknown_event(
     metadata: &CallEventMetadata,
     py_objects: &mut PyObjects,
 ) -> PyResult<PyObject> {
-    if let Some(bytecode_address) = metadata.bytecode_address {
-        let chain = chain.bind(py).borrow();
-        if chain
-            .get_evm()?
-            .db_ref()
-            .is_contract_forked(&bytecode_address)
-            .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?
-        {
-            let name_abi = py_objects
-                .wake_get_name_abi
-                .bind(py)
-                .call1((bytecode_address.to_string(), chain.forked_chain_id.unwrap()))?;
+    let borrowed_chain = chain.bind(py).borrow();
+    if borrowed_chain
+        .get_evm()?
+        .db_ref()
+        .is_contract_forked(&metadata.bytecode_address)
+        .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?
+    {
+        let name_abi = py_objects
+            .wake_get_name_abi
+            .bind(py)
+            .call1((metadata.bytecode_address.to_string(), borrowed_chain.forked_chain_id.unwrap()))?;
 
-            if !name_abi.is_none() {
-                let name_abi = name_abi.downcast_into::<PyTuple>()?;
-                let abi = name_abi.get_item(1)?.downcast_into::<PyDict>()?;
+        if !name_abi.is_none() {
+            let name_abi = name_abi.downcast_into::<PyTuple>()?;
+            let abi = name_abi.get_item(1)?.downcast_into::<PyDict>()?;
 
-                if let Some(abi) =
-                    abi.get_item(PyBytes::new(py, log.topics()[0].as_slice()))?
-                {
-                    let values = decode_event(py, abi.downcast::<PyDict>()?, log)?;
+            if let Some(abi) =
+                abi.get_item(PyBytes::new(py, log.topics()[0].as_slice()))?
+            {
+                let values = decode_event(py, abi.downcast::<PyDict>()?, log)?;
 
-                    let contract_name = name_abi.get_item(0)?.downcast_into::<PyString>()?;
-                    let event_name = abi
+                let contract_name = name_abi.get_item(0)?.downcast_into::<PyString>()?;
+                let event_name = abi
+                    .get_item(intern!(py, "name"))?
+                    .downcast_into::<PyString>()?;
+
+                let inputs = abi.get_item(intern!(py, "inputs"))?;
+                let inputs_list = inputs.downcast::<PyList>()?;
+
+                let kwargs = PyDict::new(py);
+                for (input, value) in inputs_list.iter().zip(values.iter()) {
+                    let input_dict = input.downcast::<PyDict>()?;
+                    let input_name = input_dict
                         .get_item(intern!(py, "name"))?
+                        .unwrap()
                         .downcast_into::<PyString>()?;
 
-                    let inputs = abi.get_item(intern!(py, "inputs"))?;
-                    let inputs_list = inputs.downcast::<PyList>()?;
-
-                    let kwargs = PyDict::new(py);
-                    for (input, value) in inputs_list.iter().zip(values.iter()) {
-                        let input_dict = input.downcast::<PyDict>()?;
-                        let input_name = input_dict
-                            .get_item(intern!(py, "name"))?
-                            .unwrap()
-                            .downcast_into::<PyString>()?;
-
-                        kwargs.set_item(input_name, alloy_to_py(py, &value, py_objects)?)?;
-                    }
-
-                    let event = py_objects.wake_external_event.call(
-                        py,
-                        (format!(
-                            "{}.{}",
-                            contract_name.to_str()?,
-                            event_name.to_str()?
-                        ),),
-                        Some(&kwargs),
-                    )?;
-                    event.setattr(
-                        py,
-                        "origin",
-                        Account::from_address_native(py, log.address, chain.into())?,
-                    )?;
-                    return Ok(event);
+                    kwargs.set_item(input_name, alloy_to_py(py, &value, py_objects)?)?;
                 }
+
+                let event = py_objects.wake_external_event.call(
+                    py,
+                    (format!(
+                        "{}.{}",
+                        contract_name.to_str()?,
+                        event_name.to_str()?
+                    ),),
+                    Some(&kwargs),
+                )?;
+                event.setattr(
+                    py,
+                    "origin",
+                    Account::from_address_native(py, log.address, borrowed_chain.into())?,
+                )?;
+                return Ok(event);
             }
         }
     }
@@ -418,7 +420,7 @@ pub(crate) fn resolve_event(
     py: Python,
     log: &Log,
     chain: &Py<Chain>,
-    metadata: &EventMetadata,
+    metadata: Option<&EventMetadata>,
     py_objects: &mut PyObjects,
 ) -> PyResult<PyObject> {
     if log.topics().len() == 0 {
@@ -433,15 +435,19 @@ pub(crate) fn resolve_event(
         let events = events.downcast_into::<PyDict>()?;
 
         let fqn = match metadata {
-            EventMetadata::Create(init_code) => {
-                if let Some(fqn) = get_fqn_from_creation_code(init_code, &py_objects.wake_init_code_index) {
+            Some(EventMetadata::Create(create_metadata)) => {
+                if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
+                    fqn.bind(py).clone().into_any()
+                } else if let Some(fqn) = get_fqn_from_creation_code(&create_metadata.init_code, &py_objects.wake_init_code_index) {
                     PyString::new(py, &fqn).into_any()
                 } else {
                     return new_unknown_event(py, log, chain, py_objects);
                 }
             }
-            EventMetadata::Call(call_metadata) => {
-                if let Some(fqn) = py_objects
+            Some(EventMetadata::Call(call_metadata)) => {
+                if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
+                    fqn.bind(py).clone().into_any()
+                } else if let Some(fqn) = py_objects
                     .wake_contracts_by_metadata
                     .bind(py)
                     .get_item(PyBytes::new(py, &call_metadata.metadata))?
@@ -451,16 +457,19 @@ pub(crate) fn resolve_event(
                     return external_or_unknown_event(py, log, chain, call_metadata, py_objects);
                 }
             }
+            None => {
+                return new_unknown_event(py, log, chain, py_objects);
+            }
         };
 
         let tmp = match events.get_item(fqn)? {
             Some(item) => item.downcast_into::<PyTuple>()?,
             None => {
                 match metadata {
-                    EventMetadata::Create(_) => {
+                    Some(EventMetadata::Create(_)) | None => {
                         return new_unknown_event(py, log, chain, py_objects);
                     }
-                    EventMetadata::Call(call_metadata) => {
+                    Some(EventMetadata::Call(call_metadata)) => {
                         // see https://github.com/ethereum/solidity/issues/15752
                         return external_or_unknown_event(py, log, chain, call_metadata, py_objects);
                     }
@@ -498,10 +507,10 @@ pub(crate) fn resolve_event(
         Ok(event)
     } else {
         match metadata {
-            EventMetadata::Create(_) => {
+            Some(EventMetadata::Create(_)) | None => {
                 new_unknown_event(py, log, chain, py_objects)
             }
-            EventMetadata::Call(call_metadata) => {
+            Some(EventMetadata::Call(call_metadata)) => {
                 external_or_unknown_event(py, log, chain, call_metadata, py_objects)
             }
         }
