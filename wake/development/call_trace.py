@@ -19,9 +19,6 @@ from typing import (
     cast,
 )
 
-import eth_abi
-import eth_abi.abi
-import eth_abi.exceptions
 import eth_utils
 from rich.console import Console
 from rich.highlighter import RegexHighlighter
@@ -34,6 +31,7 @@ from ..utils.formatters import format_wei
 from . import hardhat_console
 from .chain_interfaces import TxParams
 from .core import (
+    Abi,
     Account,
     Address,
     Contract,
@@ -261,7 +259,7 @@ def _decode_args(
     ]
     args = list(
         _normalize(arg, type, chain)
-        for arg, type in zip(eth_abi.abi.decode(input_types, data, strict=False), abi)
+        for arg, type in zip(Abi.decode(input_types, data), abi)
     )
     arg_names = [arg["name"] for arg in abi]
 
@@ -285,7 +283,7 @@ def _decode_event_args(
 
             decoded_indexed.append(
                 _normalize(
-                    eth_abi.abi.decode([topic_type], topics[topic_index])[0],
+                    Abi.decode([topic_type], topics[topic_index])[0],
                     arg,
                     chain,
                 )
@@ -297,7 +295,7 @@ def _decode_event_args(
 
     decoded = list(
         _normalize(arg, type, chain)
-        for arg, type in zip(eth_abi.abi.decode(types, data), non_indexed_abi)
+        for arg, type in zip(Abi.decode(types, data), non_indexed_abi)
     )
     merged = []
 
