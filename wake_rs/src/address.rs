@@ -1,6 +1,7 @@
 use alloy::signers::local::coins_bip39::English;
-use alloy::signers::local::{LocalSigner, MnemonicBuilder};
+use alloy::signers::local::{LocalSigner, LocalSignerError, MnemonicBuilder};
 use alloy::signers::trezor::{HDPath, TrezorSigner};
+use eth_keystore::KeystoreError;
 use num_bigint::BigUint;
 use pyo3::exceptions::PyValueError;
 use pyo3::{intern, prelude::*};
@@ -133,7 +134,12 @@ impl Address {
             None => py_objects.click_prompt.bind(py).call1((format!("Password for account {}", alias), "", true),).map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?.downcast_into::<PyString>()?
         };
 
-        let signer = LocalSigner::decrypt_keystore(keypath, password.to_str()?.to_owned().into_bytes()).map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?; // TODO better mapping?
+        let signer = LocalSigner::decrypt_keystore(keypath, password.to_str()?.to_owned().into_bytes()).map_err(|e|
+            match e {
+                LocalSignerError::EthKeystoreError(KeystoreError::StdIo(_)) => PyErr::new::<PyValueError, _>(format!("Account '{}' not found", alias)),
+                _ => PyErr::new::<PyValueError, _>(e.to_string()) // TODO better mapping?
+            }
+        )?;
         let address = signer.address();
 
         SIGNERS
