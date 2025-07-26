@@ -270,7 +270,7 @@ impl FromPyObject<'_> for AccessListEnum {
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum BlockEnum {
-    Int(u64),
+    Int(i64),
     Latest,
     Pending,
     Earliest,
@@ -297,7 +297,7 @@ impl<'py> IntoPyObject<'py> for BlockEnum {
 
 impl FromPyObject<'_> for BlockEnum {
     fn extract_bound(ob: &Bound<'_, PyAny>) -> PyResult<Self> {
-        if let Ok(int) = ob.extract::<u64>() {
+        if let Ok(int) = ob.extract::<i64>() {
             Ok(Self::Int(int))
         } else {
             let s = ob.extract::<String>()?;
