@@ -1,6 +1,9 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
-use alloy::rpc::types::Header;
+use alloy::consensus::{EthereumTypedTransaction, TxEip1559, TxEip2930, TxEip7702, TxLegacy, TypedTransaction};
+use alloy::eips::eip7702::SignedAuthorization;
+use alloy::rpc::types::{AccessList, AccessListItem, Authorization, Header};
 use alloy::signers::local::coins_bip39::{ChineseSimplified, ChineseTraditional, Czech, English, French, Italian, Japanese, Korean, Mnemonic, Portuguese, Spanish};
 use blake2::digest::consts::U32;
 use blake2::{Blake2b, Digest};
@@ -14,7 +17,7 @@ use alloy::primitives::keccak256 as alloy_keccak256;
 use rand::rngs::OsRng;
 use revm::context::BlockEnv;
 use revm::context_interface::block::BlobExcessGasAndPrice;
-use revm::primitives::{Address as RevmAddress, Bytes, I256, U256};
+use revm::primitives::{Address as RevmAddress, Bytes, TxKind, B256, I256, U256};
 
 use crate::enums::AddressEnum;
 
@@ -381,6 +384,169 @@ pub(crate) fn big_int_to_i256(int: BigInt) -> I256 {
 
 pub(crate) fn big_uint_to_u256(int: BigUint) -> U256 {
     U256::try_from_le_slice(&int.to_bytes_le()).unwrap()
+}
+
+fn tx_params_access_list_convert<'py>(
+    py: Python<'py>,
+    access_list: &Bound<'py, PyList>,
+) -> PyResult<AccessList> {
+    let mut list = Vec::with_capacity(access_list.len());
+
+    for item in access_list.iter() {
+        let address = item
+            .get_item(intern!(py, "address"))?
+            .extract::<String>()?
+            .parse()
+            .map_err(|e: <RevmAddress as FromStr>::Err| {
+                PyErr::new::<PyValueError, _>(e.to_string())
+            })?;
+        let storage_keys = item
+            .get_item(intern!(py, "storageKeys"))?
+            .extract::<Vec<BigUint>>()?;
+        list.push(AccessListItem {
+            address,
+            storage_keys: storage_keys
+                .iter()
+                .map(|key| B256::from_slice(&key.to_bytes_le()))
+                .collect(),
+        });
+    }
+
+    Ok(AccessList(list))
+}
+
+fn tx_params_authorization_list_convert<'py>(
+    py: Python<'py>,
+    authorization_list: &Bound<'py, PyList>,
+) -> PyResult<Vec<SignedAuthorization>> {
+    let mut list = Vec::with_capacity(authorization_list.len());
+
+    for item in authorization_list.iter() {
+        let chain_id = big_uint_to_u256(item.get_item(intern!(py, "chainId"))?.extract::<BigUint>()?);
+        let address = item.get_item(intern!(py, "address"))?.extract::<String>()?.parse().map_err(
+            |e: <RevmAddress as FromStr>::Err| PyErr::new::<PyValueError, _>(e.to_string()),
+        )?;
+        let nonce = item.get_item(intern!(py, "nonce"))?.extract::<u64>()?;
+        let r = big_uint_to_u256(item.get_item(intern!(py, "r"))?.extract::<BigUint>()?);
+        let s = big_uint_to_u256(item.get_item(intern!(py, "s"))?.extract::<BigUint>()?);
+        let y_parity = item.get_item(intern!(py, "yParity"))?.extract::<u8>()?;
+        list.push(SignedAuthorization::new_unchecked(Authorization { chain_id, address, nonce }, y_parity, r, s));
+    }
+
+    Ok(list)
+}
+
+pub(crate) fn tx_params_to_typed_tx<'py>(
+    py: Python<'py>,
+    tx_dict: &Bound<'py, PyDict>,
+) -> PyResult<TypedTransaction> {
+    let tx_type = tx_dict
+        .get_item(intern!(py, "type"))?
+        .map_or(Ok(0), |tx_type| tx_type.extract::<u64>())?;
+
+    let chain_id = match tx_dict.get_item(intern!(py, "chainId"))? {
+        Some(chain_id) => Some(chain_id.extract::<u64>()?),
+        None => None,
+    };
+
+    let tx = tx_dict.as_any();
+    let nonce = tx.get_item(intern!(py, "nonce"))?.extract::<u64>()?;
+    let gas_limit = tx.get_item(intern!(py, "gas"))?.extract::<u64>()?;
+    let to = match tx_dict.get_item(intern!(py, "to"))? {
+        Some(to) => TxKind::Call(to.extract::<String>()?.parse().map_err(
+            |e: <RevmAddress as FromStr>::Err| PyErr::new::<PyValueError, _>(e.to_string()),
+        )?),
+        None => TxKind::Create,
+    };
+    let value = big_uint_to_u256(tx.get_item(intern!(py, "value"))?.extract::<BigUint>()?);
+    let data = tx
+        .get_item(intern!(py, "data"))?
+        .extract::<Vec<u8>>()?
+        .into();
+
+    Ok(match tx_type {
+        0 => EthereumTypedTransaction::Legacy(TxLegacy {
+            chain_id,
+            nonce,
+            gas_price: tx.get_item(intern!(py, "gasPrice"))?.extract::<u128>()?,
+            gas_limit,
+            to,
+            value,
+            input: data,
+        }),
+        1 => EthereumTypedTransaction::Eip2930(TxEip2930 {
+            chain_id: chain_id
+                .ok_or_else(|| PyErr::new::<PyValueError, _>("chainId is required"))?,
+            nonce,
+            gas_price: tx.get_item(intern!(py, "gasPrice"))?.extract::<u128>()?,
+            gas_limit,
+            to,
+            value,
+            access_list: match tx_dict.get_item(intern!(py, "accessList"))? {
+                Some(access_list) => {
+                    tx_params_access_list_convert(py, &access_list.downcast_into::<PyList>()?)?
+                }
+                None => AccessList::default(),
+            },
+            input: data,
+        }),
+        2 => EthereumTypedTransaction::Eip1559(TxEip1559 {
+            chain_id: chain_id
+                .ok_or_else(|| PyErr::new::<PyValueError, _>("chainId is required"))?,
+            nonce,
+            gas_limit,
+            max_fee_per_gas: tx
+                .get_item(intern!(py, "maxFeePerGas"))?
+                .extract::<u128>()?,
+            max_priority_fee_per_gas: tx
+                .get_item(intern!(py, "maxPriorityFeePerGas"))?
+                .extract::<u128>()?,
+            to,
+            value,
+            access_list: match tx_dict.get_item(intern!(py, "accessList"))? {
+                Some(access_list) => {
+                    tx_params_access_list_convert(py, &access_list.downcast_into::<PyList>()?)?
+                }
+                None => AccessList::default(),
+            },
+            input: data,
+        }),
+        4 => EthereumTypedTransaction::Eip7702(TxEip7702 {
+            chain_id: chain_id
+                .ok_or_else(|| PyErr::new::<PyValueError, _>("chainId is required"))?,
+            nonce,
+            gas_limit,
+            max_fee_per_gas: tx
+                .get_item(intern!(py, "maxFeePerGas"))?
+                .extract::<u128>()?,
+            max_priority_fee_per_gas: tx
+                .get_item(intern!(py, "maxPriorityFeePerGas"))?
+                .extract::<u128>()?,
+            to: match to {
+                TxKind::Call(to) => to,
+                TxKind::Create => return Err(PyErr::new::<PyValueError, _>("EIP-7702: Create transaction is not supported")),
+            },
+            value,
+            access_list: match tx_dict.get_item(intern!(py, "accessList"))? {
+                Some(access_list) => {
+                    tx_params_access_list_convert(py, &access_list.downcast_into::<PyList>()?)?
+                }
+                None => AccessList::default(),
+            },
+            authorization_list: match tx_dict.get_item(intern!(py, "authorizationList"))? {
+                Some(authorization_list) => {
+                    tx_params_authorization_list_convert(py, &authorization_list.downcast_into::<PyList>()?)?
+                }
+                None => vec![],
+            },
+            input: data,
+        }),
+        _ => {
+            return Err(PyErr::new::<PyValueError, _>(
+                "Unsupported transaction type",
+            ))
+        }
+    })
 }
 
 pub(crate) fn header_to_block_env(header: Header) -> BlockEnv {

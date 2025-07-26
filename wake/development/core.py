@@ -1361,9 +1361,7 @@ class Chain(ABC):
                     except Exception:
                         raise e from None
             elif key is not None:
-                signed_tx = bytes(
-                    eth_account.Account.sign_transaction(tx_params, key).raw_transaction
-                )
+                signed_tx = Account(tx_params["from"], self).sign_transaction(tx_params)
                 try:
                     tx_hash = self._chain_interface.send_raw_transaction(signed_tx)
                 except (ValueError, JsonRpcError) as e:
