@@ -445,4 +445,4 @@ class Chain(wake.development.core.Chain):
                 raise TransactionConfirmationFailedError()
 
 
-default_chain = Chain()
+chain = Chain()

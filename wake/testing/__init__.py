@@ -35,10 +35,9 @@ from wake.development.utils import (
 )
 
 if get_config().testing.cmd == "revm":
-    from wake_rs import Chain, default_chain
+    from wake_rs import Chain
+    from wake_rs import default_chain as _default_chain
 
-    chain = default_chain()
+    chain = _default_chain()
 else:
-    from .core import Chain, default_chain
-
-    chain = default_chain
+    from .core import Chain, chain

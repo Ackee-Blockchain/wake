@@ -358,7 +358,7 @@ class Chain(wake.development.core.Chain):
         pass
 
 
-default_chain = Chain()
+chain = Chain()
 connected_chains: List[Chain] = []
 
 

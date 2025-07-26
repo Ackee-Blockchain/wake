@@ -30,16 +30,16 @@ def tx_callback(tx: TransactionAbc):
 
 
 # launch a development chain (Anvil or Hardhat - depending on the configuration)
-@default_chain.connect()
+@chain.connect()
 # or connect to a running chain
-# @default_chain.connect("ws://localhost:8545")
+# @chain.connect("ws://localhost:8545")
 def test_counter():
     # calls (pure and view functions) are executed using default_call_account
     # default_tx_account, default_estimate_account and default_access_list_account is unset by default
-    default_chain.set_default_accounts(default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
 
     # tx_callback is called after each transaction which is not configured with confirmations=0
-    default_chain.tx_callback = tx_callback
+    chain.tx_callback = tx_callback
 
     c = Counter.deploy(from_=random_account())
     print(c.address)
@@ -55,9 +55,9 @@ def test_counter():
 
     # execute multiple transactions in the same block
     # temporarily disable chain automine to achieve this
-    with default_chain.change_automine(False):
+    with chain.change_automine(False):
         # for each transaction, gas_limit can be specified with "max" as the default value
-        # "max" uses default_chain.block_gas_limit as the gas limit
+        # "max" uses chain.block_gas_limit as the gas limit
         # "auto" uses the estimated gas limit returned by the node
         # it is also possible to specify a custom gas limit in wei
 
@@ -69,7 +69,7 @@ def test_counter():
         tx2 = c.decrement(gas_limit="auto", confirmations=0)
 
     # hardhat does not mine blocks automatically after automine re-enables
-    default_chain.mine()
+    chain.mine()
     tx1.wait()
     tx2.wait()
 
