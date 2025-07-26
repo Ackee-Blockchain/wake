@@ -469,7 +469,7 @@ impl Chain {
             .borrow_mut(py)
             .get_block(
                 py,
-                BlockEnum::Int(last_block_number),
+                BlockEnum::Int(last_block_number as i64),
                 last_block_number,
                 provider,
             )?

@@ -57,10 +57,13 @@ impl Blocks {
     ) -> Result<Py<Block>, PyErr> {
         let number = match block {
             BlockEnum::Int(block_number) => {
-                if block_number > last_block_number {
+                if block_number < 0 {
+                    last_block_number + 1 + block_number as u64
+                } else if block_number as u64 > last_block_number {
                     return Err(PyValueError::new_err("Block number out of range"));
+                } else {
+                    block_number as u64
                 }
-                block_number
             }
             BlockEnum::Latest | BlockEnum::Safe | BlockEnum::Finalized => last_block_number,
             BlockEnum::Pending => {

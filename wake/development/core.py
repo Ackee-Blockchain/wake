@@ -1393,6 +1393,9 @@ class Chain(ABC):
         return_type: Type,
         block: Union[int, str],
     ) -> Any:
+        if isinstance(block, int) and block < 0:
+            block = self._chain_interface.get_block_number() + 1 + block
+
         tx_params = self._build_transaction(RequestType.CALL, params, arguments, abi)
         try:
             coverage_handler = get_coverage_handler()
@@ -1424,6 +1427,9 @@ class Chain(ABC):
         params: TxParams,
         block: Union[int, str],
     ) -> int:
+        if isinstance(block, int) and block < 0:
+            block = self._chain_interface.get_block_number() + 1 + block
+
         tx_params = self._build_transaction(
             RequestType.ESTIMATE, params, arguments, abi
         )
@@ -1440,6 +1446,9 @@ class Chain(ABC):
         params: TxParams,
         block: Union[int, str],
     ):
+        if isinstance(block, int) and block < 0:
+            block = self._chain_interface.get_block_number() + 1 + block
+
         tx_params = self._build_transaction(
             RequestType.ACCESS_LIST, params, arguments, abi
         )
