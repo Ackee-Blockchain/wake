@@ -457,6 +457,11 @@ class ChainInterfaceAbc(ABC):
             )[2:]
         )
 
+    def sign_transaction(self, tx: TxParams) -> bytes:
+        return bytes.fromhex(
+            self._communicator.send_request("eth_signTransaction", [tx])[2:]
+        )
+
     def sign_typed(self, address: str, message: Dict) -> bytes:
         return bytes.fromhex(
             self._communicator.send_request("eth_signTypedData_v4", [address, message])[
