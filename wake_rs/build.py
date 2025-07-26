@@ -64,7 +64,7 @@ def build():
         maturin("build", "--release", "--strip", *cargo_args)
 
     # We won't use the wheel built by maturin directly since
-    # we want Poetry to build it, but we need to retrieve the
+    # we want Hatchling to build it, but we need to retrieve the
     # compiled extensions from the maturin wheel.
     wheel_files = list(wheels_dir.glob("*.whl"))
     print(f"Found wheel files: {wheel_files}")

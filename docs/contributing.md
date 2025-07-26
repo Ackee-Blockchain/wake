@@ -2,17 +2,18 @@
 
 ## Creating a virtual environment
 
-### Using [Poetry](https://python-poetry.org)
+### Using [uv](https://docs.astral.sh/uv/)
 
 ```bash
-poetry shell
+uv venv
+source .venv/bin/activate
 ```
 
 ### Using [venv](https://docs.python.org/3/library/venv.html)
 
 ```bash
-python3 -m venv env
-source env/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 ### Using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io)
@@ -22,12 +23,6 @@ mkvirtualenv wake
 ```
 
 ## Installation
-
-### Using [Poetry](https://python-poetry.org)
-
-```bash
-poetry install -E tests -E dev
-```
 
 ### Using [pip](https://pip.pypa.io)
 
