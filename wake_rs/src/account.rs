@@ -425,10 +425,6 @@ impl Account {
                         intern!(py, "set_nonce"),
                         (self.address.borrow(py).__str__(), value),
                     )?;
-                chain.call_method1(
-                    intern!(py, "_update_nonce"),
-                    (self.address.clone_ref(py), value),
-                )?;
                 Ok(())
             }
         }
