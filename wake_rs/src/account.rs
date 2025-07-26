@@ -430,6 +430,37 @@ impl Account {
         }
     }
 
+    #[setter]
+    fn set_pytypes_resolver(&self, py: Python, value: Bound<PyAny>) -> PyResult<()> {
+        if value.is_none() {
+            match &self.chain {
+                ChainWrapper::Native(chain) => {
+                    chain.borrow_mut(py).fqn_overrides.remove(&self.address.borrow(py).0);
+                }
+                ChainWrapper::Python(_) => {
+                    return Err(PyNotImplementedError::new_err(
+                        "Setting pytypes_resolver is currently not supported with non-revm chains",
+                    ));
+                }
+            }
+        } else {
+            let fqn = value.getattr(intern!(py, "_fqn"))?.downcast_into::<PyString>()?;
+
+            match &self.chain {
+                ChainWrapper::Native(chain) => {
+                    chain.borrow_mut(py).fqn_overrides.insert(self.address.borrow(py).0, fqn.into());
+                }
+                ChainWrapper::Python(_) => {
+                    return Err(PyNotImplementedError::new_err(
+                        "Setting pytypes_resolver is currently not supported with non-revm chains",
+                    ));
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     #[classmethod]
     #[pyo3(signature = (private_key, chain=None))]
     fn from_key(

@@ -114,3 +114,20 @@ ARM Linux is now supported through 3rd party [nikitastupin/solc](https://github.
 ### Better debugger formatting
 
 All (i)pdb responses are now formatted using the Rich library.
+
+### `pytypes_resolver` for enforcing event and error resolution
+
+It is possible to override the resolution of events and errors for any Account using `pytypes_resolver`.
+
+```python
+usdt = Account("0xdAC17F958D2ee523a2206206994597C13D831ec7")
+usdt.pytypes_resolver = IUSDT
+```
+
+where `IUSDT` is a Solidity interface generated into pytypes.
+
+This feature can be used to enforce user-friendly resolution of "external contracts" (e.g. forked contracts, low-level deployed contracts with init code) and in cases when implicit resolution doesn't work correctly.
+
+`pytypes_resolver` must always be assigned to the Account that performs the event emit (LOGn instruction) or performs the revert. In a proxy-implementation setup, `pytypes_resolver` must be set on the implementation contract to correctly resolve events and errors originating from the code of the implementation contract. It may be set for the proxy as well if it defines its own events or errors.
+
+This feature is currently only supported with `revm` testing chain.

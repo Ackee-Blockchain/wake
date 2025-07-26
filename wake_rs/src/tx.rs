@@ -12,7 +12,7 @@ use revm::{
 
 use crate::{
     abi_old::{alloy_to_py, AbiError}, account::Account, address::Address, blocks::Block, chain::Chain, inspectors::fqn_inspector::{ErrorMetadata, EventMetadata}, pytypes::{
-        collapse_if_tuple, decode_and_normalize, new_unknown_error, new_unknown_event,
+        collapse_if_tuple, decode_and_normalize, new_unknown_error,
         resolve_error, resolve_event,
     }, utils::get_py_objects
 };
@@ -181,11 +181,7 @@ impl TransactionAbc {
 
                 logs.iter()
                     .map(|log| {
-                        if let Some(metadata) = self.events_metadata.get(log) {
-                            resolve_event(py, log, &self.chain, metadata, py_objects)
-                        } else {
-                            new_unknown_event(py, log, &self.chain, py_objects)
-                        }
+                        resolve_event(py, log, &self.chain, self.events_metadata.get(log), py_objects)
                     })
                     .collect()
             }

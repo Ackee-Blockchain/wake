@@ -653,6 +653,7 @@ class TypeGenerator:
         self.add_str_to_types(
             1, f'_creation_code = "{compilation_info.evm.bytecode.object}"', 2
         )
+        self.add_str_to_types(1, f'_fqn = "{fqn}"', 2)
 
         if contract.kind == ContractKind.LIBRARY:
             lib_id = keccak.new(data=fqn.encode("utf-8"), digest_bits=256).digest()[:17]
@@ -2103,6 +2104,7 @@ class NameSanitizer:
         self.__contract_reserved = {
             "_abi",
             "_creation_code",
+            "_fqn",
             "_address",
             "_chain",
             "_label",

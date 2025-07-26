@@ -13,18 +13,28 @@ use revm::{
 };
 
 pub enum EventMetadata {
-    Create(Bytes),
+    Create(CreateEventMetadata),
     Call(CallEventMetadata),
+}
+
+pub struct CreateEventMetadata {
+    pub init_code: Bytes,
+    pub bytecode_address: Address,
 }
 
 pub struct CallEventMetadata {
     pub metadata: Vec<u8>,
-    pub bytecode_address: Option<Address>,
+    pub bytecode_address: Address,
 }
 
 pub enum ErrorMetadata {
-    Create(Bytes),
+    Create(CreateErrorMetadata),
     Call(CallErrorMetadata),
+}
+
+pub struct CreateErrorMetadata {
+    pub init_code: Bytes,
+    pub bytecode_address: Address,
 }
 
 pub struct CallErrorMetadata {
@@ -38,10 +48,9 @@ pub struct FqnInspector {
 
     /// Stack of bytecode addresses.
     ///
-    /// Bytecode address is only used to resolve external events in the case of forking
-    /// Since CREATE / EOFCREATE can only be performed with local (not forked) contracts,
-    /// we can use None in create subcalls
-    bytecode_addresses: Vec<Option<Address>>,
+    /// Bytecode address is used to resolve external events in the case of forking
+    /// and when pytypes overrides are used.
+    bytecode_addresses: Vec<Address>,
 
     /// Stack of init code.
     ///
@@ -106,10 +115,15 @@ impl FqnInspector {
 
 impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
     fn log(&mut self, interp: &mut Interpreter, _context: &mut CTX, log: Log) {
+        let bytecode_address = self.bytecode_addresses.last().unwrap().clone();
+
         if let Some(init_code) = self.init_code_stack.last().unwrap() {
             self.events_metadata.insert(
                 log.clone(),
-                EventMetadata::Create(init_code.clone()),
+                EventMetadata::Create(CreateEventMetadata {
+                    init_code: init_code.clone(),
+                    bytecode_address,
+                }),
             );
         } else {
             let bytecode = interp.bytecode.original_byte_slice();
@@ -119,15 +133,16 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
                     log.clone(),
                     EventMetadata::Call(CallEventMetadata {
                         metadata: metadata.to_vec(),
-                        bytecode_address: self.bytecode_addresses.last().unwrap().clone(),
+                        bytecode_address,
                     }),
                 );
             }
         }
     }
 
-    fn create(&mut self, _context: &mut CTX, inputs: &mut CreateInputs) -> Option<CreateOutcome> {
-        self.bytecode_addresses.push(None);
+    fn create(&mut self, context: &mut CTX, inputs: &mut CreateInputs) -> Option<CreateOutcome> {
+        let nonce = context.journal().load_account(inputs.caller).ok()?.info.nonce;
+        self.bytecode_addresses.push(inputs.created_address(nonce));
         self.init_code_stack.push(Some(inputs.init_code.clone()));
         None
     }
@@ -138,7 +153,7 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
         inputs: &CreateInputs,
         outcome: &mut CreateOutcome,
     ) {
-        self.bytecode_addresses.pop();
+        let bytecode_address = self.bytecode_addresses.pop().unwrap();
         self.init_code_stack.pop();
 
         if outcome.result.result == InstructionResult::Revert && outcome.result.output.len() >= 4 {
@@ -146,7 +161,10 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
 
             self.errors_metadata
                 .entry(selector)
-                .or_insert(ErrorMetadata::Create(inputs.init_code.clone()));
+                .or_insert(ErrorMetadata::Create(CreateErrorMetadata {
+                    init_code: inputs.init_code.clone(),
+                    bytecode_address,
+                }));
         }
     }
 
@@ -155,7 +173,6 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
         _context: &mut CTX,
         _inputs: &mut EOFCreateInputs,
     ) -> Option<CreateOutcome> {
-        self.bytecode_addresses.push(None);
         todo!();
     }
 
@@ -165,12 +182,11 @@ impl<CTX: ContextTr<Journal: JournalExt>> Inspector<CTX> for FqnInspector {
         _inputs: &EOFCreateInputs,
         _outcome: &mut CreateOutcome,
     ) {
-        self.bytecode_addresses.pop();
-        self.init_code_stack.pop();
+        todo!();
     }
 
     fn call(&mut self, _context: &mut CTX, inputs: &mut CallInputs) -> Option<CallOutcome> {
-        self.bytecode_addresses.push(Some(inputs.bytecode_address));
+        self.bytecode_addresses.push(inputs.bytecode_address);
         self.init_code_stack.push(None);
 
         None

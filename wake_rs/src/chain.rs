@@ -178,6 +178,10 @@ pub struct Chain {
     latest_block_env: Option<BlockEnv>,
     snapshots: Vec<(CfgEnv, BlockEnv)>,
 
+    // address => fqn
+    // overrides how to resolve fqn (and pytypes) for this address
+    pub(crate) fqn_overrides: HashMap<RevmAddress, Py<PyString>>,
+
     #[pyo3(get, set)]
     tx_callback: Option<Py<PyAny>>,
 }
@@ -215,6 +219,7 @@ impl Chain {
                 default_access_list_account: None,
                 latest_block_env: None,
                 snapshots: vec![],
+                fqn_overrides: HashMap::new(),
                 tx_callback: None,
             },
         )?;
@@ -703,6 +708,7 @@ impl Chain {
     fn _disconnect(slf: Bound<Self>, py: Python) -> PyResult<()> {
         let mut borrowed = slf.borrow_mut();
         borrowed.connected = false;
+        borrowed.fqn_overrides.clear();
 
         if let Some(block_number) = borrowed.forked_block {
             let path = format!(
