@@ -34,10 +34,6 @@ from typing import (
 )
 from urllib.error import HTTPError
 
-import eth_abi
-import eth_abi.abi
-import eth_abi.grammar
-import eth_abi.packed
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import (
