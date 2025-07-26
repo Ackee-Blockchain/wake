@@ -177,27 +177,27 @@ def detect_default_chain() -> Chain:
         import wake.deployment
         import wake.testing
 
-        if wake.deployment.default_chain.connected and wake.testing.chain.connected:
+        if wake.deployment.chain.connected and wake.testing.chain.connected:
             raise ValueError(
-                "Both wake.testing.default_chain and wake.deployment.default_chain are connected. Please specify which chain to use."
+                "Both wake.testing.chain and wake.deployment.chain are connected. Please specify which chain to use."
             )
 
-        if wake.deployment.default_chain.connected:
-            return wake.deployment.default_chain
+        if wake.deployment.chain.connected:
+            return wake.deployment.chain
         elif wake.testing.chain.connected:
             return wake.testing.chain
         else:
-            raise NotConnectedError("default_chain not connected")
+            raise NotConnectedError("`chain` not connected")
     elif "wake.deployment" in sys.modules:
         import wake.deployment
 
-        return wake.deployment.default_chain
+        return wake.deployment.chain
     elif "wake.testing" in sys.modules:
         import wake.testing
 
         return wake.testing.chain
     else:
-        raise NotConnectedError("default_chain not connected")
+        raise NotConnectedError("`chain` not connected")
 
 
 Eip712Domain = TypedDict(
