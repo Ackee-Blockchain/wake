@@ -25,7 +25,6 @@ dependencies = [
     "graphviz>=0.19,<1",
     "tblib>=1.7,<2",
     "eth-utils>=2.1,<3",
-    "eth-abi>=4.0.0b2,<5",
     "parsimonious>=0.9,<1",
     "pycryptodome>=3.19.0",
     "websocket-client>=1.4,<2",
