@@ -35,6 +35,9 @@ class StorageLayoutPrinter(Printer):
             and node.compilation_info.storage_layout is not None
         ), "Storage layout not available"
 
+        if len(node.compilation_info.storage_layout.storage) == 0:
+            return
+
         table = Table(title=f"{node.name} storage layout", style=self._table_style)
         table.add_column("Slot", header_style=self._header_style)
         table.add_column("Offset", header_style=self._header_style)
