@@ -1,3 +1,4 @@
+use alloy::consensus::SignableTransaction;
 use alloy::dyn_abi::TypedData;
 use alloy::primitives::keccak256;
 use alloy::rpc::types::Authorization;
@@ -23,7 +24,7 @@ use crate::enums::{
 };
 use crate::evm::prepare_tx_params;
 use crate::globals::TOKIO_RUNTIME;
-use crate::utils::get_py_objects;
+use crate::utils::{get_py_objects, tx_params_to_typed_tx};
 
 pub enum ChainWrapper {
     Native(Py<Chain>),
@@ -864,6 +865,41 @@ impl Account {
         .as_bytes();
 
         Ok(PyBytes::new(py, &bytes))
+    }
+
+    fn sign_transaction<'py>(
+        &self,
+        py: Python<'py>,
+        tx: &Bound<'py, PyDict>,
+    ) -> PyResult<Bound<'py, PyBytes>> {
+        let handle = TOKIO_RUNTIME.handle();
+        let signers = SIGNERS.lock().unwrap();
+        let signer = signers.get(&self.address.borrow(py).0);
+
+        if let Some(signer) = signer {
+            let mut typed_tx = tx_params_to_typed_tx(py, tx)?;
+            let signature = py.allow_threads(|| signer.sign_transaction(&mut typed_tx, handle))
+                .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+
+            let signed = typed_tx.into_signed(signature);
+            let mut buffer = Vec::new();
+            signed.network_encode(&mut buffer);
+            Ok(PyBytes::new(py, &buffer))
+        } else {
+            match &self.chain {
+                ChainWrapper::Native(_) => {
+                    Err(PyErr::new::<PyValueError, _>("Account cannot sign"))
+                }
+                ChainWrapper::Python(chain) => Ok(chain
+                    .bind(py)
+                    .getattr(intern!(py, "chain_interface"))?
+                    .call_method1(
+                        intern!(py, "sign_transaction"),
+                        (tx,),
+                    )?
+                    .downcast_into::<PyBytes>()?),
+            }
+        }
     }
 
     #[pyo3(signature = (message, domain=None))]

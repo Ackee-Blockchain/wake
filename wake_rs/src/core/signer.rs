@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+use alloy::consensus::SignableTransaction;
 use alloy::dyn_abi::TypedData;
+use alloy::network::{TxSigner, TxSignerSync};
 use alloy::signers::{k256::ecdsa::SigningKey, local::LocalSigner, trezor::TrezorSigner, Signer as AlloySigner, Error as AlloySignerError};
 use alloy::signers::{Signature, SignerSync};
 use lazy_static::lazy_static;
@@ -40,13 +42,10 @@ impl Signer {
         }
     }
 
-    /*
-    pub(crate) fn sign_transaction(&self, tx: &Transaction, handle: &tokio::runtime::Handle) -> Result<[u8; 65], AlloySignerError> {
-        let signature = match self {
+    pub(crate) fn sign_transaction(&self, tx: &mut dyn SignableTransaction<Signature>, handle: &tokio::runtime::Handle) -> Result<Signature, AlloySignerError> {
+        match self {
             Signer::SigningKey(signer) => signer.sign_transaction_sync(tx),
             Signer::Trezor(signer) => handle.block_on(signer.sign_transaction(tx))
-        }?;
-        Ok(signature.as_bytes())
+        }
     }
-    */
 }
