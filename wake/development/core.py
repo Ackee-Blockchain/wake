@@ -38,8 +38,6 @@ import eth_abi
 import eth_abi.abi
 import eth_abi.grammar
 import eth_abi.packed
-import eth_account
-import eth_account.messages
 import eth_utils
 from Crypto.Hash import BLAKE2b, keccak
 from typing_extensions import (
@@ -102,9 +100,6 @@ contracts_inheritance: Dict[str, Tuple[str, ...]] = {}
 creation_code_index: List[Tuple[Tuple[Tuple[int, bytes], ...], str]] = []
 # user defined value type type identifier => underlying type type identifier
 user_defined_value_types_index: Dict[str, str] = {}
-
-
-eth_account.Account.enable_unaudited_hdwallet_features()
 
 
 def get_contracts_by_fqn() -> Dict[str, Any]:
