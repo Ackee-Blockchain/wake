@@ -6,6 +6,34 @@ small.label {
 }
 </style>
 
+## 4.20.0 <small>(Jul 27, 2025)</small> { id="4.20.0" }
+
+Features & improvements:
+
+- `wake up` now uses the same config options as `wake compile` <small class="label">[core]</small>
+    - more specifically, it does not adjust current config options unless `wake.toml` doesn't exist or `--force` was passed
+- JSON detections export now includes even detections disabled with `// wake-disable` comments, along with a boolean `suppressed` flag <small class="label">[core]</small>
+- improved `wake open` CLI messages when source code cannot be found <small class="label">[core]</small>
+- variables in NatSpec comments are now also updated on LSP rename <small class="label">[language server]</small>
+- removed the requirement for valid Solidity identifiers when using LSP rename <small class="label">[language server]</small>
+- implemented fuzzing statistics collection and summary <small class="label">[testing]</small>
+- debugger responses are now formatted with Rich <small class="label">[testing]</small>
+- added a new boolean `optimistic_pytypes_resolving` attribute to `Chain` <small class="label">[testing & deployment framework]</small>
+    - it enforces resolving of pytypes events & errors to the first available definition (using fully qualified contract names sorted alphabetically) if multiple pytypes definitions are available
+- `wake print storage-layout` doesn't print storage layout for contracts that don't have any storage variables <small class="label">[static analysis]</small>
+- `ControlFlowGraph.graph` is no longer copied upon access for performance reasons <small class="label">[static analysis]</small>
+- added new `invalid-memory-safe-assembly` detector <small class="label">[static analysis]</small>
+- added new `array-delete-nullification` detector <small class="label">[static analysis]</small>
+- added new `contract-size` printer <small class="label">[static analysis]</small>
+- added new `--keep-folders` option to `abi` printer <small class="label">[static analysis]</small>
+
+Fixes:
+
+- fixed compilation crash on using any other assembly flag than `memory-safe` <small class="label">[core]</small>
+- fixed compilation issues sometimes triggered when a file was compiled under multiple source unit names <small class="label">[core]</small>
+- fixed issue where code (IR nodes) was ignored inside `StorageLayoutSpecifier` <small class="label">[core]</small>
+- changed how pytypes errors are resolved to correctly handle `require(condition, CustomError())` <small class="label">[testing & deployment framework]</small>
+
 ## 4.19.0 <small>(Jun 17, 2025)</small> { id="4.19.0" }
 
 Features & improvements:
