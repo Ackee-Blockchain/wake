@@ -536,13 +536,14 @@ async def detect_(
         if export not in {None, "json", "json-html"}:
             console.record = True
 
-        all_detections: List[Tuple[str, DetectorResult]] = []
+        # (detector_name, detection, suppressed)
+        all_detections: List[Tuple[str, DetectorResult, bool]] = []
         for detector_name in detections.keys():
             for d in detections[detector_name][0]:
-                all_detections.append((detector_name, d))
-            if ignore_disable_overrides:
+                all_detections.append((detector_name, d, False))
+            if ignore_disable_overrides or export in {"json", "json-html"}:
                 for d in detections[detector_name][1]:
-                    all_detections.append((detector_name, d))
+                    all_detections.append((detector_name, d, True))
 
         all_detections.sort(
             key=lambda d: (
@@ -553,14 +554,15 @@ async def detect_(
             )
         )
 
-        for detector_name, detection in all_detections:
-            print_detection(
-                detector_name,
-                detection,
-                config,
-                console,
-                "monokai" if theme == "dark" else "default",
-            )
+        for detector_name, detection, suppressed in all_detections:
+            if not suppressed or ignore_disable_overrides:
+                print_detection(
+                    detector_name,
+                    detection,
+                    config,
+                    console,
+                    "monokai" if theme == "dark" else "default",
+                )
 
         if len(all_detections) == 0:
             console.print("No detections found")
@@ -644,13 +646,14 @@ async def detect_(
                 console.record = True
 
             data = []
-            for i, (detector_name, detection) in enumerate(all_detections):
+            for i, (detector_name, detection, suppressed) in enumerate(all_detections):
                 info = {
                     "detector_name": detector_name,
                     "impact": detection.impact.value,
                     "confidence": detection.confidence.value,
                     "uri": detection.uri,
                     "detection": process_detection(detection.detection),
+                    "suppressed": suppressed,
                 }
 
                 if relevant_locations is not None:
