@@ -176,9 +176,9 @@ class ControlFlowGraph:
     def graph(self) -> nx.DiGraph:
         """
         Returns:
-            Read-only view of the underlying NetworkX DiGraph.
+            Underlying NetworkX DiGraph.
         """
-        return self._graph.copy(as_view=True)
+        return self._graph
 
     @property
     def declaration(
@@ -788,15 +788,9 @@ class CfgNode:
             graph, body, success_end, revert_end, body, next, do_while_statement.body
         )
 
+        graph.add_edge(prev, body, condition=(TransitionConditionKind.ALWAYS, None))
         graph.add_edge(
-            prev,
-            body,
-            condition=(TransitionConditionKind.ALWAYS, None)
-        )
-        graph.add_edge(
-            body_end,
-            control_block,
-            condition=(TransitionConditionKind.ALWAYS, None)
+            body_end, control_block, condition=(TransitionConditionKind.ALWAYS, None)
         )
         graph.add_edge(
             control_block,
@@ -914,10 +908,14 @@ class CfgNode:
             condition=(TransitionConditionKind.ALWAYS, None),
         )
         graph.add_edge(
-            control_block, body, condition=(TransitionConditionKind.IS_TRUE, for_loop.condition)
+            control_block,
+            body,
+            condition=(TransitionConditionKind.IS_TRUE, for_loop.condition),
         )
         graph.add_edge(
-            control_block, next, condition=(TransitionConditionKind.IS_FALSE, for_loop.condition)
+            control_block,
+            next,
+            condition=(TransitionConditionKind.IS_FALSE, for_loop.condition),
         )
         graph.add_edge(
             body_end, loop_post, condition=(TransitionConditionKind.ALWAYS, None)
