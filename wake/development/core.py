@@ -1455,7 +1455,7 @@ class Chain(ABC):
     _forked_chain_id: Optional[int]
     _debug_trace_call_supported: bool
     _client_version: str
-    _optimistic_pytypes_processing: bool
+    optimistic_pytypes_resolving: bool
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1551,7 +1551,7 @@ class Chain(ABC):
 
     def __init__(self):
         self._connected = False
-        self._optimistic_pytypes_processing = False
+        self.optimistic_pytypes_resolving = False
 
     def _connect(
         self,
@@ -1889,16 +1889,6 @@ class Chain(ABC):
     @check_connected
     def require_signed_txs(self, value: bool) -> None:
         self._require_signed_txs = value
-
-    @property
-    @check_connected
-    def optimistic_pytypes_processing(self) -> bool:
-        return self._optimistic_pytypes_processing
-
-    @optimistic_pytypes_processing.setter
-    @check_connected
-    def optimistic_pytypes_processing(self, value: bool) -> None:
-        self._optimistic_pytypes_processing = value
 
     @property
     @check_connected
@@ -2326,7 +2316,7 @@ class Chain(ABC):
 
         if (
             selector not in self._single_source_errors
-            and not self._optimistic_pytypes_processing
+            and not self.optimistic_pytypes_resolving
         ):
             if tx is None:
                 e = UnknownTransactionRevertedError(revert_data)
@@ -2426,7 +2416,7 @@ class Chain(ABC):
 
             if (
                 len({source for source in events[selector].values()}) > 1
-                and not self._optimistic_pytypes_processing
+                and not self.optimistic_pytypes_resolving
             ):
                 addresses = {address}
 
