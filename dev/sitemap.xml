@@ -537,6 +537,10 @@
          <lastmod>2025-07-27</lastmod>
     </url>
     <url>
+         <loc>https://ackee.xyz/wake/docs/latest/static-analysis/detectors/array-delete-nullification/</loc>
+         <lastmod>2025-07-27</lastmod>
+    </url>
+    <url>
          <loc>https://ackee.xyz/wake/docs/latest/static-analysis/detectors/axelar-proxy-contract-id/</loc>
          <lastmod>2025-07-27</lastmod>
     </url>
