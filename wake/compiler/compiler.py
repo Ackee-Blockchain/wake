@@ -1113,7 +1113,7 @@ class SolidityCompiler:
             compilation_units = [
                 cu
                 for cu in compilation_units
-                if (cu.files & files_to_compile)
+                if (cu.source_unit_names & source_units_to_compile)
                 or cu.contains_unresolved_file(deleted_files, self.__config)
             ]
 
