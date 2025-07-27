@@ -7249,6 +7249,13 @@
 <td>Names of contracts to print ABI for.</td>
 </tr>
 <tr>
+<td><code>--out</code></td>
+<td><code>out</code></td>
+<td><code>str</code></td>
+<td><code>abi</code> if <code>--out</code> passed, <code>None</code> otherwise</td>
+<td>Output directory path. If not specified, the output is printed to the standard output.</td>
+</tr>
+<tr>
 <td><nobr><code>--skip-empty</code></nobr></td>
 <td><nobr><code>skip_empty</code></nobr></td>
 <td><code>bool</code></td>
@@ -7256,11 +7263,11 @@
 <td>Skip contracts with empty ABI.</td>
 </tr>
 <tr>
-<td><code>--out</code></td>
-<td><code>out</code></td>
-<td><code>str</code></td>
-<td><code>abi</code> if <code>--out</code> passed, <code>None</code> otherwise</td>
-<td>Output directory path. If not specified, the output is printed to the standard output.</td>
+<td><nobr><code>--keep-folders</code></nobr></td>
+<td><nobr><code>keep_folders</code></nobr></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Preserve the original folder hierarchy when exporting ABIs to output directory.</td>
 </tr>
 </tbody>
 </table>
