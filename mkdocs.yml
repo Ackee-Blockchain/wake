@@ -71,6 +71,7 @@ nav:
           - Built-in:
                 - Detectors:
                       - abi.encodeWithSignature: "static-analysis/detectors/abi-encode-with-signature.md"
+                      - Array delete nullification: "static-analysis/detectors/array-delete-nullification.md"
                       - Axelar proxy contractId: "static-analysis/detectors/axelar-proxy-contract-id.md"
                       - Balance relied on: "static-analysis/detectors/balance-relied-on.md"
                       - Calldata tuple reencoding head overflow bug: "static-analysis/detectors/calldata-tuple-reencoding-head-overflow-bug.md"
