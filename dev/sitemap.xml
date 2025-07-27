@@ -569,6 +569,10 @@
          <lastmod>2025-07-27</lastmod>
     </url>
     <url>
+         <loc>https://ackee.xyz/wake/docs/latest/static-analysis/detectors/invalid-memory-safe-assembly/</loc>
+         <lastmod>2025-07-27</lastmod>
+    </url>
+    <url>
          <loc>https://ackee.xyz/wake/docs/latest/static-analysis/detectors/missing-return/</loc>
          <lastmod>2025-07-27</lastmod>
     </url>
