@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import re
 from typing import List
 
-import rich_click as click
-
 import wake.ir as ir
-from wake.cli import SolidityName
 from wake.detectors import (
     Detection,
     Detector,
@@ -16,6 +12,57 @@ from wake.detectors import (
     detector,
 )
 from wake_detectors.utils import generate_detector_uri
+
+
+def _find_nearest_comment_blocks(node: ir.InlineAssembly) -> List[str]:
+    """
+    Find the nearest non-NatSpec comment blocks immediately preceding the inline assembly block.
+    Non-NatSpec comments are // and /* */ style comments (not /// or /** */).
+
+    Returns:
+        List of comment content strings.
+    """
+    import re
+
+    source_code = node.source_unit.file_source
+    declaration_start = node.byte_location[0]
+    code_before_declaration = source_code[:declaration_start]
+    code_str = code_before_declaration.decode("utf-8", errors="ignore")
+
+    comment_blocks = []
+
+    # Match // comments (but not /// comments) - must start with exactly //
+    single_line_pattern = r"^[ \t]*//(?!/)[^\n]*$"
+    lines = code_str.splitlines()
+
+    # Find the last set of consecutive // comments before the assembly
+    consecutive_comments = []
+    for i in reversed(range(len(lines))):
+        line = lines[i]
+        if re.match(single_line_pattern, line):
+            consecutive_comments.insert(0, line)
+        elif line.strip() == "":
+            # Empty line, continue
+            continue
+        else:
+            # Non-comment line, stop searching
+            break
+
+    if consecutive_comments:
+        comment_content = "\n".join(consecutive_comments)
+        comment_blocks.append(comment_content)
+
+    # Match /* */ style comments (but not /** */ comments)
+    multi_line_pattern = r"/\*(?!\*).*?\*/"
+    multi_line_matches = list(re.finditer(multi_line_pattern, code_str, re.DOTALL))
+    if multi_line_matches:
+        last = multi_line_matches[-1]
+        # Check if followed only by whitespace
+        if code_str[last.end() :].strip() == "":
+            comment_content = code_str[last.start() : last.end()]
+            comment_blocks.append(comment_content)
+
+    return comment_blocks
 
 
 class InvalidMemorySafeAssemblyDetector(Detector):
@@ -31,78 +78,29 @@ class InvalidMemorySafeAssemblyDetector(Detector):
         """
         Visit inline assembly blocks and check for invalid memory-safe assembly comments.
         """
-        source_code = node.source_unit.file_source
-        assembly_start = node.byte_location[0]
-        code_before_assembly = source_code[:assembly_start].decode("utf-8", errors="ignore")
-        lines = code_before_assembly.splitlines()
-        # Scan up to 10 lines above the assembly block
-        i = 1
-        max_scan = min(10, len(lines))
-        while i <= max_scan:
-            line = lines[-i].rstrip()
-            # Block comment end
-            if line.endswith("*/"):
-                block = [line]
-                for j in range(i + 1, min(i + 20, len(lines) + 1)):
-                    block_line = lines[-j].rstrip()
-                    block.append(block_line)
-                    if block_line.lstrip().startswith("/*"):
-                        break
-                block_comment = "\n".join(reversed(block))
-                if "@solidity memory-safe-assembly" in block_comment:
-                    if not block_comment.lstrip().startswith("/**"):
-                        self._detections.append(
-                            DetectorResult(
-                                Detection(
-                                    node,
-                                    "Invalid memory-safe assembly comment. Use `/// @solidity memory-safe-assembly` or `/** @solidity memory-safe-assembly */` instead of `/* @solidity memory-safe-assembly */`.",
-                                ),
-                                impact=DetectorImpact.INFO,
-                                confidence=DetectorConfidence.HIGH,
-                                uri=generate_detector_uri(
-                                    name="invalid-memory-safe-assembly",
-                                    version=self.extra["package_versions"]["eth-wake"],
-                                ),
-                            )
-                        )
-                    return
-                i += len(block)
-                continue
-            # Single-line or multi-line // comments
-            if line.lstrip().startswith("//"):
-                comment_block = []
-                for j in range(i, max_scan + 1):
-                    l = lines[-j].lstrip()
-                    if l.startswith("//"):
-                        comment_block.append(l)
-                    else:
-                        break
-                comment_block = list(reversed(comment_block))
-                for comment_line in comment_block:
-                    if "@solidity memory-safe-assembly" in comment_line:
-                        if not comment_line.startswith("///"):
-                            self._detections.append(
-                                DetectorResult(
-                                    Detection(
-                                        node,
-                                        "Invalid memory-safe assembly comment. Use `/// @solidity memory-safe-assembly` or `/** @solidity memory-safe-assembly */` instead of `// @solidity memory-safe-assembly`.",
-                                    ),
-                                    impact=DetectorImpact.INFO,
-                                    confidence=DetectorConfidence.HIGH,
-                                    uri=generate_detector_uri(
-                                        name="invalid-memory-safe-assembly",
-                                        version=self.extra["package_versions"]["eth-wake"],
-                                    ),
-                                )
-                            )
-                        return
-                i += len(comment_block)
-                continue
-            # Otherwise, continue
-            i += 1
+        import re
+
+        comment_blocks = _find_nearest_comment_blocks(node)
+
+        for comment_content in comment_blocks:
+            if re.search(r"@solidity\s+memory-safe-assembly", comment_content):
+                self._detections.append(
+                    DetectorResult(
+                        Detection(
+                            node,
+                            "Non-NatSpec comments are ignored for @solidity memory-safe-assembly",
+                        ),
+                        impact=DetectorImpact.INFO,
+                        confidence=DetectorConfidence.HIGH,
+                        uri=generate_detector_uri(
+                            name="invalid-memory-safe-assembly",
+                            version=self.extra["package_versions"]["eth-wake"],
+                        ),
+                    )
+                )
 
     @detector.command(name="invalid-memory-safe-assembly")
     def cli(self) -> None:
         """
         Invalid memory-safe assembly tag
-        """ 
+        """
