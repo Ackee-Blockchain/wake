@@ -1,4 +1,5 @@
 from .abi_encode_with_signature import AbiEncodeWithSignatureDetector
+from .array_delete_nullification import ArrayDeleteNullificationDetector
 from .axelar_proxy_contract_id import AxelarProxyContractIdDetector
 from .balance_relied_on import BalanceReliedOnDetector
 from .call_options_not_called import CallOptionsNotCalledDetector
@@ -24,4 +25,3 @@ from .unused_event import UnusedEventDetector
 from .unused_function import UnusedFunctionDetector
 from .unused_import import UnusedImportDetector
 from .unused_modifier import UnusedModifierDetector
-from .nullyfying_instead_deleting import NullifyingInsteadDeletingDetector

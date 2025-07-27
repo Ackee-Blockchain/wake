@@ -14,7 +14,7 @@ from wake.detectors import (
 )
 
 
-class NullifyingInsteadDeletingDetector(Detector):
+class ArrayDeleteNullificationDetector(Detector):
     _detections: List[DetectorResult]
 
     def __init__(self) -> None:
@@ -30,12 +30,15 @@ class NullifyingInsteadDeletingDetector(Detector):
                 if isinstance(node.sub_expression.base_expression.type, types.Array):
                     self._detections.append(
                         DetectorResult(
-                            Detection(node, "Delete on array element only nullifies it, does not remove from array"),
+                            Detection(
+                                node,
+                                "Delete on array element only nullifies it, does not remove from array",
+                            ),
                             impact=DetectorImpact.INFO,
                             confidence=DetectorConfidence.LOW,
                         )
                     )
 
-    @detector.command(name="nullifying-instead-deleting")
+    @detector.command(name="array-delete-nullification")
     def cli(self) -> None:
         pass
