@@ -7000,7 +7000,7 @@
 
 
 <h1 id="wake.ir.meta.storage_layout_specifier" class="doc doc-heading">
-          <code>wake.ir.meta.storage_layout_specifier</code>
+            <code>wake.ir.meta.storage_layout_specifier</code>
 
 
   <span class="doc doc-labels">
@@ -7009,7 +7009,13 @@
 
 <a href="#wake.ir.meta.storage_layout_specifier" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7022,12 +7028,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.meta.storage_layout_specifier.StorageLayoutSpecifier" class="doc doc-heading">
-        <code>StorageLayoutSpecifier</code>
+              <code>StorageLayoutSpecifier</code>
 
 
   <span class="doc doc-labels">
@@ -7037,9 +7043,9 @@
 <a href="#wake.ir.meta.storage_layout_specifier.StorageLayoutSpecifier" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.SolidityAbc" href="../../abc/#wake.ir.abc.SolidityAbc">SolidityAbc</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.SolidityAbc" href="../../abc/#wake.ir.abc.SolidityAbc">SolidityAbc</a></code></p>
 
 
         <div class="admonition example">
@@ -7050,9 +7056,14 @@
 </div>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/meta/storage_layout_specifier.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/meta/storage_layout_specifier.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
 <span class="normal"><a href="#__codelineno-0-17">17</a></span>
 <span class="normal"><a href="#__codelineno-0-18">18</a></span>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
@@ -7132,7 +7143,7 @@
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">IrAbc</span><span class="p">]:</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a>        <span class="k">yield</span> <span class="bp">self</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_slot_expression</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_slot_expression</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="nd">@property</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ContractDefinition</span><span class="p">:</span>
@@ -7158,7 +7169,7 @@
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_slot_expression</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7305,16 +7316,16 @@
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 

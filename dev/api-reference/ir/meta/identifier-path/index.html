@@ -7156,7 +7156,7 @@
 
 
 <h1 id="wake.ir.meta.identifier_path" class="doc doc-heading">
-          <code>wake.ir.meta.identifier_path</code>
+            <code>wake.ir.meta.identifier_path</code>
 
 
   <span class="doc doc-labels">
@@ -7165,7 +7165,13 @@
 
 <a href="#wake.ir.meta.identifier_path" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7178,12 +7184,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.meta.identifier_path.IdentifierPath" class="doc doc-heading">
-        <code>IdentifierPath</code>
+              <code>IdentifierPath</code>
 
 
   <span class="doc doc-labels">
@@ -7193,18 +7199,23 @@
 <a href="#wake.ir.meta.identifier_path.IdentifierPath" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.SolidityAbc" href="../../abc/#wake.ir.abc.SolidityAbc">SolidityAbc</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.SolidityAbc" href="../../abc/#wake.ir.abc.SolidityAbc">SolidityAbc</a></code></p>
 
 
         <p>Identifier path represents a path name of identifiers separated by dots. It was introduced in Solidity 0.8.0 to replace
 <a class="autorefs autorefs-internal" href="../../type-names/user-defined-type-name/#wake.ir.type_names.user_defined_type_name.UserDefinedTypeName">UserDefinedTypeName</a> in some cases.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/meta/identifier_path.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-142">142</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/meta/identifier_path.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-142">142</a></span>
 <span class="normal"><a href="#__codelineno-0-143">143</a></span>
 <span class="normal"><a href="#__codelineno-0-144">144</a></span>
 <span class="normal"><a href="#__codelineno-0-145">145</a></span>
@@ -7586,7 +7597,7 @@
 <a id="__codelineno-0-331" name="__codelineno-0-331"></a>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">DeclarationAbc</span><span class="p">)</span>
 <a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="k">return</span> <span class="n">node</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7875,16 +7886,16 @@
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.meta.identifier_path.IdentifierPathPart" class="doc doc-heading">
-        <code>IdentifierPathPart</code>
+              <code>IdentifierPathPart</code>
 
 
   <span class="doc doc-labels">
@@ -7894,15 +7905,20 @@
 <a href="#wake.ir.meta.identifier_path.IdentifierPathPart" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
+      <div class="doc doc-contents ">
 
 
         <p>A class representing a part of an identifier path. Is almost the same as <a class="autorefs autorefs-internal" href="../../expressions/identifier/#wake.ir.expressions.identifier.Identifier">Identifier</a>, but it is not generated in the AST output of the compiler and so it is not an IR node.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/meta/identifier_path.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/meta/identifier_path.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
 <span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
 <span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
 <span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
@@ -8118,7 +8134,7 @@
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">DeclarationAbc</span><span class="p">,</span> <span class="n">SourceUnit</span><span class="p">))</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="k">return</span> <span class="n">node</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8365,16 +8381,16 @@
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 

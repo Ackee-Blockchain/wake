@@ -7220,7 +7220,7 @@
 
 
 <h1 id="wake.detectors.api" class="doc doc-heading">
-          <code>wake.detectors.api</code>
+            <code>wake.detectors.api</code>
 
 
   <span class="doc doc-labels">
@@ -7229,7 +7229,13 @@
 
 <a href="#wake.detectors.api" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7247,16 +7253,16 @@
 
   </div>
 
-  </div>
+    </div>
 
 </div>
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.detectors.api.DetectorConfidence" class="doc doc-heading">
-        <code>DetectorConfidence</code>
+              <code>DetectorConfidence</code>
 
 
   <span class="doc doc-labels">
@@ -7266,17 +7272,22 @@
 <a href="#wake.detectors.api.DetectorConfidence" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents first">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.utils.StrEnum">StrEnum</span></code></p>
+      <div class="doc doc-contents first">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.utils.StrEnum">StrEnum</span></code></p>
 
 
         <p>The confidence of a <a class="autorefs autorefs-internal" href="#wake.detectors.api.DetectorResult">DetectorResult</a>.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/detectors/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/detectors/api.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
 <span class="normal"><a href="#__codelineno-0-71">71</a></span>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span>
@@ -7306,7 +7317,7 @@
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="n">prio</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="k">return</span> <span class="n">prio</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">prio</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7384,16 +7395,16 @@
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.detectors.api.DetectorImpact" class="doc doc-heading">
-        <code>DetectorImpact</code>
+              <code>DetectorImpact</code>
 
 
   <span class="doc doc-labels">
@@ -7403,17 +7414,22 @@
 <a href="#wake.detectors.api.DetectorImpact" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents first">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.utils.StrEnum">StrEnum</span></code></p>
+      <div class="doc doc-contents first">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.utils.StrEnum">StrEnum</span></code></p>
 
 
         <p>The impact of a <a class="autorefs autorefs-internal" href="#wake.detectors.api.DetectorResult">DetectorResult</a>.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/detectors/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/detectors/api.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
@@ -7447,7 +7463,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">prio</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">]</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="k">return</span> <span class="n">prio</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">prio</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7565,16 +7581,16 @@
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.detectors.api.Detection" class="doc doc-heading">
-        <code>Detection</code>
+              <code>Detection</code>
 
 
   <span class="doc doc-labels">
@@ -7584,7 +7600,7 @@
 <a href="#wake.detectors.api.Detection" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents first">
+      <div class="doc doc-contents first">
 
 
         <p>A single detection bound to a location in the source code through an IR node. May contain any number of subdetections.</p>
@@ -7661,9 +7677,14 @@ This attribute determines whether the detection should be filtered out if all su
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/detectors/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/detectors/api.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
 <span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
 <span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
 <span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
@@ -7703,7 +7724,7 @@ This attribute determines whether the detection should be filtered out if all su
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="n">lsp_range</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="n">subdetections_mandatory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7721,16 +7742,16 @@ This attribute determines whether the detection should be filtered out if all su
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.detectors.api.DetectorResult" class="doc doc-heading">
-        <code>DetectorResult</code>
+              <code>DetectorResult</code>
 
 
   <span class="doc doc-labels">
@@ -7740,7 +7761,7 @@ This attribute determines whether the detection should be filtered out if all su
 <a href="#wake.detectors.api.DetectorResult" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents first">
+      <div class="doc doc-contents first">
 
 
         <p>A single result reported by a <a class="autorefs autorefs-internal" href="#wake.detectors.api.Detector">Detector</a>.</p>
@@ -7804,9 +7825,14 @@ This attribute determines whether the detection should be filtered out if all su
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/detectors/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-108">108</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/detectors/api.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-108">108</a></span>
 <span class="normal"><a href="#__codelineno-0-109">109</a></span>
 <span class="normal"><a href="#__codelineno-0-110">110</a></span>
 <span class="normal"><a href="#__codelineno-0-111">111</a></span>
@@ -7850,7 +7876,7 @@ This attribute determines whether the detection should be filtered out if all su
 <a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DetectorConfidence</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid confidence: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7868,16 +7894,16 @@ This attribute determines whether the detection should be filtered out if all su
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.detectors.api.Detector" class="doc doc-heading">
-        <code>Detector</code>
+              <code>Detector</code>
 
 
   <span class="doc doc-labels">
@@ -7887,9 +7913,9 @@ This attribute determines whether the detection should be filtered out if all su
 <a href="#wake.detectors.api.Detector" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents first">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.core.visitor.Visitor" href="../../core/visitor/#wake.core.visitor.Visitor">Visitor</a></code></p>
+      <div class="doc doc-contents first">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.core.visitor.Visitor" href="../../core/visitor/#wake.core.visitor.Visitor">Visitor</a></code></p>
 
 
         <p>Base class for detectors.</p>
@@ -7932,9 +7958,14 @@ In this case, the detector should operate on all paths. May be ignored unless <a
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/detectors/api.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-132">132</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/detectors/api.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-132">132</a></span>
 <span class="normal"><a href="#__codelineno-0-133">133</a></span>
 <span class="normal"><a href="#__codelineno-0-134">134</a></span>
 <span class="normal"><a href="#__codelineno-0-135">135</a></span>
@@ -8006,7 +8037,7 @@ In this case, the detector should operate on all paths. May be ignored unless <a
 <a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8135,9 +8166,9 @@ In this case, the detector should use the <code>paths</code> attribute to determ
 
   </div>
 
-  </div>
+      </div>
 
-</div>
+  </div>
 
 
 

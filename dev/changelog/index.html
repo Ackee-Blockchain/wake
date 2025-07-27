@@ -681,6 +681,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.20.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.20.0 (Jul 27, 2025)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.19.0" class="md-nav__link">
     <span class="md-ellipsis">
       4.19.0 (Jun 17, 2025)
@@ -7199,6 +7208,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#4.20.0" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.20.0 (Jul 27, 2025)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#4.19.0" class="md-nav__link">
     <span class="md-ellipsis">
       4.19.0 (Jun 17, 2025)
@@ -7557,6 +7575,37 @@ small.label {
 }
 </style>
 
+<h2 id="4.20.0">4.20.0 <small>(Jul 27, 2025)</small><a class="headerlink" href="#4.20.0" title="Permanent link">#</a></h2>
+<p>Features &amp; improvements:</p>
+<ul>
+<li><code>wake up</code> now uses the same config options as <code>wake compile</code> <small class="label">[core]</small><ul>
+<li>more specifically, it does not adjust current config options unless <code>wake.toml</code> doesn't exist or <code>--force</code> was passed</li>
+</ul>
+</li>
+<li>JSON detections export now includes even detections disabled with <code>// wake-disable</code> comments, along with a boolean <code>suppressed</code> flag <small class="label">[core]</small></li>
+<li>improved <code>wake open</code> CLI messages when source code cannot be found <small class="label">[core]</small></li>
+<li>variables in NatSpec comments are now also updated on LSP rename <small class="label">[language server]</small></li>
+<li>removed the requirement for valid Solidity identifiers when using LSP rename <small class="label">[language server]</small></li>
+<li>implemented fuzzing statistics collection and summary <small class="label">[testing]</small></li>
+<li>debugger responses are now formatted with Rich <small class="label">[testing]</small></li>
+<li>added a new boolean <code>optimistic_pytypes_resolving</code> attribute to <code>Chain</code> <small class="label">[testing &amp; deployment framework]</small><ul>
+<li>it enforces resolving of pytypes events &amp; errors to the first available definition (using fully qualified contract names sorted alphabetically) if multiple pytypes definitions are available</li>
+</ul>
+</li>
+<li><code>wake print storage-layout</code> doesn't print storage layout for contracts that don't have any storage variables <small class="label">[static analysis]</small></li>
+<li><code>ControlFlowGraph.graph</code> is no longer copied upon access for performance reasons <small class="label">[static analysis]</small></li>
+<li>added new <code>invalid-memory-safe-assembly</code> detector <small class="label">[static analysis]</small></li>
+<li>added new <code>array-delete-nullification</code> detector <small class="label">[static analysis]</small></li>
+<li>added new <code>contract-size</code> printer <small class="label">[static analysis]</small></li>
+<li>added new <code>--keep-folders</code> option to <code>abi</code> printer <small class="label">[static analysis]</small></li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>fixed compilation crash on using any other assembly flag than <code>memory-safe</code> <small class="label">[core]</small></li>
+<li>fixed compilation issues sometimes triggered when a file was compiled under multiple source unit names <small class="label">[core]</small></li>
+<li>fixed issue where code (IR nodes) was ignored inside <code>StorageLayoutSpecifier</code> <small class="label">[core]</small></li>
+<li>changed how pytypes errors are resolved to correctly handle <code>require(condition, CustomError())</code> <small class="label">[testing &amp; deployment framework]</small></li>
+</ul>
 <h2 id="4.19.0">4.19.0 <small>(Jun 17, 2025)</small><a class="headerlink" href="#4.19.0" title="Permanent link">#</a></h2>
 <p>Features &amp; improvements:</p>
 <ul>

@@ -6982,7 +6982,7 @@
 
 
 <h1 id="wake.ir.yul.abc" class="doc doc-heading">
-          <code>wake.ir.yul.abc</code>
+            <code>wake.ir.yul.abc</code>
 
 
   <span class="doc doc-labels">
@@ -6991,7 +6991,13 @@
 
 <a href="#wake.ir.yul.abc" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7004,12 +7010,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.yul.abc.YulAbc" class="doc doc-heading">
-        <code>YulAbc</code>
+              <code>YulAbc</code>
 
 
   <span class="doc doc-labels">
@@ -7019,17 +7025,22 @@
 <a href="#wake.ir.yul.abc.YulAbc" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.IrAbc" href="../../abc/#wake.ir.abc.IrAbc">IrAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.IrAbc" href="../../abc/#wake.ir.abc.IrAbc">IrAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>Abstract base class for all Yul IR nodes.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/yul/abc.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/yul/abc.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
 <span class="normal"><a href="#__codelineno-0-17">17</a></span>
 <span class="normal"><a href="#__codelineno-0-18">18</a></span>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
@@ -7093,7 +7104,7 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="k">return</span> <span class="n">is_not_none</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inline_assembly</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7154,16 +7165,16 @@
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.yul.abc.YulStatementAbc" class="doc doc-heading">
-        <code>YulStatementAbc</code>
+              <code>YulStatementAbc</code>
 
 
   <span class="doc doc-labels">
@@ -7173,17 +7184,22 @@
 <a href="#wake.ir.yul.abc.YulStatementAbc" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.yul.abc.YulAbc" href="#wake.ir.yul.abc.YulAbc">YulAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.yul.abc.YulAbc" href="#wake.ir.yul.abc.YulAbc">YulAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>Abstract base class for all Yul IR statements.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/yul/abc.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/yul/abc.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">class</span><span class="w"> </span><span class="nc">YulStatementAbc</span><span class="p">(</span><span class="n">YulAbc</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
@@ -7191,7 +7207,7 @@
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    Abstract base class for all Yul IR statements.</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    &quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7209,16 +7225,16 @@
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 

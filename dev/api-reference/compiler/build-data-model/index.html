@@ -7070,7 +7070,7 @@
 
 
 <h1 id="wake.compiler.build_data_model" class="doc doc-heading">
-          <code>wake.compiler.build_data_model</code>
+            <code>wake.compiler.build_data_model</code>
 
 
   <span class="doc doc-labels">
@@ -7079,7 +7079,13 @@
 
 <a href="#wake.compiler.build_data_model" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7092,12 +7098,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.compiler.build_data_model.CompilationUnitBuildInfo" class="doc doc-heading">
-        <code>CompilationUnitBuildInfo</code>
+              <code>CompilationUnitBuildInfo</code>
 
 
   <span class="doc doc-labels">
@@ -7107,9 +7113,9 @@
 <a href="#wake.compiler.build_data_model.CompilationUnitBuildInfo" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
 
 
         <p>Holds all compilation errors and warnings that occurred during compilation of a single compilation unit.
@@ -7142,9 +7148,14 @@ Because of incremental compilation, it is important to keep track of all errors 
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
 <span class="normal"><a href="#__codelineno-0-71">71</a></span>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span>
@@ -7166,7 +7177,7 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SolcOutputError</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7184,16 +7195,16 @@ Because of incremental compilation, it is important to keep track of all errors 
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.compiler.build_data_model.ProjectBuild" class="doc doc-heading">
-        <code>ProjectBuild</code>
+              <code>ProjectBuild</code>
 
 
   <span class="doc doc-labels">
@@ -7203,15 +7214,20 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a href="#wake.compiler.build_data_model.ProjectBuild" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
+      <div class="doc doc-contents ">
 
 
         <p>Class holding a single project build.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-147">147</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-147">147</a></span>
 <span class="normal"><a href="#__codelineno-0-148">148</a></span>
 <span class="normal"><a href="#__codelineno-0-149">149</a></span>
 <span class="normal"><a href="#__codelineno-0-150">150</a></span>
@@ -7517,7 +7533,7 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a id="__codelineno-0-298" name="__codelineno-0-298"></a>                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ContractDefinition</span><span class="p">)</span>
 <a id="__codelineno-0-299" name="__codelineno-0-299"></a>                        <span class="n">c</span><span class="o">.</span><span class="n">_child_contracts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7896,16 +7912,16 @@ Because of incremental compilation, it is important to keep track of all errors 
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.compiler.build_data_model.ProjectBuildInfo" class="doc doc-heading">
-        <code>ProjectBuildInfo</code>
+              <code>ProjectBuildInfo</code>
 
 
   <span class="doc doc-labels">
@@ -7915,9 +7931,9 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a href="#wake.compiler.build_data_model.ProjectBuildInfo" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
 
 
 
@@ -8035,9 +8051,14 @@ Because of incremental compilation, it is important to keep track of all errors 
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
 <span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
 <span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
 <span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
@@ -8141,7 +8162,7 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a id="__codelineno-0-143" name="__codelineno-0-143"></a>            <span class="n">v</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;__null__&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-144" name="__codelineno-0-144"></a>        <span class="k">return</span> <span class="n">v</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8159,16 +8180,16 @@ Because of incremental compilation, it is important to keep track of all errors 
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.compiler.build_data_model.SourceUnitInfo" class="doc doc-heading">
-        <code>SourceUnitInfo</code>
+              <code>SourceUnitInfo</code>
 
 
   <span class="doc doc-labels">
@@ -8178,9 +8199,9 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a href="#wake.compiler.build_data_model.SourceUnitInfo" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.compiler.build_data_model.BuildInfoModel">BuildInfoModel</span></code></p>
 
 
 
@@ -8221,9 +8242,14 @@ Because of incremental compilation, it is important to keep track of all errors 
     </table>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-82">82</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/compiler/build_data_model.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-82">82</a></span>
 <span class="normal"><a href="#__codelineno-0-83">83</a></span>
 <span class="normal"><a href="#__codelineno-0-84">84</a></span>
 <span class="normal"><a href="#__codelineno-0-85">85</a></span>
@@ -8241,7 +8267,7 @@ Because of incremental compilation, it is important to keep track of all errors 
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">fs_path</span><span class="p">:</span> <span class="n">Path</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">blake2b_hash</span><span class="p">:</span> <span class="n">HexBytes</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8259,16 +8285,16 @@ Because of incremental compilation, it is important to keep track of all errors 
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 

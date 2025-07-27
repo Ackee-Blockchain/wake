@@ -7700,7 +7700,7 @@
 
 
 <h1 id="wake.core.solidity_version" class="doc doc-heading">
-          <code>wake.core.solidity_version</code>
+            <code>wake.core.solidity_version</code>
 
 
   <span class="doc doc-labels">
@@ -7709,7 +7709,13 @@
 
 <a href="#wake.core.solidity_version" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7722,12 +7728,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.core.solidity_version.SemanticVersion" class="doc doc-heading">
-        <code>SemanticVersion</code>
+              <code>SemanticVersion</code>
 
 
   <span class="doc doc-labels">
@@ -7737,18 +7743,23 @@
 <a href="#wake.core.solidity_version.SemanticVersion" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="wake.core.solidity_version.VersionAbc">VersionAbc</span></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><span title="wake.core.solidity_version.VersionAbc">VersionAbc</span></code></p>
 
 
         <p>A class representing a single Solidity version (not a range of versions).
 Prerelease and build tags are parsed but ignored (even in comparison). As of <code>solc</code> version 0.8.11 there is no use for them.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
 <span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
 <span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
 <span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
@@ -8118,7 +8129,7 @@ Prerelease and build tags are parsed but ignored (even in comparison). As of <co
 <a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__build</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8818,16 +8829,16 @@ Prerelease and build tags are ignored.</p>
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.core.solidity_version.SolidityVersion" class="doc doc-heading">
-        <code>SolidityVersion</code>
+              <code>SolidityVersion</code>
 
 
   <span class="doc doc-labels">
@@ -8837,17 +8848,22 @@ Prerelease and build tags are ignored.</p>
 <a href="#wake.core.solidity_version.SolidityVersion" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.core.solidity_version.SemanticVersion" href="#wake.core.solidity_version.SemanticVersion">SemanticVersion</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.core.solidity_version.SemanticVersion" href="#wake.core.solidity_version.SemanticVersion">SemanticVersion</a></code></p>
 
 
         <p>A class representing a single Solidity version. Just an alias for <a href="#wake.core.solidity_version.SolidityVersion--semanticversion">SemanticVersion</a>.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-260">260</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-260">260</a></span>
 <span class="normal"><a href="#__codelineno-0-261">261</a></span>
 <span class="normal"><a href="#__codelineno-0-262">262</a></span>
 <span class="normal"><a href="#__codelineno-0-263">263</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="k">class</span><span class="w"> </span><span class="nc">SolidityVersion</span><span class="p">(</span><span class="n">SemanticVersion</span><span class="p">):</span>
@@ -8855,7 +8871,7 @@ Prerelease and build tags are ignored.</p>
 <a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">    A class representing a single Solidity version. Just an alias for [SemanticVersion](#semanticversion).</span>
 <a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">    &quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -8873,16 +8889,16 @@ Prerelease and build tags are ignored.</p>
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.core.solidity_version.SolidityVersionExpr" class="doc doc-heading">
-        <code>SolidityVersionExpr</code>
+              <code>SolidityVersionExpr</code>
 
 
   <span class="doc doc-labels">
@@ -8892,16 +8908,21 @@ Prerelease and build tags are ignored.</p>
 <a href="#wake.core.solidity_version.SolidityVersionExpr" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
+      <div class="doc doc-contents ">
 
 
         <p>A class representing a Solidity version expression.
 It keeps the original expression string and a <code>SolidityVersionRanges</code> instance that represents the expression.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-552">552</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-552">552</a></span>
 <span class="normal"><a href="#__codelineno-0-553">553</a></span>
 <span class="normal"><a href="#__codelineno-0-554">554</a></span>
 <span class="normal"><a href="#__codelineno-0-555">555</a></span>
@@ -9541,7 +9562,7 @@ It keeps the original expression string and a <code>SolidityVersionRanges</code>
 <a id="__codelineno-0-870" name="__codelineno-0-870"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-871" name="__codelineno-0-871"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ranges</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -9808,16 +9829,16 @@ It keeps the original expression string and a <code>SolidityVersionRanges</code>
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.core.solidity_version.SolidityVersionRange" class="doc doc-heading">
-        <code>SolidityVersionRange</code>
+              <code>SolidityVersionRange</code>
 
 
   <span class="doc doc-labels">
@@ -9827,7 +9848,7 @@ It keeps the original expression string and a <code>SolidityVersionRanges</code>
 <a href="#wake.core.solidity_version.SolidityVersionRange" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
+      <div class="doc doc-contents ">
 
 
         <p>A class representing a range of Solidity versions by keeping the lower and the higher bound.
@@ -9836,9 +9857,14 @@ In case the lower bound is unspecified, the default value 0.0.0 (inclusive) is u
 If the lower bound is semantically greater than the higher bound, create an empty range.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-266">266</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-266">266</a></span>
 <span class="normal"><a href="#__codelineno-0-267">267</a></span>
 <span class="normal"><a href="#__codelineno-0-268">268</a></span>
 <span class="normal"><a href="#__codelineno-0-269">269</a></span>
@@ -10286,7 +10312,7 @@ If the lower bound is semantically greater than the higher bound, create an empt
 <a id="__codelineno-0-488" name="__codelineno-0-488"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-489" name="__codelineno-0-489"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__higher_inclusive</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -11034,16 +11060,16 @@ May only be <code>None</code> if <code>higher_bound</code> is <code>None</code>.
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.core.solidity_version.SolidityVersionRanges" class="doc doc-heading">
-        <code>SolidityVersionRanges</code>
+              <code>SolidityVersionRanges</code>
 
 
   <span class="doc doc-labels">
@@ -11053,16 +11079,21 @@ May only be <code>None</code> if <code>higher_bound</code> is <code>None</code>.
 <a href="#wake.core.solidity_version.SolidityVersionRanges" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
+      <div class="doc doc-contents ">
 
 
         <p>Helper class implementing intersection on List[SolidityVersionRange].
 No normalization is performed, i.e. the ranges are taken as is without merging.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-492">492</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/core/solidity_version.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-492">492</a></span>
 <span class="normal"><a href="#__codelineno-0-493">493</a></span>
 <span class="normal"><a href="#__codelineno-0-494">494</a></span>
 <span class="normal"><a href="#__codelineno-0-495">495</a></span>
@@ -11178,7 +11209,7 @@ No normalization is performed, i.e. the ranges are taken as is without merging.<
 <a id="__codelineno-0-548" name="__codelineno-0-548"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-549" name="__codelineno-0-549"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__version_ranges</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -11365,16 +11396,16 @@ No normalization is performed, i.e. the ranges are taken as is without merging.<
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 

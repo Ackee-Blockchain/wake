@@ -7088,7 +7088,7 @@
 
 
 <h1 id="wake.ir.abc" class="doc doc-heading">
-          <code>wake.ir.abc</code>
+            <code>wake.ir.abc</code>
 
 
   <span class="doc doc-labels">
@@ -7097,7 +7097,13 @@
 
 <a href="#wake.ir.abc" class="headerlink" title="Permanent link">#</a></h1>
 
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -7110,12 +7116,12 @@
 
 
 
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.abc.IrAbc" class="doc doc-heading">
-        <code>IrAbc</code>
+              <code>IrAbc</code>
 
 
   <span class="doc doc-labels">
@@ -7125,9 +7131,9 @@
 <a href="#wake.ir.abc.IrAbc" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>Base class for all IR nodes. Defines attributes and methods that are common to all Solidity and Yul IR nodes.</p>
@@ -7140,9 +7146,14 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 </div>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/abc.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-20"> 20</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/abc.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-20"> 20</a></span>
 <span class="normal"><a href="#__codelineno-0-21"> 21</a></span>
 <span class="normal"><a href="#__codelineno-0-22"> 22</a></span>
 <span class="normal"><a href="#__codelineno-0-23"> 23</a></span>
@@ -7406,7 +7417,7 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-151" name="__codelineno-0-151"></a>        <span class="k">return</span> <span class="n">is_not_none</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_unit</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7748,16 +7759,16 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 
   </div>
 
+      </div>
+
   </div>
 
-</div>
-
-<div class="doc doc-object doc-class">
+  <div class="doc doc-object doc-class">
 
 
 
 <h2 id="wake.ir.abc.SolidityAbc" class="doc doc-heading">
-        <code>SolidityAbc</code>
+              <code>SolidityAbc</code>
 
 
   <span class="doc doc-labels">
@@ -7767,17 +7778,22 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <a href="#wake.ir.abc.SolidityAbc" class="headerlink" title="Permanent link">#</a></h2>
 
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.IrAbc" href="#wake.ir.abc.IrAbc">IrAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+      <div class="doc doc-contents ">
+              <p class="doc doc-class-bases">
+                Bases: <code><a class="autorefs autorefs-internal" title="wake.ir.abc.IrAbc" href="#wake.ir.abc.IrAbc">IrAbc</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>Abstract base class for all Solidity IR nodes.</p>
 
 
-        <details class="quote">
-          <summary>Source code in <code>wake/ir/abc.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-154">154</a></span>
+
+
+
+
+
+                <details class="quote">
+                  <summary>Source code in <code>wake/ir/abc.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-154">154</a></span>
 <span class="normal"><a href="#__codelineno-0-155">155</a></span>
 <span class="normal"><a href="#__codelineno-0-156">156</a></span>
 <span class="normal"><a href="#__codelineno-0-157">157</a></span>
@@ -7821,7 +7837,7 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">ast_node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AstNodeId</span><span class="p">:</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ast_node</span><span class="o">.</span><span class="n">id</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+                </details>
 
 
 
@@ -7839,16 +7855,16 @@ This means that each IR node has a corresponding (typically non-empty) Solidity 
 
   </div>
 
-  </div>
-
-</div>
-
-
-
+      </div>
 
   </div>
 
+
+
+
   </div>
+
+    </div>
 
 </div>
 
