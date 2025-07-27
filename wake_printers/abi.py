@@ -11,6 +11,7 @@ import wake.ir as ir
 import wake.ir.types as types
 from wake.cli import SolidityName
 from wake.printers import Printer, printer
+from wake.utils import is_relative_to
 
 
 class AbiPrinter(Printer):
@@ -35,14 +36,22 @@ class AbiPrinter(Printer):
                 )
                 self.console.print_json(data=abi)
             else:
-                if self._keep_folders or len([c for c in self._abi.keys() if c.name == contract.name]) > 1:
-                    source_unit_name_path = Path(contract.parent.source_unit_name).parent
+                if (
+                    self._keep_folders
+                    or len([c for c in self._abi.keys() if c.name == contract.name]) > 1
+                ):
+                    source_unit_name_path = Path(contract.parent.source_unit_name)
                     if source_unit_name_path.is_absolute():
                         self.logger.warning(
-                            f"Cannot generate ABI for duplicate contract [link={self.generate_link(contract)}]{contract.name}[/link] with absolute source unit name {contract.parent.source_unit_name}"
+                            f"Cannot generate ABI for contract [link={self.generate_link(contract)}]{contract.name}[/link] with absolute source unit name '{contract.parent.source_unit_name}'"
                         )
                         continue
-                    p = self._out.joinpath(source_unit_name_path)
+                    p = self._out.joinpath(source_unit_name_path).resolve()
+                    if not is_relative_to(p, self._out):
+                        self.logger.warning(
+                            f"Cannot generate ABI for contract [link={self.generate_link(contract)}]{contract.name}[/link] with relative source unit name '{contract.parent.source_unit_name}' outside of the current working directory"
+                        )
+                        continue
                     p.mkdir(parents=True, exist_ok=True)
                     p.joinpath(f"{contract.name}.abi.json").write_text(
                         json.dumps(abi, indent=4)
@@ -54,6 +63,9 @@ class AbiPrinter(Printer):
 
     def visit_contract_definition(self, node: ir.ContractDefinition):
         if len(self._names) > 0 and node.name not in self._names:
+            return
+        if is_relative_to(node.source_unit.file, self.config.wake_contracts_path):
+            # skip contracts in the wake_contracts_path
             return
         if node.compilation_info is None or node.compilation_info.abi is None:
             self.logger.warning(
@@ -98,7 +110,13 @@ class AbiPrinter(Printer):
         default=False,
         help="Preserve the original folder hierarchy",
     )
-    def cli(self, names: Tuple[str, ...], out: Optional[str], skip_empty: bool, keep_folders: bool) -> None:
+    def cli(
+        self,
+        names: Tuple[str, ...],
+        out: Optional[str],
+        skip_empty: bool,
+        keep_folders: bool,
+    ) -> None:
         """
         Print ABI of contracts.
         """
@@ -106,7 +124,11 @@ class AbiPrinter(Printer):
         self._skip_empty = skip_empty
         self._keep_folders = keep_folders
         if out is not None:
-            self._out = Path(out)
+            self._out = Path(out).resolve()
             self._out.mkdir(parents=True, exist_ok=True)
         else:
             self._out = None
+            if keep_folders:
+                self.logger.warning(
+                    "The --keep-folders option is ignored when no output directory is specified"
+                )
