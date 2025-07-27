@@ -107,7 +107,7 @@ async def open_address(
     from wake.config import WakeConfig
     from wake.core import get_logger
     from wake.core.solidity_version import SolidityVersion
-    from wake.development.utils import get_info_from_explorer
+    from wake.development.utils import get_info_from_explorer, AbiNotFound
     from wake.svm import SolcVersionManager
 
     logger = get_logger(__name__)
@@ -148,21 +148,23 @@ async def open_address(
             )
             return
 
-    try:
-        with console.status(f"Fetching {address} from explorer..."):
-            info, source = get_info_from_explorer(address, chain_id, config, force=force)
-    except Exception as e:
-        # Import AbiNotFound here to check the exception type
-        from wake.development.utils import AbiNotFound
-        
-        if isinstance(e, AbiNotFound):
-            console.print(f"[red]Contract {address} not found on {e.method}[/red]")
+    with console.status(f"Fetching {address} from explorer..."):
+        try:
+            info, source = get_info_from_explorer(
+                address, chain_id, config, force=force
+            )
+        except AbiNotFound as e:
+            if e.method == "etherscan":
+                console.print(
+                    f"[red]Contract {address} not found on Sourcify or Etherscan[/red]"
+                )
+            else:
+                console.print(f"[red]Contract {address} not found on Sourcify[/red]")
             if e.api_key_name:
-                console.print(f"[yellow]Hint: Make sure you have a valid {e.api_key_name} API key configured[/yellow]")
-            return
-        else:
-            # Re-raise other exceptions
-            raise
+                console.print(
+                    f"[yellow]Hint: Make sure you have a valid {e.api_key_name} API key configured[/yellow]"
+                )
+            sys.exit(68)
 
     if source == "sourcify":
         version = SolidityVersion.fromstring(info["compilation"]["compilerVersion"])
