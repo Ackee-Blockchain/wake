@@ -1653,17 +1653,9 @@ def get_info_from_explorer(
 
     try:
         return _get_sourcify_info(addr, chain_id, cache_dir), "sourcify"
-    except AbiNotFound as sourcify_error:
+    except Exception:
         if api_key is not None and chain_id in get_etherscan_explorer_info():
-            try:
-                return _get_etherscan_info(addr, chain_id, api_key, cache_dir), "etherscan"
-            except AbiNotFound:
-                # Both explorers failed, raise a combined error
-                raise AbiNotFound(
-                    method="sourcify and etherscan",
-                    api_key_name="etherscan" if api_key is None else None
-                ) from sourcify_error
-        # Only Sourcify was tried, re-raise the original error
+            return _get_etherscan_info(addr, chain_id, api_key, cache_dir), "etherscan"
         raise
 
 
