@@ -1459,7 +1459,7 @@ class Chain(ABC):
     _forked_chain_id: Optional[int]
     _debug_trace_call_supported: bool
     _client_version: str
-    _optimistic_events_processing: bool
+    _optimistic_pytypes_processing: bool
 
     tx_callback: Optional[Callable[[TransactionAbc], None]]
 
@@ -1555,6 +1555,7 @@ class Chain(ABC):
 
     def __init__(self):
         self._connected = False
+        self._optimistic_pytypes_processing = False
 
     def _connect(
         self,
@@ -1895,13 +1896,13 @@ class Chain(ABC):
 
     @property
     @check_connected
-    def optimistic_events_processing(self) -> bool:
-        return self._optimistic_events_processing
+    def optimistic_pytypes_processing(self) -> bool:
+        return self._optimistic_pytypes_processing
 
-    @optimistic_events_processing.setter
+    @optimistic_pytypes_processing.setter
     @check_connected
-    def optimistic_events_processing(self, value: bool) -> None:
-        self._optimistic_events_processing = value
+    def optimistic_pytypes_processing(self, value: bool) -> None:
+        self._optimistic_pytypes_processing = value
 
     @property
     @check_connected
@@ -2327,7 +2328,10 @@ class Chain(ABC):
             e.tx = tx
             raise e from None
 
-        if selector not in self._single_source_errors:
+        if (
+            selector not in self._single_source_errors
+            and not self._optimistic_pytypes_processing
+        ):
             if tx is None:
                 e = UnknownTransactionRevertedError(revert_data)
                 e.tx = tx
@@ -2356,7 +2360,7 @@ class Chain(ABC):
                 e.tx = tx
                 raise e from None
         else:
-            fqn = list(errors[selector].keys())[0]
+            fqn = sorted(errors[selector].keys())[0]
 
         module_name, attrs = errors[selector][fqn]
         obj = getattr(importlib.import_module(module_name), attrs[0])
@@ -2424,7 +2428,10 @@ class Chain(ABC):
                 generated_events.append(unknown_event)
                 continue
 
-            if len({source for source in events[selector].values()}) > 1:
+            if (
+                len({source for source in events[selector].values()}) > 1
+                and not self._optimistic_pytypes_processing
+            ):
                 addresses = {address}
 
                 if isinstance(tx.chain.chain_interface, AnvilChainInterface):
@@ -2465,15 +2472,12 @@ class Chain(ABC):
                             break
 
                 if len(candidates) != 1:
-                    if self._optimistic_events_processing:
-                        fqn = list(events[selector].keys())[0]
-                    else:
-                        generated_events.append(unknown_event)
-                        continue
+                    generated_events.append(unknown_event)
+                    continue
                 else:
                     fqn = candidates[0]
             else:
-                fqn = list(events[selector].keys())[0]
+                fqn = sorted(events[selector].keys())[0]
 
             module_name, attrs = events[selector][fqn]
             obj = getattr(importlib.import_module(module_name), attrs[0])
