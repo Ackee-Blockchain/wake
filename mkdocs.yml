@@ -99,6 +99,7 @@ nav:
                 - Printers:
                       - ABI: "static-analysis/printers/abi.md"
                       - C3 linearization: "static-analysis/printers/c3-linearization.md"
+                      - Contract size: "static-analysis/printers/contract-size.md"
                       - Control flow graph: "static-analysis/printers/control-flow-graph.md"
                       - Imports graph: "static-analysis/printers/imports-graph.md"
                       - Inheritance graph: "static-analysis/printers/inheritance-graph.md"
