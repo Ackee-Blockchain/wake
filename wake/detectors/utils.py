@@ -31,7 +31,7 @@ from .api import DetectorImpact, DetectorResult
 
 
 def create_sarif_log(
-    detectors: List[Command], detections: List[Tuple[str, DetectorResult]]
+    detectors: List[Command], detections: List[Tuple[str, DetectorResult, bool]]
 ) -> SarifLog:
     from wake.cli.detect import run_detect
 
@@ -92,7 +92,7 @@ def create_sarif_log(
         workspace_root = Path(workspace_root).resolve()
 
     results = []
-    for detector_name, result in detections:
+    for detector_name, result, _ in detections:
         (
             start_line,
             start_col,
