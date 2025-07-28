@@ -1,6 +1,6 @@
 [project]
 name = "eth-wake"
-version = "4.21.0"
+version = "5.0.0rc0"
 description = "Wake is a Python-based Solidity development and testing framework with built-in vulnerability detectors."
 license = {text = "ISC"}
 authors = [{name = "Ackee Blockchain"}]
