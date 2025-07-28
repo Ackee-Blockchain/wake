@@ -80,8 +80,6 @@ artifacts = [
     "wake_rs/*.pyd",
 ]
 include = [
-    "examples",
-    "contracts/wake",
     "wake_rs/__init__.py",
     "wake_rs/*.pyi",
 ]
@@ -94,10 +92,14 @@ exclude = [
     "wake_rs/.gitignore",
 ]
 
+[tool.hatch.build.targets.wheel.force-include]
+"examples" = "wake/examples"
+"contracts" = "wake/contracts"
+
 [tool.hatch.build.targets.sdist]
+packages = ["wake", "wake_detectors", "wake_printers", "wake_rs"]
+
 include = [
-    "examples",
-    "contracts/wake",
     "wake_rs/__init__.py",
     "wake_rs/*.pyi",
     "wake_rs/src/**/*",
@@ -109,7 +111,11 @@ exclude = [
     "wake_rs/target/**",
 ]
 
-[tool.hatch.build.hooks.custom]
+[tool.hatch.build.targets.sdist.force-include]
+"examples" = "examples"
+"contracts" = "contracts"
+
+[tool.hatch.build.targets.wheel.hooks.custom]
 path = "wake_rs/build.py"
 
 [tool.black]
