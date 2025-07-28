@@ -638,7 +638,7 @@ def run_init(
             )
 
         copy_dir(
-            Path(__file__).parent.parent.parent / "examples" / "counter",
+            Path(__file__).parent.parent / "examples" / "counter",
             config.project_root_path,
             overwrite=force,
         )
