@@ -3,13 +3,16 @@ name: Build native conda environments
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - "feat/version-5.0.0"
   workflow_dispatch:
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-13, windows-latest]
         python-version: ["3.10"]
     runs-on: ${{ matrix.os }}
 
