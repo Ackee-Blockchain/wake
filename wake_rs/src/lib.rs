@@ -10,6 +10,7 @@ use pyo3::prelude::*;
 use pyo3_log;
 use utils::{new_mnemonic, to_checksum_address};
 use inspectors::coverage_inspector::{sync_coverage, set_coverage_callback};
+use eip712::{encode_eip712_type, encode_eip712_data};
 
 mod core;
 mod address;
@@ -45,6 +46,8 @@ fn wake_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(to_checksum_address, m)?)?;
     m.add_function(wrap_pyfunction!(sync_coverage, m)?)?;
     m.add_function(wrap_pyfunction!(set_coverage_callback, m)?)?;
+    m.add_function(wrap_pyfunction!(encode_eip712_type, m)?)?;
+    m.add_function(wrap_pyfunction!(encode_eip712_data, m)?)?;
 
     m.add_class::<Address>()?;
     m.add_class::<Account>()?;

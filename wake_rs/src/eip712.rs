@@ -18,8 +18,44 @@ use crate::{
     account::Account,
     address::Address,
     enums::AddressEnum,
-    utils::{big_uint_to_u256, PyObjects},
+    utils::{big_uint_to_u256, get_py_objects, PyObjects},
 };
+
+#[pyfunction]
+pub(crate) fn encode_eip712_type(slf: &Bound<PyAny>, py: Python) -> PyResult<String> {
+    let mut resolver = Resolver::default();
+    let py_objects = get_py_objects(py);
+
+    let (primary_type, _) = process_dataclass(py, slf, &mut resolver, py_objects)?;
+
+    resolver
+        .encode_type(&primary_type)
+        .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))
+}
+
+#[pyfunction]
+pub(crate) fn encode_eip712_data<'py>(
+    slf: &Bound<'py, PyAny>,
+    py: Python<'py>,
+) -> PyResult<Bound<'py, PyBytes>> {
+    let mut resolver = Resolver::default();
+    let py_objects = get_py_objects(py);
+
+    let (primary_type, message) = process_dataclass(py, slf, &mut resolver, py_objects)?;
+
+    let dyn_type = resolver
+        .resolve(&primary_type)
+        .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+    let value = dyn_type
+        .coerce_json(&message)
+        .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+
+    let encoded = resolver
+        .encode_data(&value)
+        .map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))?;
+
+    Ok(PyBytes::new(py, &encoded.unwrap_or_default()))
+}
 
 pub(crate) fn py_to_eip712(
     py: Python,
@@ -375,7 +411,7 @@ fn convert(
     }
 }
 
-fn process_dataclass(
+pub(crate) fn process_dataclass(
     py: Python,
     obj: &Bound<PyAny>,
     resolver: &mut Resolver,
