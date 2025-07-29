@@ -44,7 +44,17 @@ from typing_extensions import (
     get_origin,
     get_type_hints,
 )
-from wake_rs import Abi, Account, Address, Contract, Library, abi
+
+from wake_rs import (
+    Abi,
+    Account,
+    Address,
+    Contract,
+    Library,
+    abi,
+    encode_eip712_data,
+    encode_eip712_type,
+)
 
 from ..utils import StrEnum
 from ..utils.keyed_default_dict import KeyedDefaultDict
@@ -120,6 +130,15 @@ class AlreadyConnectedError(Exception):
 
 class TransactionConfirmationFailedError(Exception):
     pass
+
+
+@dataclasses.dataclass
+class Struct:
+    def encode_eip712_type(self) -> str:
+        return encode_eip712_type(self)
+
+    def encode_eip712_data(self) -> bytes:
+        return encode_eip712_data(self)
 
 
 class RequestType(StrEnum):
