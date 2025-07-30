@@ -118,21 +118,20 @@ class CustomBuildHook(BuildHookInterface):
         """Initialize hook - called before build starts."""
         build_data["infer_tag"] = True
         build_data["pure_pyton"] = False
-        build()
 
-    def finalize(self, version, build_data, artifact):
-        """Finalize hook - called after build completes."""
-        # Clean up compiled dynamic libraries from wake_rs directory
+        # Clean up old dynamic libraries before building new ones
         wake_rs_dir = Path(__file__).parent.absolute()
 
-        # Remove .so and .pyd files (they're now packaged in the wheel)
+        # Remove .so and .pyd files from previous builds
         for so_file in wake_rs_dir.glob("*.so"):
             so_file.unlink()
-            print(f"Cleaned up dynamic library: {so_file.name}")
+            print(f"Cleaned up old dynamic library: {so_file.name}")
 
         for pyd_file in wake_rs_dir.glob("*.pyd"):
             pyd_file.unlink()
-            print(f"Cleaned up dynamic library: {pyd_file.name}")
+            print(f"Cleaned up old dynamic library: {pyd_file.name}")
+
+        build()
 
 
 if __name__ == "__main__":
