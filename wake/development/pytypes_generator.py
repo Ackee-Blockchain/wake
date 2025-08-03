@@ -730,6 +730,7 @@ class TypeGenerator:
                     (member_name, member_type, member_type_desc, member.name)
                 )
 
+            self.add_str_to_types(indent, "@dataclasses.dataclass", 1)
             self.add_str_to_types(indent, f"class {self.get_name(struct)}(Struct):", 1)
             self.add_str_to_types(indent + 1, '"""', 1)
             line, _ = self.__get_line_pos_from_byte_offset(

@@ -132,7 +132,6 @@ class TransactionConfirmationFailedError(Exception):
     pass
 
 
-@dataclasses.dataclass
 class Struct:
     def encode_eip712_type(self) -> str:
         return encode_eip712_type(self)
