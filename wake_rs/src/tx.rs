@@ -5,8 +5,8 @@ use pyo3::{
     intern, prelude::*, types::{PyBytes, PyDict, PyList, PyNone}, IntoPyObjectExt, PyTypeInfo
 };
 use revm::{
-    context::{result::{ExecutionResult, Output}, TxEnv}, primitives::{
-        bytes::Buf, Address as RevmAddress, Log,
+    context::{result::{ExecutionResult, Output}, BlockEnv, TxEnv}, primitives::{
+        bytes::Buf, Log, TxKind, B256
     },
 };
 
@@ -27,7 +27,6 @@ pub struct TransactionAbc {
     chain: Py<Chain>,
     pub(crate) block: BlockInfo,
     return_type: Py<PyAny>,
-    to: Option<RevmAddress>,
     result: ExecutionResult,
     abi: Option<Py<PyDict>>,
     errors_metadata: HashMap<[u8; 4], ErrorMetadata>,
@@ -39,6 +38,9 @@ pub struct TransactionAbc {
     pub(crate) journal_index: usize, // used for EVM DB journal rollbacks; index into DB journal before this tx happened
     tx_env: TxEnv,
     gas_limit_before: u64, // gas limit before this tx was executed
+    tx_hash: B256,
+    #[pyo3(get)]
+    tx_index: u32,
 }
 
 impl TransactionAbc {
@@ -47,19 +49,19 @@ impl TransactionAbc {
         block: BlockInfo,
         return_type: Py<PyAny>,
         abi: Option<Py<PyDict>>,
-        to: Option<RevmAddress>,
         result: ExecutionResult,
         errors_metadata: HashMap<[u8; 4], ErrorMetadata>,
         events_metadata: HashMap<Log, EventMetadata>,
         journal_index: usize,
         tx_env: TxEnv,
         gas_limit_before: u64,
+        tx_hash: B256,
+        tx_index: u32,
     ) -> Self {
         Self {
             chain,
             block,
             return_type,
-            to,
             result,
             abi,
             errors_metadata,
@@ -70,6 +72,8 @@ impl TransactionAbc {
             journal_index,
             tx_env,
             gas_limit_before,
+            tx_hash,
+            tx_index,
         }
     }
 }
@@ -78,7 +82,7 @@ impl TransactionAbc {
 impl TransactionAbc {
     #[getter]
     fn tx_hash(&self) -> String {
-        todo!()
+        self.tx_hash.to_string()
     }
 
     #[getter]
@@ -128,8 +132,37 @@ impl TransactionAbc {
     }
 
     #[getter]
+    fn from_(&self, py: Python) -> PyResult<Py<Account>> {
+        Py::new(py, Account::from_address_native(py, self.tx_env.caller, self.chain.clone_ref(py))?)
+    }
+
+    #[getter]
+    fn to(&self, py: Python) -> PyResult<Option<Py<Account>>> {
+        match self.tx_env.kind {
+            TxKind::Call(to) => Ok(Some(Py::new(py, Account::from_address_native(py, to, self.chain.clone_ref(py))?)?)),
+            TxKind::Create => Ok(None),
+        }
+    }
+
+    #[getter]
     fn gas_used(&self) -> u64 {
         self.result.gas_used()
+    }
+
+    #[getter]
+    fn cumulative_gas_used(&self, py: Python) -> PyResult<u64> {
+        Ok(self.block(py)?.borrow(py).block_env.gas_limit - self.gas_limit_before + self.result.gas_used())
+    }
+
+    #[getter]
+    fn status<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let py_objects = get_py_objects(py);
+
+        match &self.result {
+            ExecutionResult::Success { .. } => py_objects.tx_status_enum.bind(py).call1((1,)),
+            ExecutionResult::Revert { .. } => py_objects.tx_status_enum.bind(py).call1((0,)),
+            ExecutionResult::Halt { .. } => py_objects.tx_status_enum.bind(py).call1((0,)),
+        }
     }
 
     #[getter]

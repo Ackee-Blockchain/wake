@@ -301,6 +301,14 @@ pub(crate) fn get_py_objects(py: Python<'_>) -> &mut PyObjects {
                 .downcast_into::<PyDict>()
                 .unwrap()
                 .unbind(),
+            tx_status_enum: py
+                .import("wake.development.transactions")
+                .unwrap()
+                .getattr("TransactionStatusEnum")
+                .unwrap()
+                .downcast_into::<PyType>()
+                .unwrap()
+                .unbind(),
         });
 
         PY_FUNCTIONS.get_mut().unwrap()
@@ -342,6 +350,7 @@ pub(crate) struct PyObjects {
     pub wake_get_name_abi: Py<PyAny>,
     pub click_prompt: Py<PyFunction>,
     pub hardhat_console_abi: Py<PyDict>,
+    pub tx_status_enum: Py<PyType>,
 
     type_hints_cache: HashMap<String, Py<PyDict>>,
 }
