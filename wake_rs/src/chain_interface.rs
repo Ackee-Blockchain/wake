@@ -56,10 +56,10 @@ impl ChainInterface {
         let address = address.parse().map_err(|e: FromHexError| PyValueError::new_err(e.to_string()))?;
 
         let data = match block_identifier {
-            BlockEnum::Latest => self.with_evm(py, &self.chain, |evm| {
+            BlockEnum::Pending => self.with_evm(py, &self.chain, |evm| {
                 evm.db().storage(address, big_uint_to_u256(position))
             })?,
-            BlockEnum::Int(_) => {
+            BlockEnum::Int(_) | BlockEnum::Latest => {
                 let last_block_number = self.chain.borrow(py).last_block_number()?;
                 let chain = self.chain.bind(py).borrow_mut();
                 let journal_index = chain
@@ -121,6 +121,8 @@ impl ChainInterface {
             evm.db().set_storage(address, big_uint_to_u256(position), U256::from_be_slice(bytes))
         })??;
 
+        self.chain.borrow_mut(py).mine(py, false)?;
+
         Ok(())
     }
 
@@ -134,7 +136,7 @@ impl ChainInterface {
         let address = address.parse().map_err(|e: FromHexError| PyValueError::new_err(e.to_string()))?;
 
         match block_identifier {
-            BlockEnum::Latest => {
+            BlockEnum::Pending => {
                 let account = Account::from_address_native(
                     py,
                     address,
@@ -142,7 +144,7 @@ impl ChainInterface {
                 )?;
                 account.get_code(py)
             }
-            BlockEnum::Int(_) => {
+            BlockEnum::Int(_) | BlockEnum::Latest => {
                 let last_block_number = self.chain.borrow(py).last_block_number()?;
                 let journal_index = self
                     .chain

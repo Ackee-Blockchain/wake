@@ -24,9 +24,10 @@ impl Blocks {
     pub fn add_block(
         &mut self,
         py: Python,
-        block_env: BlockEnv,
+        block_env: BlockEnv, // must always have gas_limit set to the initial value
         journal_index: usize,
         block_hash: B256,
+        gas_used: u64,
     ) -> PyResult<Py<Block>> {
         let block_number = block_env.number as usize;
         let block = Py::new(
@@ -36,6 +37,7 @@ impl Blocks {
                 block_hash,
                 block_env,
                 journal_index: Some(journal_index),
+                gas_used,
             },
         )?;
         self.blocks.push(block.clone_ref(py));
@@ -67,15 +69,19 @@ impl Blocks {
             }
             BlockEnum::Latest | BlockEnum::Safe | BlockEnum::Finalized => last_block_number,
             BlockEnum::Pending => {
-                let pending_block_env = self.chain.borrow(py).get_evm()?.block.clone();
+                let borrowed_chain = self.chain.borrow(py);
+                let mut block_env = borrowed_chain.get_evm()?.block.clone();
+                // add pending gas used to the block gas limit
+                block_env.gas_limit += borrowed_chain.pending_gas_used;
 
                 return Py::new(
                     py,
                     Block {
                         chain: self.chain.clone_ref(py),
                         block_hash: B256::ZERO,
-                        block_env: pending_block_env,
+                        block_env,
                         journal_index: None,
+                        gas_used: borrowed_chain.pending_gas_used,
                     },
                 );
             }
@@ -126,8 +132,9 @@ impl Blocks {
                                             Block {
                                                 chain: self.chain.clone_ref(py),
                                                 block_hash: block.header.hash,
-                                                block_env: header_to_block_env(block.header),
+                                                block_env: header_to_block_env(&block.header),
                                                 journal_index: None,
+                                                gas_used: block.header.gas_used,
                                             },
                                         )?;
                                         self.forked_blocks.insert(number, block.clone_ref(py));
@@ -179,12 +186,14 @@ impl Blocks {
 #[pyclass]
 pub struct Block {
     #[pyo3(get)]
-    chain: Py<Chain>,
+    pub chain: Py<Chain>,
     pub block_env: BlockEnv,
     pub block_hash: B256,
     /// index into DB journal after this block was created
     /// None if this block was forked or this is temporal pending block
     pub journal_index: Option<usize>,
+    #[pyo3(get)]
+    pub gas_used: u64,
 }
 
 #[pymethods]

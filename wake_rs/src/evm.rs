@@ -44,7 +44,7 @@ pub(crate) fn prepare_tx_env(
 
     tx_env.gas_limit = match gas_limit {
         Some(GasLimitEnum::Int(v)) => v.try_into().unwrap(),
-        Some(GasLimitEnum::Max) => block_gas_limit,
+        Some(GasLimitEnum::Max) => block_gas_limit, // TODO use max block gas limit or current block gas limit?
         Some(GasLimitEnum::Auto) => todo!(),
         None => block_gas_limit,
     };

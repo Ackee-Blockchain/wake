@@ -45,7 +45,7 @@ use crate::evm::prepare_tx_env;
 use crate::inspectors::fqn_inspector::{ErrorMetadata, EventMetadata, FqnInspector};
 use crate::globals::{DEFAULT_CHAIN, TOKIO_RUNTIME};
 use crate::pytypes::{decode_and_normalize, resolve_error};
-use crate::tx::TransactionAbc;
+use crate::tx::{BlockInfo, TransactionAbc};
 use crate::txs::Txs;
 use crate::utils::get_py_objects;
 use crate::memory_db::CacheDB;
@@ -174,9 +174,15 @@ pub struct Chain {
     default_estimate_account: Option<Py<Account>>,
     #[pyo3(get)]
     default_access_list_account: Option<Py<Account>>,
+    #[pyo3(get, set)]
+    automine: bool,
+    #[pyo3(get)]
+    pub(crate) block_gas_limit: u64,
 
     latest_block_env: Option<BlockEnv>,
     snapshots: Vec<(CfgEnv, BlockEnv)>,
+    pending_txs: Vec<Py<TransactionAbc>>,
+    pub(crate) pending_gas_used: u64,
 
     // address => fqn
     // overrides how to resolve fqn (and pytypes) for this address
@@ -217,8 +223,12 @@ impl Chain {
                 default_call_account: None,
                 default_estimate_account: None,
                 default_access_list_account: None,
+                automine: true,
+                block_gas_limit: 30000000_u64,
                 latest_block_env: None,
                 snapshots: vec![],
+                pending_txs: vec![],
+                pending_gas_used: 0,
                 fqn_overrides: HashMap::new(),
                 tx_callback: None,
             },
@@ -371,17 +381,6 @@ impl Chain {
         Ok(())
     }
 
-    #[getter]
-    fn get_block_gas_limit(&self) -> PyResult<u64> {
-        Ok(self.get_evm()?.block.gas_limit)
-    }
-
-    #[setter]
-    fn set_block_gas_limit(&mut self, gas_limit: u64) -> PyResult<()> {
-        self.get_evm_mut()?.block.gas_limit = gas_limit;
-        Ok(())
-    }
-
     #[pyo3(signature = (account))]
     fn set_default_accounts(
         slf: &Bound<Self>,
@@ -427,6 +426,16 @@ impl Chain {
                 label.downcast_into::<PyString>()?.to_string(),
             );
         }
+        Ok(())
+    }
+
+    #[setter]
+    fn set_block_gas_limit(&mut self, gas_limit: u64) -> PyResult<()> {
+        if gas_limit < self.pending_gas_used {
+            return Err(PyValueError::new_err("Gas limit is lower than gas already used in pending block"));
+        }
+        self.block_gas_limit = gas_limit;
+        self.get_evm_mut()?.block.gas_limit = gas_limit - self.pending_gas_used;
         Ok(())
     }
 
@@ -509,6 +518,13 @@ impl Chain {
         Ok(context.into())
     }
 
+    fn change_automine(slf: Py<Self>, py: Python, automine: bool) -> PyResult<PyObject> {
+        let automine_context = PyModule::import(py, "wake.utils.automine_context")?
+            .getattr("AutomineContext")?
+            .call1((slf.clone_ref(py), automine))?;
+        Ok(automine_context.into())
+    }
+
     #[pyo3(name = "mine", signature = (callback=None))]
     fn mine_py(slf: Bound<Self>, py: Python, callback: Option<Bound<PyAny>>) -> PyResult<()> {
         if let Some(callback) = callback {
@@ -519,9 +535,9 @@ impl Chain {
             let mut borrowed = slf.borrow_mut();
             let evm = borrowed.get_evm_mut()?;
             evm.block.timestamp = new_timestamp;
-            let _ = borrowed.mine(py);
+            let _ = borrowed.mine(py, true);
         } else {
-            let _ = slf.borrow_mut().mine(py);
+            let _ = slf.borrow_mut().mine(py, true);
         }
 
         Ok(())
@@ -690,17 +706,18 @@ impl Chain {
             }
         }
 
+        let block_gas_limit = slf_.block_gas_limit;
         let evm = slf_.get_evm_mut()?;
         evm.cfg.limit_contract_code_size = Some(usize::max_value());
         evm.cfg.disable_nonce_check = true;
         evm.cfg.disable_eip3607 = true;
-        evm.block.gas_limit = 30000000_u64;
+        evm.block.gas_limit = block_gas_limit;
         evm.tx.chain_id = Some(evm.cfg.chain_id);
 
         slf_.blocks = Some(Py::new(py, Blocks::new(slf.clone_ref(py), slf_.forked_block))?);
         slf_.txs = Some(Py::new(py, Txs::new())?);
 
-        let _ = slf_.mine(py)?; // mine one block
+        let _ = slf_.mine(py, true)?; // mine one block
 
         Ok(())
     }
@@ -841,7 +858,11 @@ impl Chain {
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Not connected"))
     }
 
-    fn mine(&mut self, py: Python) -> PyResult<Py<Block>> {
+    pub(crate) fn mine(&mut self, py: Python, force: bool) -> PyResult<Option<Py<Block>>> {
+        if !self.automine && !force {
+            return Ok(None);
+        }
+
         let evm = self.evm
             .as_mut()
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Not connected"))?;
@@ -854,6 +875,10 @@ impl Chain {
             .set_last_block_number(last_block_number.try_into().unwrap());
         evm.db().set_block_hash(last_block_number, block_hash);
 
+        let mut block_env = evm.block.clone();
+        // reset to its original value
+        block_env.gas_limit += self.pending_gas_used;
+
         let block = self
             .blocks
             .as_mut()
@@ -862,16 +887,24 @@ impl Chain {
             .borrow_mut()
             .add_block(
                 py,
-                evm.block.clone(),
+                block_env,
                 evm.db().get_journal_index(),
                 block_hash,
-            );
+                self.pending_gas_used,
+            )?;
+
+        // assign mined block to pending txs and clear them
+        for tx in self.pending_txs.drain(..) {
+            tx.borrow_mut(py).block = BlockInfo::Mined(block.clone_ref(py));
+        }
+        self.pending_gas_used = 0;
 
         // prepare pending block
         evm.block.number += 1;
         evm.block.timestamp += 1;
+        evm.block.gas_limit = self.block_gas_limit;
 
-        block
+        Ok(Some(block))
     }
 
     pub(crate) fn last_block_number(&self) -> PyResult<u64> {
@@ -931,28 +964,10 @@ impl Chain {
         };
 
         let res = match block {
-            BlockEnum::Latest => {
-                let latest_block_env = mem::replace(&mut borrowed.latest_block_env, None).unwrap();
-
-                let (res, latest_block_env) =
-                    borrowed.with_evm_with_inspector(py, &mut *inspector, |evm| {
-                        let block_env_backup =
-                            mem::replace(&mut evm.block, latest_block_env);
-                        let res = evm.inspect_replay();
-                        let latest_block_env =
-                            mem::replace(&mut evm.block, block_env_backup);
-
-                        (res, latest_block_env)
-                    });
-
-                mem::swap(&mut borrowed.latest_block_env, &mut Some(latest_block_env));
-
-                res.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?
-            }
             BlockEnum::Pending => borrowed
                 .with_evm_with_inspector(py, &mut *inspector, |evm| evm.inspect_replay())
                 .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?,
-            BlockEnum::Int(_) => {
+            BlockEnum::Int(_) | BlockEnum::Latest => {
                 let block = borrowed.blocks.as_ref().unwrap().borrow_mut(py).get_block(
                     py,
                     block,
@@ -1084,7 +1099,18 @@ impl Chain {
 
         inspector.sync_coverage(py)?;
 
-        let block = borrowed.mine(py)?;
+        let gas_limit_before = borrowed.get_evm()?.block.gas_limit;
+        borrowed.get_evm_mut()?.block.gas_limit -= result.gas_used();
+        borrowed.pending_gas_used += result.gas_used();
+
+        let block = match borrowed.mine(py, false)? {
+            Some(block) => BlockInfo::Mined(block),
+            None => {
+                BlockInfo::Pending(borrowed.get_evm()?.block.clone())
+            }
+        };
+        let mined = matches!(block, BlockInfo::Mined(_));
+
         let (errors_metadata, events_metadata) = inspector.into_metadata();
         let tx = Py::new(
             py,
@@ -1099,8 +1125,12 @@ impl Chain {
                 events_metadata,
                 journal_index,
                 tx_env,
+                gas_limit_before,
             ),
         )?;
+        if !mined {
+            borrowed.pending_txs.push(tx.clone_ref(py));
+        }
 
         borrowed
             .txs
@@ -1173,28 +1203,10 @@ impl Chain {
         let mut inspector = FqnInspector::new();
 
         let res = match block {
-            BlockEnum::Latest => {
-                let latest_block_env = mem::replace(&mut borrowed.latest_block_env, None).unwrap();
-
-                let (res, latest_block_env) =
-                    borrowed.with_evm_with_inspector(py, &mut inspector, |evm| {
-                        let block_env_backup =
-                            mem::replace(&mut evm.block, latest_block_env);
-                        let res = evm.inspect_replay();
-                        let latest_block_env =
-                            mem::replace(&mut evm.block, block_env_backup);
-
-                        (res, latest_block_env)
-                    });
-
-                mem::swap(&mut borrowed.latest_block_env, &mut Some(latest_block_env));
-
-                res.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?
-            }
             BlockEnum::Pending => borrowed
                 .with_evm_with_inspector(py, &mut inspector, |evm| evm.inspect_replay())
                 .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?,
-            BlockEnum::Int(_) => {
+            BlockEnum::Int(_) | BlockEnum::Latest => {
                 let block = borrowed.blocks.as_ref().unwrap().borrow_mut(py).get_block(
                     py,
                     block,
@@ -1305,28 +1317,10 @@ impl Chain {
         let mut inspector = AccessListInspector::new(vec![].into());
 
         let res = match block {
-            BlockEnum::Latest => {
-                let latest_block_env = mem::replace(&mut borrowed.latest_block_env, None).unwrap();
-
-                let (res, latest_block_env) =
-                    borrowed.with_evm_with_inspector(py, &mut inspector, |evm| {
-                        let block_env_backup =
-                            mem::replace(&mut evm.block, latest_block_env);
-                        let res = evm.inspect_replay();
-                        let latest_block_env =
-                            mem::replace(&mut evm.block, block_env_backup);
-
-                        (res, latest_block_env)
-                    });
-
-                mem::swap(&mut borrowed.latest_block_env, &mut Some(latest_block_env));
-
-                res.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?
-            }
             BlockEnum::Pending => borrowed
                 .with_evm_with_inspector(py, &mut inspector, |evm| evm.inspect_replay())
                 .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?,
-            BlockEnum::Int(_) => {
+            BlockEnum::Int(_) | BlockEnum::Latest => {
                 let block = borrowed.blocks.as_ref().unwrap().borrow_mut(py).get_block(
                     py,
                     block,
@@ -1400,12 +1394,12 @@ impl Chain {
         py: Python,
         journal_index: usize,
         tx_env: &TxEnv,
-        block_env: &BlockEnv,
+        block_env: BlockEnv,
     ) -> NativeTrace {
         let mut inspector = TraceInspector::new();
 
         self.with_evm_with_inspector(py, &mut inspector, |evm| {
-            let block_env_backup = mem::replace(&mut evm.block, block_env.clone());
+            let block_env_backup = mem::replace(&mut evm.block, block_env);
             let rollback = evm.db().rollback(journal_index);
             let _ = evm.inspect_with_tx(tx_env.clone());
             evm.db().restore_rollback(rollback);
@@ -1420,12 +1414,12 @@ impl Chain {
         py: Python,
         journal_index: usize,
         tx_env: &TxEnv,
-        block_env: &BlockEnv,
+        block_env: BlockEnv,
     ) -> PyResult<Vec<Bytes>> {
         let mut inspector = ConsoleLogInspector::new();
 
         self.with_evm_with_inspector(py, &mut inspector, |evm| {
-            let block_env_backup = mem::replace(&mut evm.block, block_env.clone());
+            let block_env_backup = mem::replace(&mut evm.block, block_env);
             let rollback = evm.db().rollback(journal_index);
             let _ = evm.inspect_with_tx(tx_env.clone());
             evm.db().restore_rollback(rollback);

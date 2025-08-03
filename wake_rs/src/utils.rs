@@ -549,7 +549,7 @@ pub(crate) fn tx_params_to_typed_tx<'py>(
     })
 }
 
-pub(crate) fn header_to_block_env(header: Header) -> BlockEnv {
+pub(crate) fn header_to_block_env(header: &Header) -> BlockEnv {
     let blob_info = if let Some(excess_blob_gas) = header.excess_blob_gas {
         Some(BlobExcessGasAndPrice::new(excess_blob_gas.try_into().unwrap(), false)) // TODO!!
     } else {
