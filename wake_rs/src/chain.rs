@@ -1111,6 +1111,7 @@ impl Chain {
         };
         let mined = matches!(block, BlockInfo::Mined(_));
 
+        let tx_hash = B256::from_slice(&borrowed.rng.gen::<[u8; 32]>());
         let (errors_metadata, events_metadata) = inspector.into_metadata();
         let tx = Py::new(
             py,
@@ -1119,13 +1120,14 @@ impl Chain {
                 block,
                 Py::from(return_type),
                 abi.map(|abi| Py::from(abi)),
-                to,
                 result,
                 errors_metadata,
                 events_metadata,
                 journal_index,
                 tx_env,
                 gas_limit_before,
+                tx_hash,
+                borrowed.pending_txs.len() as u32,
             ),
         )?;
         if !mined {
