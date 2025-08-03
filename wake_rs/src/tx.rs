@@ -17,10 +17,15 @@ use crate::{
     }, utils::get_py_objects
 };
 
+pub enum BlockInfo {
+    Mined(Py<Block>),
+    Pending(BlockEnv),
+}
+
 #[pyclass(subclass)]
 pub struct TransactionAbc {
     chain: Py<Chain>,
-    block: Py<Block>,
+    pub(crate) block: BlockInfo,
     return_type: Py<PyAny>,
     to: Option<RevmAddress>,
     result: ExecutionResult,
@@ -33,12 +38,13 @@ pub struct TransactionAbc {
     cached_call_trace: Option<PyObject>,
     pub(crate) journal_index: usize, // used for EVM DB journal rollbacks; index into DB journal before this tx happened
     tx_env: TxEnv,
+    gas_limit_before: u64, // gas limit before this tx was executed
 }
 
 impl TransactionAbc {
     pub fn new(
         chain: Py<Chain>,
-        block: Py<Block>,
+        block: BlockInfo,
         return_type: Py<PyAny>,
         abi: Option<Py<PyDict>>,
         to: Option<RevmAddress>,
@@ -47,6 +53,7 @@ impl TransactionAbc {
         events_metadata: HashMap<Log, EventMetadata>,
         journal_index: usize,
         tx_env: TxEnv,
+        gas_limit_before: u64,
     ) -> Self {
         Self {
             chain,
@@ -62,6 +69,7 @@ impl TransactionAbc {
             cached_call_trace: None,
             journal_index,
             tx_env,
+            gas_limit_before,
         }
     }
 }
@@ -79,13 +87,39 @@ impl TransactionAbc {
     }
 
     #[getter]
-    fn block(&self, py: Python) -> Py<Block> {
-        self.block.clone_ref(py)
+    fn block(&self, py: Python) -> PyResult<Py<Block>> {
+        match &self.block {
+            BlockInfo::Mined(block) => Ok(block.clone_ref(py)),
+            BlockInfo::Pending(_) => {
+                let borrowed_chain = self.chain.borrow(py);
+                let mut block_env = borrowed_chain.get_evm()?.block.clone();
+                let gas_used = borrowed_chain.pending_gas_used;
+
+                // add pending gas used to the block gas limit
+                block_env.gas_limit += gas_used;
+
+                return Py::new(
+                    py,
+                    Block {
+                        chain: self.chain.clone_ref(py),
+                        block_hash: B256::ZERO,
+                        block_env,
+                        journal_index: None,
+                        gas_used,
+                    },
+                );
+            }
+        }
     }
 
     #[getter]
-    fn block_number(&self, py: Python) -> u64 {
-        self.block.borrow(py).block_env.number.try_into().unwrap()
+    fn block_number(&self, py: Python) -> PyResult<u64> {
+        match &self.block {
+            BlockInfo::Mined(block) => Ok(block.borrow(py).block_env.number),
+            BlockInfo::Pending(block_env) => {
+                Ok(block_env.number)
+            }
+        }
     }
 
     #[getter]
@@ -271,11 +305,17 @@ impl TransactionAbc {
 
     #[getter]
     fn console_logs(&self, py: Python) -> PyResult<Vec<Py<PyAny>>> {
+        let mut block_env = match &self.block {
+            BlockInfo::Mined(block) => block.borrow(py).block_env.clone(),
+            BlockInfo::Pending(block_env) => block_env.clone(),
+        };
+        block_env.gas_limit = self.gas_limit_before;
+
         let console_logs = self.chain.borrow_mut(py).get_console_logs(
             py,
             self.journal_index,
             &self.tx_env,
-            &self.block.borrow(py).block_env,
+            block_env,
         )?;
         let py_objects = get_py_objects(py);
         let hardhat_console_abi = py_objects.hardhat_console_abi.bind_borrowed(py);
@@ -310,11 +350,17 @@ impl TransactionAbc {
         let borrowed = slf.borrow();
         let journal_index = borrowed.journal_index;
 
+        let mut block_env = match &borrowed.block {
+            BlockInfo::Mined(block) => block.borrow(py).block_env.clone(),
+            BlockInfo::Pending(block_env) => block_env.clone(),
+        };
+        block_env.gas_limit = borrowed.gas_limit_before;
+
         let trace = borrowed.chain.borrow_mut(py).get_call_trace(
             py,
             journal_index,
             &borrowed.tx_env,
-            &borrowed.block.borrow(py).block_env,
+            block_env,
         );
 
         let py_objects = get_py_objects(py);
