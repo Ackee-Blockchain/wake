@@ -2,7 +2,7 @@ use crate::{
     abi_old::{py_to_alloy, Abi, AbiError},
     account::Account,
     address::Address,
-    pytypes::{extract_abi_types, normalize_output},
+    pytypes::{normalize_output},
     utils::{big_int_to_i256, big_uint_to_u256, get_py_objects, PyObjects},
 };
 use alloy::core::dyn_abi::{DynSolType, DynSolValue, Error as AlloyAbiError};
@@ -13,7 +13,7 @@ use pyo3::{
     exceptions::PyValueError,
     intern,
     prelude::*,
-    types::{PyBool, PyByteArray, PyBytes, PyDict, PyList, PyInt, PyString, PyTuple, PyType},
+    types::{PyBool, PyByteArray, PyBytes, PyList, PyInt, PyString, PyTuple, PyType},
     PyTypeInfo,
 };
 use revm::primitives::{B256, U256};
@@ -116,28 +116,7 @@ impl abi {
         func: &Bound<'py, PyAny>,
         args: Vec<Bound<'py, PyAny>>,
     ) -> PyResult<Bound<'py, PyBytes>> {
-        let py_objects = get_py_objects(py);
-        let selector = func
-            .getattr(intern!(py, "selector"))?
-            .downcast_into::<PyBytes>()?;
-        let contract =
-            py_objects
-                .wake_get_class_that_defined_method
-                .call(py, (func,), None)?;
-        let contract = contract.bind(py);
-        let abi = contract
-            .getattr(intern!(py, "_abi"))?
-            .downcast_into::<PyDict>()?
-            .get_item(selector.clone())?
-            .expect("selector not found in abi")
-            .downcast_into::<PyDict>()?;
-        let types = extract_abi_types(py, &abi, intern!(py, "inputs"))?;
-
-        let encoded = Abi::encode(py, types, args, py_objects)?;
-        let mut result = Vec::with_capacity(4 + encoded.len());
-        result.extend_from_slice(&selector.as_bytes()[..4]);
-        result.extend_from_slice(&encoded);
-        Ok(PyBytes::new(py, result.as_slice()))
+        Ok(PyBytes::new(py, Abi::encode_call(py, func, args, get_py_objects(py))?.as_slice()))
     }
 
     #[staticmethod]

@@ -4,10 +4,11 @@ use num_bigint::{BigInt, BigUint};
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::{intern, prelude::*, IntoPyObjectExt};
 use pyo3::create_exception;
-use pyo3::types::{PyBool, PyByteArray, PyBytes, PyList, PyString, PyTuple};
+use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyList, PyString, PyTuple};
 
 use crate::address::Address;
 use crate::enums::AddressEnum;
+use crate::pytypes::extract_abi_types;
 use crate::utils::{big_int_to_i256, big_uint_to_u256, get_py_objects, PyObjects};
 
 create_exception!("wake.development.core", AbiError, PyException);
@@ -75,6 +76,36 @@ impl Abi {
         Ok(converted.abi_encode_packed())
     }
 
+    pub(crate) fn encode_call<'py>(
+        py: Python<'py>,
+        func: &Bound<'py, PyAny>,
+        args: Vec<Bound<'py, PyAny>>,
+        py_objects: &PyObjects,
+    ) -> PyResult<Vec<u8>> {
+        let selector = func
+            .getattr(intern!(py, "selector"))?
+            .downcast_into::<PyBytes>()?;
+        let contract =
+            py_objects
+                .wake_get_class_that_defined_method
+                .call(py, (func,), None)?;
+        let contract = contract.bind(py);
+        let abi = contract
+            .getattr(intern!(py, "_abi"))?
+            .downcast_into::<PyDict>()?
+            .get_item(selector.clone())?
+            .expect("selector not found in abi")
+            .downcast_into::<PyDict>()?;
+        let types = extract_abi_types(py, &abi, intern!(py, "inputs"))?;
+
+        let encoded = Abi::encode(py, types, args, py_objects)?;
+        let mut result = Vec::with_capacity(4 + encoded.len());
+        result.extend_from_slice(&selector.as_bytes()[..4]);
+        result.extend_from_slice(&encoded);
+
+        Ok(result)
+    }
+
     pub(crate) fn decode<'py>(py: Python<'py>, types: Vec<String>, data: Vec<u8>, py_objects: &PyObjects) -> PyResult<PyObject> {
         let alloy_type: DynSolType = format!("({})", types.join(",")).parse().map_err(|e: AlloyAbiError| AbiError::new_err(e.to_string()))?;
         let decoded = alloy_type.abi_decode_sequence(data.as_slice()).map_err(|e| AbiError::new_err(e.to_string()))?;
@@ -131,6 +162,15 @@ impl Abi {
         data: Vec<Bound<'py, PyAny>>,
     ) -> PyResult<Bound<'py, PyBytes>> {
         Ok(PyBytes::new(py, Self::encode_packed(py, types, data, get_py_objects(py))?.as_slice()))
+    }
+    #[staticmethod]
+    #[pyo3(name = "encode_call")]
+    fn encode_call_py<'py>(
+        py: Python<'py>,
+        func: &Bound<'py, PyAny>,
+        args: Vec<Bound<'py, PyAny>>,
+    ) -> PyResult<Bound<'py, PyBytes>> {
+        Ok(PyBytes::new(py, Self::encode_call(py, func, args, get_py_objects(py))?.as_slice()))
     }
 
     #[staticmethod]
