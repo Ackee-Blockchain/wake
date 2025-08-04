@@ -2346,6 +2346,14 @@ class Chain(ABC):
                     debug_trace,  # pyright: ignore reportGeneralTypeIssues
                     fqn_overrides,
                 )
+                for base_fqn in contracts_inheritance[fqn]:
+                    if base_fqn in errors[selector]:
+                        fqn = base_fqn
+                        break
+                if fqn not in errors[selector]:
+                    e = UnknownTransactionRevertedError(revert_data)
+                    e.tx = tx
+                    raise e from None
             except ValueError:
                 e = UnknownTransactionRevertedError(revert_data)
                 e.tx = tx
