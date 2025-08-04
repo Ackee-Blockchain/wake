@@ -1132,7 +1132,7 @@ wheels = [
 
 [[package]]
 name = "eth-wake"
-version = "4.19.0"
+version = "5.0.0rc0"
 source = { editable = "." }
 dependencies = [
     { name = "abch-tree-sitter" },
