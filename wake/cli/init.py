@@ -637,8 +637,18 @@ def run_init(
                 f"Project directory {config.project_root_path} is not empty. Use --force to force overwrite."
             )
 
+        installed_path = Path(__file__).parent.parent / "examples" / "counter"
+        editable_path = Path(__file__).parent.parent.parent / "examples" / "counter"
+
+        if installed_path.exists():
+            path = installed_path
+        elif editable_path.exists():
+            path = editable_path
+        else:
+            path = installed_path
+
         copy_dir(
-            Path(__file__).parent.parent / "examples" / "counter",
+            path,
             config.project_root_path,
             overwrite=force,
         )

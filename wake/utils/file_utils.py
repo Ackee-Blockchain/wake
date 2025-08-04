@@ -5,7 +5,19 @@ import shutil
 from os import PathLike
 from typing import Union
 
-wake_contracts_path = pathlib.Path(__file__).parent.parent / "contracts"
+# Handle both editable and installed modes
+# In installed mode: contracts are at (root)/wake/contracts
+# In editable mode: contracts are at (root)/contracts
+_installed_contracts = pathlib.Path(__file__).parent.parent / "contracts"
+_editable_contracts = pathlib.Path(__file__).parent.parent.parent / "contracts"
+
+if _installed_contracts.exists():
+    wake_contracts_path = _installed_contracts
+elif _editable_contracts.exists():
+    wake_contracts_path = _editable_contracts
+else:
+    # Fallback to installed path if neither exists
+    wake_contracts_path = _installed_contracts
 
 
 def is_relative_to(path: pathlib.PurePath, *other: Union[str, PathLike[str]]):
