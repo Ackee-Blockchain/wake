@@ -6,6 +6,13 @@ small.label {
 }
 </style>
 
+## 4.20.1 <small>(Aug 4, 2025)</small> { id="4.20.1" }
+
+Fixes:
+
+- fixed JSON-RPC error when call/estimate/access list is requested for a historical block, caused by `gasPrice`/`baseFeePerGas` being too low compared to the block's base fee <small class="label">[deployment framework]</small>
+- fixed pytypes resolving of errors defined in base contracts (compared to the contract raising them) <small class="label">[testing & deployment framework]</small>
+
 ## 4.20.0 <small>(Jul 27, 2025)</small> { id="4.20.0" }
 
 Features & improvements:
