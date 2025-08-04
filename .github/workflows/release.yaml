@@ -247,8 +247,11 @@ jobs:
         path: wheelhouse
         merge-multiple: true
 
+    - name: List wheelhouse
+      run: ls -la wheelhouse
+
     - name: Build and upload to PyPI
-      run: uv build --sdist && uv publish --token ${{ secrets.PYPI_DEPLOY_TOKEN }} dist/ wheelhouse/
+      run: uv build --sdist && uv publish --token ${{ secrets.PYPI_DEPLOY_TOKEN }} dist/*.tar.gz wheelhouse/*.whl
 
   docker:
     needs: pypi
