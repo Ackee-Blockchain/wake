@@ -5,6 +5,7 @@ from typing import Dict, List, Sequence, Union, Optional, Any, Callable, Type, T
 from typing_extensions import Literal
 
 from wake.development.core import Chain, SignedAuthorization, TransactionAbc, TxParams, Eip712Domain
+from wake.development.primitive_types import bytes32
 
 
 class abi:
@@ -299,7 +300,7 @@ def default_chain() -> Chain: ...
 
 def new_mnemonic(words: int, language: str) -> str: ...
 
-def keccak256(data: bytes) -> bytes: ...  # TODO actually returns bytes32
+def keccak256(data: bytes) -> bytes32: ...
 
 def to_checksum_address(address: Union[Address, Account, str, int]) -> str: ...
 
