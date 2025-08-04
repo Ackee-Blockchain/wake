@@ -741,7 +741,9 @@ class SakeContext:
                 None,
                 None,
             )
-            tx_params = chain._build_transaction(RequestType.CALL, tx_params, [], None)
+            tx_params = chain._build_transaction(
+                RequestType.CALL, tx_params, [], None, "latest"
+            )
 
             trace = chain.chain_interface.debug_trace_call(
                 tx_params, options={"enableMemory": True}

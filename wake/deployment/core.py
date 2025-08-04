@@ -151,6 +151,7 @@ class Chain(wake.development.core.Chain):
         params: TxParams,
         arguments: Iterable,
         abi: Optional[Dict],
+        block_identifier: Union[int, str],
     ) -> TxParams:
         if "authorizationList" in params and len(params["authorizationList"]) > 0:
             tx_type = 4
@@ -210,14 +211,18 @@ class Chain(wake.development.core.Chain):
         if "to" in params:
             tx["to"] = params["to"]
 
-        if tx_type == 0:
-            tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self.gas_price
-            )
-        elif tx_type == 1:
-            tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self.gas_price
-            )
+        if tx_type in [0, 1]:
+            if "gasPrice" in params:
+                tx["gasPrice"] = params["gasPrice"]
+            elif block_identifier == "pending":
+                tx["gasPrice"] = self.gas_price
+            else:
+                tx["gasPrice"] = int(
+                    self.chain_interface.get_block(block_identifier).get(
+                        "baseFeePerGas", "0x0"
+                    ),
+                    16,
+                )
         elif tx_type >= 2:
             tx["maxPriorityFeePerGas"] = (
                 params["maxPriorityFeePerGas"]
@@ -233,7 +238,9 @@ class Chain(wake.development.core.Chain):
                 ):
                     tx["maxFeePerGas"] = tx["maxPriorityFeePerGas"] + int(
                         int(
-                            self.chain_interface.get_block("pending")["baseFeePerGas"],
+                            self.chain_interface.get_block(block_identifier)[
+                                "baseFeePerGas"
+                            ],
                             16,
                         )
                         * 2
@@ -262,7 +269,9 @@ class Chain(wake.development.core.Chain):
                 tx_copy.pop("gasPrice", None)
                 tx_copy.pop("maxPriorityFeePerGas", None)
                 tx_copy.pop("maxFeePerGas", None)
-                tx["gas"] = int(self._chain_interface.estimate_gas(tx_copy) * 1.1)
+                tx["gas"] = int(
+                    self._chain_interface.estimate_gas(tx_copy, block_identifier) * 1.1
+                )
             except JsonRpcError as e:
                 raise self._process_call_revert(e) from None
         elif isinstance(params["gas"], int):
@@ -276,7 +285,9 @@ class Chain(wake.development.core.Chain):
             and request_type != "access_list"
         ):
             try:
-                response = self._chain_interface.create_access_list(tx)
+                response = self._chain_interface.create_access_list(
+                    tx, block_identifier
+                )
 
                 tx_copy = tx.copy()
                 tx_copy.pop("gas", None)
@@ -286,7 +297,9 @@ class Chain(wake.development.core.Chain):
                 tx_copy["accessList"] = response["accessList"]
 
                 # gas estimate returned by eth_createAccessList cannot be trusted
-                gas_used = int(self._chain_interface.estimate_gas(tx_copy) * 1.1)
+                gas_used = int(
+                    self._chain_interface.estimate_gas(tx_copy, block_identifier) * 1.1
+                )
 
                 if params.get("accessList", None) == "auto" or (
                     "accessList" not in params and gas_used <= tx["gas"]
