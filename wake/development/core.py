@@ -1025,7 +1025,9 @@ class Account:
             access_list,
             type,
         )
-        params = self._chain._build_transaction(RequestType.CALL, params, [], None)
+        params = self._chain._build_transaction(
+            RequestType.CALL, params, [], None, block
+        )
 
         try:
             coverage_handler = get_coverage_handler()
@@ -1080,7 +1082,9 @@ class Account:
             access_list,
             type,
         )
-        params = self._chain._build_transaction(RequestType.CALL, params, [], None)
+        params = self._chain._build_transaction(
+            RequestType.CALL, params, [], None, block
+        )
 
         try:
             return self._chain.chain_interface.estimate_gas(params, block)
@@ -1119,7 +1123,7 @@ class Account:
             type,
         )
         params = self._chain._build_transaction(
-            RequestType.ACCESS_LIST, params, [], None
+            RequestType.ACCESS_LIST, params, [], None, block
         )
 
         try:
@@ -1159,7 +1163,7 @@ class Account:
             type,
         )
         tx_params = self._chain._build_transaction(
-            RequestType.CALL, tx_params, [], None
+            RequestType.TX, tx_params, [], None, "pending"
         )
 
         tx_hash = self._chain._send_transaction(tx_params, from_)
@@ -1491,6 +1495,7 @@ class Chain(ABC):
         params: TxParams,
         arguments: Iterable,
         abi: Optional[Dict],
+        block_identifier: Union[int, str],
     ) -> TxParams:
         ...
 
@@ -2686,7 +2691,9 @@ class Chain(ABC):
         return_type: Type,
         block: Union[int, str],
     ) -> Any:
-        tx_params = self._build_transaction(RequestType.CALL, params, arguments, abi)
+        tx_params = self._build_transaction(
+            RequestType.CALL, params, arguments, abi, block
+        )
         try:
             coverage_handler = get_coverage_handler()
             if coverage_handler is not None and self._debug_trace_call_supported:
@@ -2720,7 +2727,7 @@ class Chain(ABC):
         block: Union[int, str],
     ) -> int:
         tx_params = self._build_transaction(
-            RequestType.ESTIMATE, params, arguments, abi
+            RequestType.ESTIMATE, params, arguments, abi, block
         )
         try:
             return self._chain_interface.estimate_gas(tx_params, block)
@@ -2736,7 +2743,7 @@ class Chain(ABC):
         block: Union[int, str],
     ):
         tx_params = self._build_transaction(
-            RequestType.ACCESS_LIST, params, arguments, abi
+            RequestType.ACCESS_LIST, params, arguments, abi, block
         )
         try:
             response = self._chain_interface.create_access_list(tx_params, block)
@@ -2758,7 +2765,9 @@ class Chain(ABC):
         confirmations: Optional[int],
         from_: Optional[Union[Account, Address, str]],
     ) -> Any:
-        tx_params = self._build_transaction(RequestType.TX, params, arguments, abi)
+        tx_params = self._build_transaction(
+            RequestType.TX, params, arguments, abi, "pending"
+        )
 
         tx_hash = self._send_transaction(tx_params, from_)
 
