@@ -1,0 +1,75 @@
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #0000FF;
+    --md-code-hl-name-color: #0f1112;
+    --md-code-hl-keyword-color: #212ed7;
+    --md-code-hl-variable-color: rgb(0 0 0 / 60%);
+    --md-code-fg-color: #1f2528;
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #00FFFF;
+}
+
+[data-md-color-scheme="slate"] .excalidraw svg {
+    filter: invert(1) hue-rotate(90deg);
+}
+
+@media screen and (max-width: 76.1875em) {
+    .md-nav--primary
+    .md-nav__title[for=__drawer] {
+        background-color: #0000FF;
+    }
+}
+
+.md-header {
+    background-color: #0000FF;
+}
+
+.doc-attribute > .doc-heading {
+    margin: 0.3em 0;
+}
+
+[data-md-color-scheme="default"] .md-typeset h1,
+[data-md-color-scheme="default"] .md-typeset h2,
+[data-md-color-scheme="default"] .md-typeset h3,
+[data-md-color-scheme="default"] .md-typeset h4,
+[data-md-color-scheme="default"] .md-typeset h5,
+[data-md-color-scheme="default"] .md-typeset h6 {
+    color: #0000FF;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4,
+[data-md-color-scheme="slate"] .md-typeset h5,
+[data-md-color-scheme="slate"] .md-typeset h6 {
+    color: #00FFFF;
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+    background-color: #0000FF;
+}
+
+:not(.doc-attribute) > h2.doc-heading > code,
+:not(.doc-attribute) > h3.doc-heading > code,
+:not(.doc-attribute) > h4.doc-heading > code,
+:not(.doc-attribute) > h2.doc-heading .doc-label > code,
+:not(.doc-attribute) > h3.doc-heading .doc-label > code,
+:not(.doc-attribute) > h4.doc-heading .doc-label > code
+{
+    color: #FFF !important;
+    padding-top: 0.2em !important;
+    padding-bottom: 0.3em !important;
+    background-color: #0000FF;
+}
+
+:not(.doc-attribute) > h2.doc-heading > code span,
+:not(.doc-attribute) > h3.doc-heading > code span,
+:not(.doc-attribute) > h4.doc-heading > code span,
+:not(.doc-attribute) > h2.doc-heading .doc-label > code span,
+:not(.doc-attribute) > h3.doc-heading .doc-label > code span,
+:not(.doc-attribute) > h4.doc-heading .doc-label > code span
+{
+    color: #FFF !important;
+}
