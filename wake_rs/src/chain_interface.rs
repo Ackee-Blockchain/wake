@@ -60,8 +60,8 @@ impl ChainInterface {
                 evm.db().storage(address, big_uint_to_u256(position))
             })?,
             BlockEnum::Int(_) | BlockEnum::Latest => {
-                let last_block_number = self.chain.borrow(py).last_block_number()?;
-                let chain = self.chain.bind(py).borrow_mut();
+                let chain = self.chain.bind(py).borrow();
+                let last_block_number = chain.last_block_number()?;
                 let journal_index = chain
                     .blocks
                     .as_ref()
@@ -80,6 +80,8 @@ impl ChainInterface {
                 } else {
                     todo!() // fetch from forked chain wih rpc
                 };
+
+                drop(chain);
 
                 self.with_evm(py, &self.chain, |evm| {
                     let rollback = evm.db().rollback(journal_index);
@@ -145,10 +147,9 @@ impl ChainInterface {
                 account.get_code(py)
             }
             BlockEnum::Int(_) | BlockEnum::Latest => {
-                let last_block_number = self.chain.borrow(py).last_block_number()?;
-                let journal_index = self
-                    .chain
-                    .borrow(py)
+                let chain = self.chain.bind(py).borrow();
+                let last_block_number = chain.last_block_number()?;
+                let journal_index = chain
                     .blocks
                     .as_ref()
                     .expect("Not connected")
@@ -157,7 +158,7 @@ impl ChainInterface {
                         py,
                         block_identifier,
                         last_block_number,
-                        self.chain.borrow(py).provider.clone(),
+                        chain.provider.clone(),
                     )?
                     .borrow(py)
                     .journal_index;
@@ -166,6 +167,8 @@ impl ChainInterface {
                 } else {
                     todo!() // fetch from forked chain wih rpc
                 };
+
+                drop(chain);
 
                 let code = self.with_evm(py, &self.chain, |evm| -> PyResult<Vec<u8>> {
                     let rollback = evm.db().rollback(journal_index);
