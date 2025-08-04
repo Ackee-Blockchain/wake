@@ -209,6 +209,7 @@ class Chain(wake.development.core.Chain):
         params: TxParams,
         arguments: Iterable,
         abi: Optional[Dict],
+        block_identifier: Union[int, str],
     ) -> TxParams:
         tx_type = params.get("type", self._default_tx_type)
         if tx_type not in {0, 1, 2}:
@@ -278,18 +279,34 @@ class Chain(wake.development.core.Chain):
             tx["to"] = params["to"]
 
         if tx_type == 0:
-            tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self._gas_price
-            )
+            if "gasPrice" in params:
+                tx["gasPrice"] = params["gasPrice"]
+            elif block_identifier == "pending":
+                tx["gasPrice"] = self.gas_price
+            else:
+                tx["gasPrice"] = int(
+                    self.chain_interface.get_block(block_identifier).get(
+                        "baseFeePerGas", "0x0"
+                    ),
+                    16,
+                )
         elif tx_type == 1:
             if "accessList" not in params:
                 tx["accessList"] = []
             elif params["accessList"] != "auto":
                 tx["accessList"] = params["accessList"]
             tx["chainId"] = self._chain_id
-            tx["gasPrice"] = (
-                params["gasPrice"] if "gasPrice" in params else self._gas_price
-            )
+            if "gasPrice" in params:
+                tx["gasPrice"] = params["gasPrice"]
+            elif block_identifier == "pending":
+                tx["gasPrice"] = self.gas_price
+            else:
+                tx["gasPrice"] = int(
+                    self.chain_interface.get_block(block_identifier).get(
+                        "baseFeePerGas", "0x0"
+                    ),
+                    16,
+                )
         elif tx_type == 2:
             if "accessList" not in params:
                 tx["accessList"] = []
@@ -322,7 +339,9 @@ class Chain(wake.development.core.Chain):
         elif params["gas"] == "auto":
             # auto
             try:
-                tx["gas"] = int(self._chain_interface.estimate_gas(tx) * 1.1)
+                tx["gas"] = int(
+                    self._chain_interface.estimate_gas(tx, block_identifier) * 1.1
+                )
             except JsonRpcError as e:
                 raise self._process_call_revert(e) from None
         else:
@@ -334,7 +353,9 @@ class Chain(wake.development.core.Chain):
             and params["accessList"] == "auto"
         ):
             try:
-                response = self._chain_interface.create_access_list(tx)
+                response = self._chain_interface.create_access_list(
+                    tx, block_identifier
+                )
                 tx["accessList"] = response["accessList"]
 
                 if "gas" in params and params["gas"] == "auto":
