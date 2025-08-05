@@ -287,6 +287,14 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         zip_path.unlink()
         return solc_path
 
+    def __fetch_list_file_from_url(self, url: str) -> None:
+        logger.debug(f"Downloading solc list from {url}")
+        with urllib.request.urlopen(url, timeout=5) as response:
+            json = response.read()
+            self.__solc_builds = SolcBuilds.model_validate_json(json)
+            self.__solc_list_path.write_bytes(json)
+            self.__list_force_loaded = True
+
     def __fetch_list_file(
         self, target_version: Optional[SolidityVersion], force: bool
     ) -> None:
@@ -313,40 +321,28 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             return
 
         try:
-            logger.debug(f"Downloading solc list from {self.__solc_list_urls[0]}")
-            with urllib.request.urlopen(
-                self.__solc_list_urls[0], timeout=5
-            ) as response:
-                json = response.read()
-                self.__solc_builds = SolcBuilds.model_validate_json(json)
-                self.__solc_list_path.write_bytes(json)
-                self.__list_force_loaded = True
+            self.__fetch_list_file_from_url(self.__solc_list_urls[0])
         except (urllib.error.URLError, OSError) as e:
             logger.warning(
                 f"Failed to download solc list from {self.__solc_list_urls[0]}: {e}"
             )
 
-            try:
-                logger.debug(f"Downloading solc list from {self.__solc_list_urls[1]}")
-                with urllib.request.urlopen(
-                    self.__solc_list_urls[1], timeout=0.5
-                ) as response:
-                    json = response.read()
-                    self.__solc_builds = SolcBuilds.model_validate_json(json)
-                    self.__solc_list_path.write_bytes(json)
-                    self.__list_force_loaded = True
-            except (urllib.error.URLError, OSError) as e:
-                logger.warning(
-                    f"Failed to download solc list from {self.__solc_list_urls[1]}: {e}"
-                )
-
-                # in case of networking issues try to use the locally downloaded solc builds file as a fallback
-                if self.__solc_list_path.is_file():
-                    self.__solc_builds = SolcBuilds.model_validate_json(
-                        self.__solc_list_path.read_text()
+            if len(self.__solc_list_urls) > 1:
+                try:
+                    self.__fetch_list_file_from_url(self.__solc_list_urls[1])
+                    return
+                except (urllib.error.URLError, OSError) as e:
+                    logger.warning(
+                        f"Failed to download solc list from {self.__solc_list_urls[1]}: {e}"
                     )
-                else:
-                    raise
+
+            # in case of networking issues try to use the locally downloaded solc builds file as a fallback
+            if self.__solc_list_path.is_file():
+                self.__solc_builds = SolcBuilds.model_validate_json(
+                    self.__solc_list_path.read_text()
+                )
+            else:
+                raise
 
     def __verify_checksums(self, version: SolidityVersion) -> bool:
         assert self.__solc_builds is not None
