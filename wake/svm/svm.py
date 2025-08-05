@@ -62,6 +62,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     __solc_list_path: Path
     __solc_builds: Optional[SolcBuilds]
     __list_force_loaded: bool
+    __using_3rd_party_source: bool
 
     def __init__(self, wake_config: WakeConfig):
         system = platform.system()
@@ -89,6 +90,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             self.__solc_download_urls = [
                 f"{self.NIKITA_LINUX_AARCH64_URL}/linux/aarch64/",
             ]
+            self.__using_3rd_party_source = True
         else:
             self.__solc_list_urls = [
                 f"{self.BINARIES_URL}/{self.__platform}/list.json",
@@ -98,12 +100,17 @@ class SolcVersionManager(CompilerVersionManagerAbc):
                 f"{self.BINARIES_URL}/{self.__platform}/",
                 f"{self.GITHUB_URL}/{self.__platform}/",
             ]
+            self.__using_3rd_party_source = False
         self.__compilers_path = wake_config.global_data_path / "compilers"
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
         self.__list_force_loaded = False
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def using_3rd_party_source(self) -> bool:
+        return self.__using_3rd_party_source
 
     def installed(self, version: Union[SolidityVersion, str]) -> bool:
         if isinstance(version, str):
@@ -157,6 +164,11 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             # checksum verification passed
             if self.__verify_checksums(version):
                 return
+
+        if self.__using_3rd_party_source:
+            logger.warning(
+                "Using 3rd party source for solc binaries: https://github.com/nikitastupin/solc"
+            )
 
         local_path = self.get_path(version).parent / filename
         local_path.parent.mkdir(parents=True, exist_ok=True)

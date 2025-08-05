@@ -1468,6 +1468,12 @@ class LspCompiler:
     async def __install_solc(self, target_versions: List[SolidityVersion]) -> None:
         for version in set(target_versions):
             if not self.__svm.installed(version):
+                if self.__svm.using_3rd_party_source:
+                    await self.__server.show_message(
+                        "Using 3rd party source for solc binaries: https://github.com/nikitastupin/solc",
+                        MessageType.WARNING,
+                    )
+
                 progress_token = await self.__server.progress_begin(
                     "Downloading", f"solc {version}", 0
                 )
