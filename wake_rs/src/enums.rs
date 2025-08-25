@@ -14,14 +14,6 @@ use crate::{account::Account, address::Address};
 
 
 #[derive(FromPyObject)]
-pub enum RawAddressEnum {
-    #[pyo3(transparent, annotation = "int")]
-    Int(BigUint),
-    #[pyo3(transparent, annotation = "str")]
-    String(String)
-}
-
-#[derive(FromPyObject)]
 pub(crate) enum AddressEnum {
     #[pyo3(transparent, annotation = "Account")]
     Account(Py<Account>),

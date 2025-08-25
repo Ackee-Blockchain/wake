@@ -12,7 +12,7 @@ use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use revm::primitives::{Address as RevmAddress, FixedBytes};
 use crate::core::signer::{Signer, SIGNERS};
-use crate::enums::RawAddressEnum;
+use crate::enums::AddressEnum;
 use crate::globals::TOKIO_RUNTIME;
 use crate::utils::get_py_objects;
 
@@ -30,16 +30,8 @@ impl Address {
     }
 
     #[new]
-    pub fn new(address: RawAddressEnum) -> PyResult<Self> {
-        match address {
-            RawAddressEnum::Int(i) => {
-                let mut bytes = vec![0; 20];
-                let be_bytes = i.to_bytes_be();
-                bytes[20-be_bytes.len()..].copy_from_slice(&be_bytes);
-                Ok(Self(RevmAddress::from_slice(&bytes)))
-            }
-            RawAddressEnum::String(s) => s.parse().map(Self).map_err(|e| PyErr::new::<PyValueError, _>(e.to_string()))
-        }
+    pub(crate) fn new(address: AddressEnum) -> PyResult<Self> {
+        Ok(Self(address.try_into()?))
     }
 
     pub fn __str__(&self) -> String {
