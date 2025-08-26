@@ -224,6 +224,8 @@ class ModifierDefinition(DeclarationAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def declaration_string(self) -> str:
+        from .contract_definition import ContractDefinition
+
         ret = f"modifier {self._name}"
         ret += (
             f"({', '.join(param.declaration_string for param in self.parameters.parameters)})"
