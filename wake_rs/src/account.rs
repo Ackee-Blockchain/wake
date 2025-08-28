@@ -40,7 +40,7 @@ impl ChainWrapper {
     }
 }
 
-#[pyclass(subclass)]
+#[pyclass(subclass, frozen)]
 pub struct Account {
     #[pyo3(get)]
     pub address: Py<Address>,
@@ -221,6 +221,10 @@ impl Account {
         hasher.write_isize(self.chain.inner().bind(py).hash()?);
 
         Ok(hasher.finish())
+    }
+
+    fn __deepcopy__<'py>(slf: &Bound<'py, Self>, _memo: Option<Py<PyAny>>) -> Bound<'py, Self> {
+        slf.clone()
     }
 
     #[getter]
