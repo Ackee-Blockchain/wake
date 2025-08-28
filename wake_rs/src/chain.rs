@@ -7,8 +7,9 @@ use auto_impl::auto_impl;
 use num_bigint::BigUint;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::types::{PyBytes, PyDict, PyNone, PyString, PyTuple};
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand_xoshiro::rand_core::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
+use rand::Rng;
 use revm::context::result::ExecutionResult;
 use revm::context::transaction::AccessList;
 use revm::context::{BlockEnv, CfgEnv, ContextTr, Evm, EvmData, TxEnv};
@@ -150,7 +151,7 @@ pub(crate) type CustomEvm = Evm<
 
 #[pyclass]
 pub struct Chain {
-    rng: SmallRng,
+    rng: Xoshiro256PlusPlus,
     pub evm: Option<CustomEvm>,
     pub(crate) provider: Option<ProviderWrapper>,
     pub labels: HashMap<RevmAddress, String>,
@@ -202,7 +203,7 @@ impl Chain {
         let chain = Py::new(
             py,
             Self {
-                rng: SmallRng::seed_from_u64(
+                rng: Xoshiro256PlusPlus::seed_from_u64(
                     random
                         .call_method1(intern!(py, "getrandbits"), (64,))?
                         .extract()?,
@@ -436,6 +437,17 @@ impl Chain {
         }
         self.block_gas_limit = gas_limit;
         self.get_evm_mut()?.block.gas_limit = gas_limit - self.pending_gas_used;
+        Ok(())
+    }
+
+    fn dump_rng<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
+        let b = bincode::serialize(&self.rng).map_err(|_| PyRuntimeError::new_err("Failed to serialize RNG"))?;
+        Ok(PyBytes::new(py, &b).into())
+    }
+
+    fn load_rng(&mut self, rng: Vec<u8>) -> PyResult<()> {
+        let rng: Xoshiro256PlusPlus = bincode::deserialize(&rng).map_err(|_| PyRuntimeError::new_err("Failed to deserialize RNG"))?;
+        self.rng = rng;
         Ok(())
     }
 
