@@ -33,3 +33,4 @@ serde = "1.0.216"
 uuid = { version = "1.12.1", features = ["v4"] }
 rust-lapper = "1.1.0"
 blake2 = "0.10.6"
+rand_xoshiro = { version = "0.6.0", features = ["serde1"] }
