@@ -17,7 +17,7 @@ use crate::globals::TOKIO_RUNTIME;
 use crate::utils::get_py_objects;
 
 
-#[pyclass]
+#[pyclass(frozen)]
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct Address(pub RevmAddress);
 
@@ -59,6 +59,10 @@ impl Address {
 
     fn __int__(&self) -> BigUint {
         BigUint::from_bytes_be(self.0.as_slice())
+    }
+
+    fn __deepcopy__<'py>(slf: &Bound<'py, Self>, _memo: Option<Py<PyAny>>) -> Bound<'py, Self> {
+        slf.clone()
     }
 
     #[classmethod]

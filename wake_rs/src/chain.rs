@@ -243,6 +243,10 @@ impl Chain {
         self as *const _ as usize as u64
     }
 
+    fn __deepcopy__<'py>(slf: &Bound<'py, Self>, _memo: Option<Py<PyAny>>) -> Bound<'py, Self> {
+        slf.clone()
+    }
+
     #[setter]
     fn set_default_call_account(
         slf: &Bound<Self>,
