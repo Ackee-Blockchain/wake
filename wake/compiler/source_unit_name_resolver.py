@@ -98,6 +98,10 @@ class SourceUnitNameResolver:
                 normalized_import_parts = normalized_import_parts[no:]
                 break
 
+        # final trim of trailing slashes
+        while len(parent_parts) > 0 and parent_parts[-1] == "":
+            parent_parts.pop()
+
         if len(parent_parts) > 0:
             source_unit_name = (
                 "/".join(parent_parts) + "/" + "/".join(normalized_import_parts)
