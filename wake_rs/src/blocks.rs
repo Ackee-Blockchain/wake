@@ -207,4 +207,9 @@ impl Block {
     fn get_timestamp(&self) -> u64 {
         self.block_env.timestamp.try_into().unwrap()
     }
+
+    #[getter]
+    fn get_hash(&self) -> String {
+        self.block_hash.to_string()
+    }
 }
