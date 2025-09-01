@@ -183,6 +183,8 @@ class Account:
     @nonce.setter
     def nonce(self, value: int) -> None: ...
 
+    pytypes_resolver: Optional[Any]
+
     def call(
         self,
         data: bytes = b"",
