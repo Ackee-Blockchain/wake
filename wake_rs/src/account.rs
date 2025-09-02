@@ -328,7 +328,9 @@ impl Account {
                 self.with_evm_context(py, chain, |evm| -> PyResult<()> {
                     evm.db().set_balance(addr, value)?;
                     Ok(())
-                })?
+                })??;
+                chain.borrow_mut(py).mine(py, false)?;
+                Ok(())
             }
             ChainWrapper::Python(chain) => {
                 let value: BigUint = value.try_into()?;
@@ -376,7 +378,9 @@ impl Account {
                 self.with_evm_context(py, chain, |evm| -> PyResult<()> {
                     evm.db().set_code(addr, code)?;
                     Ok(())
-                })?
+                })??;
+                chain.borrow_mut(py).mine(py, false)?;
+                Ok(())
             }
             ChainWrapper::Python(chain) => {
                 chain
@@ -419,7 +423,9 @@ impl Account {
                 self.with_evm_context(py, chain, |evm| -> PyResult<()> {
                     evm.db().set_nonce(addr, value)?;
                     Ok(())
-                })?
+                })??;
+                chain.borrow_mut(py).mine(py, false)?;
+                Ok(())
             }
             ChainWrapper::Python(chain) => {
                 let chain = chain.bind(py);
