@@ -38,15 +38,39 @@ impl Contract {
         address: AddressEnum,
         chain: Option<Py<PyAny>>,
     ) -> PyResult<(Self, Account)> {
-        let chain = match chain {
-            Some(chain) => chain,
-            None => {
-                let py_objects = get_py_objects(py);
-                py_objects.wake_detect_default_chain.call0(py)?
+        let (final_address, final_chain) = match &address {
+            AddressEnum::Account(account) => {
+                let account_borrowed = account.borrow(py);
+                let account_chain_py = account_borrowed.get_chain(py);
+                let account_address = account_borrowed.address.borrow(py).0;
+                match chain {
+                    None => {
+                        (account_address, account_chain_py)
+                    }
+                    Some(provided_chain) => {
+                        if account_borrowed.chain.inner().is(&provided_chain) {
+                            (account_address, provided_chain)
+                        } else {
+                            return Err(PyValueError::new_err(
+                                "Account and chain must be from the same chain"
+                            ));
+                        }
+                    }
+                }
+            }
+            _ => {
+                let resolved_chain = match chain {
+                    Some(chain) => chain,
+                    None => {
+                        let py_objects = get_py_objects(py);
+                        py_objects.wake_detect_default_chain.call0(py)?
+                    }
+                };
+                (address.try_into()?, resolved_chain)
             }
         };
 
-        let account = Account::from_revm_address(py, address.try_into()?, chain)?;
+        let account = Account::from_revm_address(py, final_address, final_chain)?;
         Ok((Contract {}, account))
     }
 

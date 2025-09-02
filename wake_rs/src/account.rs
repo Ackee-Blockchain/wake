@@ -233,7 +233,7 @@ impl Account {
     }
 
     #[getter]
-    fn get_chain(&self, py: Python) -> Py<PyAny> {
+    pub(crate) fn get_chain(&self, py: Python) -> Py<PyAny> {
         match &self.chain {
             ChainWrapper::Native(chain) => chain.as_any().clone_ref(py),
             ChainWrapper::Python(chain) => chain.clone_ref(py),
