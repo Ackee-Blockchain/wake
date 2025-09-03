@@ -223,6 +223,7 @@ def get_logic_contract(contract: Account) -> Account:
         contract.chain.chain_interface.get_storage_at(
             str(contract.address),
             0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC,
+            "pending",
         ),
     )[0]
     if impl_addr != Address.ZERO:
@@ -234,6 +235,7 @@ def get_logic_contract(contract: Account) -> Account:
         contract.chain.chain_interface.get_storage_at(
             str(contract.address),
             0x7050C9E0F4CA769C69BD3A8EF740BC37934F8E2C036E5A723FD8EE048ED3F8C3,
+            "pending",
         ),
     )[0]
     if impl_addr != Address.ZERO:
@@ -245,6 +247,7 @@ def get_logic_contract(contract: Account) -> Account:
         contract.chain.chain_interface.get_storage_at(
             str(contract.address),
             0xA3F0AD74E5423AEBFD80D3EF4346578335A9A72AEAEE59FF6CB3582B35133D50,
+            "pending",
         ),
     )[0]
 
@@ -273,7 +276,7 @@ def read_storage_variable(
     ):
         type_info = types[type_name]
         slot_data = contract.chain.chain_interface.get_storage_at(
-            str(contract.address), slot
+            str(contract.address), slot, "pending"
         )
         data = slot_data[
             -offset - type_info.number_of_bytes : (-offset if offset != 0 else None)
@@ -293,14 +296,14 @@ def read_storage_variable(
 
                 while length >= 32:
                     raw += contract.chain.chain_interface.get_storage_at(
-                        str(contract.address), start_slot
+                        str(contract.address), start_slot, "pending"
                     )
                     start_slot += 1
                     length -= 32
 
                 if length > 0:
                     raw += contract.chain.chain_interface.get_storage_at(
-                        str(contract.address), start_slot
+                        str(contract.address), start_slot, "pending"
                     )[:length]
 
             if type_name == "t_string_storage":
@@ -520,7 +523,7 @@ def write_storage_variable(
 
                 if length > 0:
                     original_data = contract.chain.chain_interface.get_storage_at(
-                        str(contract.address), start_slot
+                        str(contract.address), start_slot, "pending"
                     )
                     contract.chain.chain_interface.set_storage_at(
                         str(contract.address),
@@ -589,7 +592,7 @@ def write_storage_variable(
             # arrays always start a new slot
             if type_info.encoding == "dynamic_array":
                 slot_data = contract.chain.chain_interface.get_storage_at(
-                    str(contract.address), slot
+                    str(contract.address), slot, "pending"
                 )
                 length_slot = slot
                 slot = int.from_bytes(keccak256(slot.to_bytes(32, "big")), "big")
@@ -696,7 +699,7 @@ def write_storage_variable(
         else:
             original_data = bytearray(
                 contract.chain.chain_interface.get_storage_at(
-                    str(contract.address), slot
+                    str(contract.address), slot, "pending"
                 )
             )
             encoded_value = Abi.encode_packed([type_name[2:]], [value])
@@ -776,13 +779,45 @@ def mint_erc721(
         owner_contract, owner_slot = owner_data
 
     if balance_slot is None:
+        print(f":white-check-mark: detecting balance slot")
         balance_data = _detect_erc20_balance_slot(contract, to)
+        print(f"balance_data: {balance_data}")
         if balance_data is None:
             raise ValueError("Could not detect ERC721 balance slot")
         balance_contract, balance_slot = balance_data
 
     _try_change_erc721_owner(contract, owner_contract, token_id, to, owner_slot)
     _try_change_erc20_balance(contract, balance_contract, to, balance_slot, 1)
+
+def burn_erc721(
+    contract: Account,
+    from_: Union[Account, Address],
+    token_id: int,
+    *,
+    owner_slot: Optional[int] = None,
+    balance_slot: Optional[int] = None,
+    owner_mapping_slot: Optional[int] = None,
+) -> None:
+
+    if isinstance(from_, Address):
+        from_ = Account(from_, chain=contract.chain)
+    owner_contract = contract
+    balance_contract = contract
+
+    if owner_slot is None:
+        owner_data = _detect_erc721_owner_slot(contract, token_id)
+        if owner_data is None:
+            raise ValueError("Could not detect ERC721 owner slot")
+        owner_contract, owner_slot = owner_data
+
+    if balance_slot is None:
+        balance_data = _detect_erc20_balance_slot(contract, from_)
+        if balance_data is None:
+            raise ValueError("Could not detect ERC721 balance slot")
+        balance_contract, balance_slot = balance_data
+
+    _try_remove_erc721_owner(contract, owner_contract, token_id, owner_slot)
+    _try_change_erc20_balance(contract, balance_contract, from_, balance_slot, -1)
 
 
 def mint_erc1155(
@@ -830,6 +865,48 @@ def burn_erc1155(
     mint_erc1155(contract, from_, token_id, -amount, balance_slot=balance_slot)
 
 
+def _try_remove_erc721_owner(
+    contract: Account, owner_acc: Account, token_id: int, slot: int
+):
+    call_acc = contract.chain.default_call_account
+    if call_acc is None and len(contract.chain.accounts) > 0:
+        call_acc = contract.chain.accounts[0]
+
+    data_before = contract.chain.chain_interface.get_storage_at(
+        str(owner_acc.address), slot, "pending"
+    )
+    contract.chain.chain_interface.set_storage_at(
+        str(owner_acc.address),
+        slot,
+        abi.encode(Address.ZERO),
+    )
+    from wake.development.transactions import RevertError
+
+    # As Specification of ERC721, ZERO address is not a valid owner and must throw.
+    try:
+        owner_after = abi.decode(
+            contract.call(
+                data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+                from_=call_acc,
+                block="pending",
+            ),
+            [Address],
+        )
+
+        assert owner_after == Address.ZERO, f"currnet ownerOf(token_id={token_id}) = {owner_after}, slot={slot}"
+        print("WARNING: Zero address owner should be thrown.")
+
+    except RevertError:
+        # it should revert so expected behavior. passing
+        pass
+
+    except Exception as e:
+        contract.chain.chain_interface.set_storage_at(
+            str(owner_acc.address), slot, data_before
+        )
+        raise ValueError(f"Owner removal failed. {e}")
+
+
 def _try_change_erc721_owner(
     contract: Account, owner_acc: Account, token_id: int, to: Account, slot: int
 ):
@@ -838,7 +915,7 @@ def _try_change_erc721_owner(
         call_acc = contract.chain.accounts[0]
 
     data_before = contract.chain.chain_interface.get_storage_at(
-        str(owner_acc.address), slot
+        str(owner_acc.address), slot, "pending"
     )
     contract.chain.chain_interface.set_storage_at(
         str(owner_acc.address),
@@ -851,6 +928,7 @@ def _try_change_erc721_owner(
             contract.call(
                 data=abi.encode_with_signature("ownerOf(uint256)", token_id),
                 from_=call_acc,
+                block="pending",
             ),
             [Address],
         )
@@ -865,6 +943,7 @@ def _try_change_erc721_owner(
 def _try_change_erc20_balance(
     erc20: Account, balance_acc: Account, acc: Account, slot: int, amount: int
 ):
+    print(f"DEBUG: balance slot: {slot}")
     call_acc = erc20.chain.default_call_account
     if call_acc is None and len(erc20.chain.accounts) > 0:
         call_acc = erc20.chain.accounts[0]
@@ -873,6 +952,7 @@ def _try_change_erc20_balance(
         balance_before = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("balanceOf(address)", acc),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
@@ -885,7 +965,7 @@ def _try_change_erc20_balance(
         raise ValueError("Balance overflow")
 
     data_before = erc20.chain.chain_interface.get_storage_at(
-        str(balance_acc.address), slot
+        str(balance_acc.address), slot, "pending"
     )
     erc20.chain.chain_interface.set_storage_at(
         str(balance_acc.address),
@@ -895,20 +975,29 @@ def _try_change_erc20_balance(
         ),
     )
 
+    data_after = erc20.chain.chain_interface.get_storage_at(
+        str(balance_acc.address), slot, "pending"
+    )
+
+    print(data_before)
+    print(data_after)
+
     try:
         balance_after = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("balanceOf(address)", acc),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
         )
-        assert balance_after == balance_before + amount
-    except Exception:
+
+        assert balance_after == balance_before + amount, f"balance_after: {balance_after}, balance_before: {balance_before}, amount: {amount}"
+    except Exception as e:
         erc20.chain.chain_interface.set_storage_at(
             str(balance_acc.address), slot, data_before
         )
-        raise ValueError("Balance change failed")
+        raise ValueError(f"Balance change failed {e}")
 
 
 def _try_change_erc20_supply(
@@ -922,6 +1011,7 @@ def _try_change_erc20_supply(
         supply_before = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("totalSupply()"),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
@@ -940,6 +1030,7 @@ def _try_change_erc20_supply(
             supply_after = abi.decode(
                 erc20.call(
                     data=abi.encode_with_signature("totalSupply()"),
+                    block="pending",
                     from_=call_acc,
                 ),
                 [uint256],
@@ -951,7 +1042,7 @@ def _try_change_erc20_supply(
             raise ValueError("Total supply change failed")
 
     data_before = erc20.chain.chain_interface.get_storage_at(
-        str(supply_acc.address), slot
+        str(supply_acc.address), slot, "pending"
     )
     erc20.chain.chain_interface.set_storage_at(
         str(supply_acc.address),
@@ -965,6 +1056,7 @@ def _try_change_erc20_supply(
         supply_after = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("totalSupply()"),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
@@ -1000,7 +1092,7 @@ def _detect_erc721_owner_slot(
 
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
         for slot in access_list[addr]:
-            data_before = contract.chain.chain_interface.get_storage_at(str(addr), slot)
+            data_before = contract.chain.chain_interface.get_storage_at(str(addr), slot, "pending")
 
             try:
                 contract.chain.chain_interface.set_storage_at(
@@ -1015,11 +1107,13 @@ def _detect_erc721_owner_slot(
                 owner_after = abi.decode(
                     contract.call(
                         data=abi.encode_with_signature("ownerOf(uint256)", token_id),
+                        block="pending",
                         from_=call_acc,
                     ),
                     [Address],
                 )
                 assert owner_after == new_owner
+                print(f"DEBUG: _detect_erc721_owner_slot found owner slot: {addr}, slot: {slot}")
                 return Account(addr, chain=contract.chain), slot
             except Exception:
                 continue
@@ -1035,6 +1129,7 @@ def _detect_erc721_owner_slot(
 def _detect_erc20_balance_slot(
     erc20: Account, account: Account
 ) -> Optional[Tuple[Account, int]]:
+    print(f"DEBUG: _detect_erc20_balance_slot called for {erc20.address}")
     access_list_acc = erc20.chain.default_access_list_account
     if access_list_acc is None and len(erc20.chain.accounts) > 0:
         access_list_acc = erc20.chain.accounts[0]
@@ -1044,6 +1139,7 @@ def _detect_erc20_balance_slot(
 
     access_list, _ = erc20.access_list(
         data=abi.encode_with_signature("balanceOf(address)", account),
+        block="pending",
         from_=access_list_acc,
     )
 
@@ -1053,17 +1149,22 @@ def _detect_erc20_balance_slot(
         balance_before = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("balanceOf(address)", account),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
         )
     except Exception:
+
+        print("baalnce of call failed")
         return None
+
+    print(f"access_list: {access_list}")
 
     # start with the storage slots of the logic contract since they are more likely to be used
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
         for slot in access_list[addr]:
-            data_before = erc20.chain.chain_interface.get_storage_at(str(addr), slot)
+            data_before = erc20.chain.chain_interface.get_storage_at(str(addr), slot, block_identifier="pending")
 
             try:
                 erc20.chain.chain_interface.set_storage_at(
@@ -1080,10 +1181,12 @@ def _detect_erc20_balance_slot(
                 balance_after = abi.decode(
                     erc20.call(
                         data=abi.encode_with_signature("balanceOf(address)", account),
+                        block="pending",
                         from_=call_acc,
                     ),
                     [uint256],
                 )
+                print(f"DEBUG: balance_after: {balance_after}, balance_before: {balance_before} for slot: {slot}")
                 assert balance_after == balance_before + 1
                 return Account(addr, chain=erc20.chain), slot
             except Exception:
@@ -1097,6 +1200,7 @@ def _detect_erc20_balance_slot(
 
 @lru_cache(maxsize=1024)
 def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, int]]:
+    print(f"DEBUG: _detect_erc20_total_supply_slot called for {erc20.address}")
     access_list_acc = erc20.chain.default_access_list_account
     if access_list_acc is None and len(erc20.chain.accounts) > 0:
         access_list_acc = erc20.chain.accounts[0]
@@ -1106,42 +1210,61 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
 
     access_list, _ = erc20.access_list(
         data=abi.encode_with_signature("totalSupply()"),
+        block="pending",
         from_=access_list_acc,
     )
+    print(f"DEBUG: access_list values for keys:")
+    for key in access_list.keys():
+        print(f"DEBUG: {key}: {list(access_list[key])}")
+
+
 
     impl = get_logic_contract(erc20)
+    print(f"DEBUG: impl address: {impl.address}")
 
     try:
         total_supply_before = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("totalSupply()"),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
         )
-    except Exception:
+        print(f"DEBUG: total_supply_before: {total_supply_before}")
+    except Exception as e:
+        print(f"DEBUG: Failed to get initial totalSupply: {e}")
         return None
 
     erc20.balance += 1
     try:
+        # erc20.balance += 1 with disabled automine, the balance at latest block is not updated.
+        # To use += 1, result, we are using pending block.
+        # For consistency, other call uses pending block as well.
         total_supply_after = abi.decode(
             erc20.call(
                 data=abi.encode_with_signature("totalSupply()"),
+                block="pending",
                 from_=call_acc,
             ),
             [uint256],
         )
+        print(f"DEBUG: After balance increase, total_supply_after: {total_supply_after}")
         assert total_supply_after == total_supply_before + 1
+        print(f"DEBUG: Native balance affects totalSupply! Returning (erc20, -1)")
         return erc20, -1
-    except Exception:
+    except Exception as e:
+        print(f"DEBUG: Balance increase didn't affect totalSupply or failed: {e}")
         pass
     finally:
         erc20.balance -= 1
 
     # start with the storage slots of the logic contract since they are more likely to be used
+    print(f"DEBUG: Checking storage slots to find totalSupply slot")
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
+        print(f"DEBUG: Checking address {addr}, slots: {list(access_list[addr])[:5]}...")  # Show first 5 slots
         for slot in access_list[addr]:
-            data_before = erc20.chain.chain_interface.get_storage_at(str(addr), slot)
+            data_before = erc20.chain.chain_interface.get_storage_at(str(addr), slot, "pending")
 
             try:
                 erc20.chain.chain_interface.set_storage_at(
@@ -1151,25 +1274,32 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
                         32, byteorder="big"
                     ),
                 )
-            except Exception:
+            except Exception as e:
+                print(f"DEBUG: Failed to set storage at slot {slot}: {e}")
                 continue
 
             try:
                 total_supply_after = abi.decode(
                     erc20.call(
                         data=abi.encode_with_signature("totalSupply()"),
+                        block="pending",
                         from_=call_acc,
                     ),
                     [uint256],
                 )
-                assert total_supply_after == total_supply_before + 1
-                return Account(addr, chain=erc20.chain), slot
-            except Exception:
-                continue
+                if total_supply_after == total_supply_before + 1:
+                    print(f"DEBUG: Found totalSupply slot! addr: {addr}, slot: {slot}")
+                    return Account(addr, chain=erc20.chain), slot
+                else:
+                    print(f"DEBUG: Slot {slot} changed totalSupply but not by +1: before={total_supply_before}, after={total_supply_after}")
+            except Exception as e:
+                # Don't print for every slot as it would be too verbose
+                pass
             finally:
                 # revert changes
                 erc20.chain.chain_interface.set_storage_at(str(addr), slot, data_before)
 
+    print(f"DEBUG: Could not find totalSupply slot for {erc20.address}, returning None")
     return None
 
 
@@ -1191,6 +1321,7 @@ def _update_erc20_balance(
 
     if total_supply_slot is None:
         supply_data = _detect_erc20_total_supply_slot(contract)
+        print("supply_data", supply_data)
         if supply_data is None:
             supply_contract = None
             total_supply_slot = None
@@ -1203,10 +1334,10 @@ def _update_erc20_balance(
             _try_change_erc20_supply(
                 contract, supply_contract, total_supply_slot, amount
             )
-        except Exception:
-            warnings.warn(f"Could not update total supply of {contract.address}")
+        except Exception as e:
+            raise ValueError(f"Total supply change failed {e}")
     else:
-        warnings.warn(f"Could not update total supply of {contract.address}")
+        raise ValueError("Total supply change failed: Total supply slot not detected")
 
 
 def _get_storage_layout(
@@ -1282,6 +1413,7 @@ def _detect_erc1155_balance_slot(
                     "balanceOf(address,uint256)", account, token_id
                 ),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1291,7 +1423,7 @@ def _detect_erc1155_balance_slot(
     # Start with the storage slots of the logic contract since they are more likely to be used
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
         for slot in access_list[addr]:
-            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot)
+            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot, "pending")
 
             try:
                 erc1155.chain.chain_interface.set_storage_at(
@@ -1311,6 +1443,7 @@ def _detect_erc1155_balance_slot(
                             "balanceOf(address,uint256)", account, token_id
                         ),
                         from_=call_acc,
+                        block="pending",
                     ),
                     [uint256],
                 )
@@ -1346,6 +1479,7 @@ def _try_change_erc1155_balance(
                     "balanceOf(address,uint256)", acc, token_id
                 ),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1358,7 +1492,7 @@ def _try_change_erc1155_balance(
         raise ValueError("Balance overflow")
 
     data_before = erc1155.chain.chain_interface.get_storage_at(
-        str(balance_acc.address), slot
+        str(balance_acc.address), slot, "pending"
     )
     erc1155.chain.chain_interface.set_storage_at(
         str(balance_acc.address),
@@ -1375,6 +1509,7 @@ def _try_change_erc1155_balance(
                     "balanceOf(address,uint256)", acc, token_id
                 ),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1401,6 +1536,7 @@ def _detect_erc1155_total_supply_slot(
         access_list, _ = erc1155.access_list(
             data=abi.encode_with_signature("totalSupply(uint256)", token_id),
             from_=access_list_acc,
+            block="pending",
         )
     except Exception:
         # when token does not support totalSupply
@@ -1413,6 +1549,7 @@ def _detect_erc1155_total_supply_slot(
             erc1155.call(
                 data=abi.encode_with_signature("totalSupply(uint256)", token_id),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1421,7 +1558,7 @@ def _detect_erc1155_total_supply_slot(
 
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
         for slot in access_list[addr]:
-            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot)
+            data_before = erc1155.chain.chain_interface.get_storage_at(str(addr), slot, "pending")
 
             try:
                 erc1155.chain.chain_interface.set_storage_at(
@@ -1441,6 +1578,7 @@ def _detect_erc1155_total_supply_slot(
                             "totalSupply(uint256)", token_id
                         ),
                         from_=call_acc,
+                        block="pending",
                     ),
                     [uint256],
                 )
@@ -1469,6 +1607,7 @@ def _try_change_erc1155_total_supply(
             erc1155.call(
                 data=abi.encode_with_signature("totalSupply(uint256)", token_id),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1481,7 +1620,7 @@ def _try_change_erc1155_total_supply(
         raise ValueError("Total supply overflow")
 
     data_before = erc1155.chain.chain_interface.get_storage_at(
-        str(supply_acc.address), slot
+        str(supply_acc.address), slot, "pending"
     )
     erc1155.chain.chain_interface.set_storage_at(
         str(supply_acc.address),
@@ -1496,6 +1635,7 @@ def _try_change_erc1155_total_supply(
             erc1155.call(
                 data=abi.encode_with_signature("totalSupply(uint256)", token_id),
                 from_=call_acc,
+                block="pending",
             ),
             [uint256],
         )
@@ -1777,3 +1917,34 @@ def _get_storage_layout_from_explorer(
 
     assert info.storage_layout is not None
     return info.storage_layout
+
+
+def reset_lru_cache():
+    """
+    for the unit test
+    @chain.connect()
+    def test_erc20():
+        erc20_contract = ... deploy()
+        mint_erc20(...)
+
+    @chain.connect()
+    def test_erc721():
+        erc721_contract = ... deploy()
+        mint_erc721(...)
+
+
+    # In this case, because of chain reset, it could be erc20_contract == erc721_contract
+    And "_detect_erc20_balance_slot" can return erc20_contract's slot for erc721_contract.
+    """
+
+    _detect_erc20_balance_slot.cache_clear()
+    _detect_erc20_total_supply_slot.cache_clear()
+    _detect_erc1155_balance_slot.cache_clear()
+    _detect_erc1155_total_supply_slot.cache_clear()
+    _detect_erc721_owner_slot.cache_clear()
+
+    # Etherscan return information would not return in chain session.
+    # However, just in case, those are possible call.
+    # get_name_abi_from_explorer_cached.cache_clear()
+    # _get_storage_layout_from_explorer.cache_clear()
+    # get_etherscan_explorer_info.cache_clear()
