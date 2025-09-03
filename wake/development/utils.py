@@ -779,9 +779,7 @@ def mint_erc721(
         owner_contract, owner_slot = owner_data
 
     if balance_slot is None:
-        print(f":white-check-mark: detecting balance slot")
         balance_data = _detect_erc20_balance_slot(contract, to)
-        print(f"balance_data: {balance_data}")
         if balance_data is None:
             raise ValueError("Could not detect ERC721 balance slot")
         balance_contract, balance_slot = balance_data
@@ -894,10 +892,10 @@ def _try_remove_erc721_owner(
         )
 
         assert owner_after == Address.ZERO, f"currnet ownerOf(token_id={token_id}) = {owner_after}, slot={slot}"
-        print("WARNING: Zero address owner should be thrown.")
+        ## Maybe do output that zero address owner of ownerOf(token_id) call should be reverted.
 
     except RevertError:
-        # it should revert so expected behavior. passing
+        # it should revert so expected behavior.
         pass
 
     except Exception as e:
@@ -943,7 +941,6 @@ def _try_change_erc721_owner(
 def _try_change_erc20_balance(
     erc20: Account, balance_acc: Account, acc: Account, slot: int, amount: int
 ):
-    print(f"DEBUG: balance slot: {slot}")
     call_acc = erc20.chain.default_call_account
     if call_acc is None and len(erc20.chain.accounts) > 0:
         call_acc = erc20.chain.accounts[0]
@@ -978,10 +975,6 @@ def _try_change_erc20_balance(
     data_after = erc20.chain.chain_interface.get_storage_at(
         str(balance_acc.address), slot, "pending"
     )
-
-    print(data_before)
-    print(data_after)
-
     try:
         balance_after = abi.decode(
             erc20.call(
@@ -1113,7 +1106,6 @@ def _detect_erc721_owner_slot(
                     [Address],
                 )
                 assert owner_after == new_owner
-                print(f"DEBUG: _detect_erc721_owner_slot found owner slot: {addr}, slot: {slot}")
                 return Account(addr, chain=contract.chain), slot
             except Exception:
                 continue
@@ -1129,7 +1121,6 @@ def _detect_erc721_owner_slot(
 def _detect_erc20_balance_slot(
     erc20: Account, account: Account
 ) -> Optional[Tuple[Account, int]]:
-    print(f"DEBUG: _detect_erc20_balance_slot called for {erc20.address}")
     access_list_acc = erc20.chain.default_access_list_account
     if access_list_acc is None and len(erc20.chain.accounts) > 0:
         access_list_acc = erc20.chain.accounts[0]
@@ -1155,11 +1146,7 @@ def _detect_erc20_balance_slot(
             [uint256],
         )
     except Exception:
-
-        print("baalnce of call failed")
         return None
-
-    print(f"access_list: {access_list}")
 
     # start with the storage slots of the logic contract since they are more likely to be used
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
@@ -1186,7 +1173,6 @@ def _detect_erc20_balance_slot(
                     ),
                     [uint256],
                 )
-                print(f"DEBUG: balance_after: {balance_after}, balance_before: {balance_before} for slot: {slot}")
                 assert balance_after == balance_before + 1
                 return Account(addr, chain=erc20.chain), slot
             except Exception:
@@ -1200,7 +1186,6 @@ def _detect_erc20_balance_slot(
 
 @lru_cache(maxsize=1024)
 def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, int]]:
-    print(f"DEBUG: _detect_erc20_total_supply_slot called for {erc20.address}")
     access_list_acc = erc20.chain.default_access_list_account
     if access_list_acc is None and len(erc20.chain.accounts) > 0:
         access_list_acc = erc20.chain.accounts[0]
@@ -1213,14 +1198,8 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
         block="pending",
         from_=access_list_acc,
     )
-    print(f"DEBUG: access_list values for keys:")
-    for key in access_list.keys():
-        print(f"DEBUG: {key}: {list(access_list[key])}")
-
-
 
     impl = get_logic_contract(erc20)
-    print(f"DEBUG: impl address: {impl.address}")
 
     try:
         total_supply_before = abi.decode(
@@ -1231,9 +1210,7 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
             ),
             [uint256],
         )
-        print(f"DEBUG: total_supply_before: {total_supply_before}")
-    except Exception as e:
-        print(f"DEBUG: Failed to get initial totalSupply: {e}")
+    except Exception:
         return None
 
     erc20.balance += 1
@@ -1249,20 +1226,15 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
             ),
             [uint256],
         )
-        print(f"DEBUG: After balance increase, total_supply_after: {total_supply_after}")
         assert total_supply_after == total_supply_before + 1
-        print(f"DEBUG: Native balance affects totalSupply! Returning (erc20, -1)")
         return erc20, -1
-    except Exception as e:
-        print(f"DEBUG: Balance increase didn't affect totalSupply or failed: {e}")
+    except Exception:
         pass
     finally:
         erc20.balance -= 1
 
     # start with the storage slots of the logic contract since they are more likely to be used
-    print(f"DEBUG: Checking storage slots to find totalSupply slot")
     for addr in sorted(access_list.keys(), key=lambda a: 1 if a == impl.address else 0):
-        print(f"DEBUG: Checking address {addr}, slots: {list(access_list[addr])[:5]}...")  # Show first 5 slots
         for slot in access_list[addr]:
             data_before = erc20.chain.chain_interface.get_storage_at(str(addr), slot, "pending")
 
@@ -1274,8 +1246,7 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
                         32, byteorder="big"
                     ),
                 )
-            except Exception as e:
-                print(f"DEBUG: Failed to set storage at slot {slot}: {e}")
+            except Exception:
                 continue
 
             try:
@@ -1288,18 +1259,13 @@ def _detect_erc20_total_supply_slot(erc20: Account) -> Optional[Tuple[Account, i
                     [uint256],
                 )
                 if total_supply_after == total_supply_before + 1:
-                    print(f"DEBUG: Found totalSupply slot! addr: {addr}, slot: {slot}")
                     return Account(addr, chain=erc20.chain), slot
-                else:
-                    print(f"DEBUG: Slot {slot} changed totalSupply but not by +1: before={total_supply_before}, after={total_supply_after}")
-            except Exception as e:
-                # Don't print for every slot as it would be too verbose
+            except Exception:
                 pass
             finally:
                 # revert changes
                 erc20.chain.chain_interface.set_storage_at(str(addr), slot, data_before)
 
-    print(f"DEBUG: Could not find totalSupply slot for {erc20.address}, returning None")
     return None
 
 
@@ -1321,7 +1287,6 @@ def _update_erc20_balance(
 
     if total_supply_slot is None:
         supply_data = _detect_erc20_total_supply_slot(contract)
-        print("supply_data", supply_data)
         if supply_data is None:
             supply_contract = None
             total_supply_slot = None
