@@ -22,6 +22,8 @@ from wake.development.transactions import (
 )
 from wake.development.utils import (
     burn_erc20,
+    burn_erc721,
+    burn_erc1155,
     get_create2_address_from_code,
     get_create2_address_from_hash,
     get_create_address,
