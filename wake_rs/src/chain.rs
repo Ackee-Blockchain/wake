@@ -575,6 +575,38 @@ impl Chain {
         hardfork: Option<&str>,
     ) -> PyResult<()> {
         let mut slf_ = slf.borrow_mut(py);
+
+        if slf_.connected {
+            return Err(PyRuntimeError::new_err("Already connected"));
+        }
+
+        // Reset all state completely
+        slf_.fqn_overrides.clear();
+        slf_.provider = None;
+        slf_.blocks = None;
+        slf_.txs = None;
+        slf_.evm = None;
+        slf_.forked_chain_id = None;
+        slf_.forked_block = None;
+        slf_.latest_block_env = None;
+        slf_.snapshots.clear();
+        slf_.pending_txs.clear();
+        slf_.pending_gas_used = 0;
+        slf_.accounts.clear();
+        slf_.deployed_libraries.clear();
+        slf_.labels.clear();
+        slf_.default_tx_account = None;
+        slf_.default_call_account = None;
+        slf_.default_estimate_account = None;
+        slf_.default_access_list_account = None;
+
+        // set automine to true for always, so change requre in test function.
+        // Some of value can be set outside of connection.
+        // This might confuse if tester set it at global level with global variable.
+        // however, if multiple test function is run without reset, it will remain the config from previous test.
+        slf_.automine = true;
+        slf_.tx_callback = None;
+
         slf_.connected = true;
 
         let py_objects = get_py_objects(py);
