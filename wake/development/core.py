@@ -394,6 +394,8 @@ class Chain(ABC):
         try:
             self._connected = True
             self._client_version = self._chain_interface.get_client_version()
+            from .utils import reset_lru_cache
+            reset_lru_cache()
 
             try:
                 self._chain_interface.debug_trace_call(

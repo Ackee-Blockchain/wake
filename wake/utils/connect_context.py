@@ -8,6 +8,9 @@ class ConnectContext:
 
     def __enter__(self):
         self.chain._connect(self.accounts, self.chain_id, self.fork, self.hardfork)
+        from wake.development.utils import reset_lru_cache
+        reset_lru_cache()
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
