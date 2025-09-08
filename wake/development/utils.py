@@ -1299,10 +1299,10 @@ def _update_erc20_balance(
             _try_change_erc20_supply(
                 contract, supply_contract, total_supply_slot, amount
             )
-        except Exception as e:
-            raise ValueError(f"Total supply change failed {e}")
+        except Exception:
+            warnings.warn(f"Could not update total supply of {contract.address}")
     else:
-        raise ValueError("Total supply change failed: Total supply slot not detected")
+        warnings.warn(f"Could not update total supply of {contract.address}")
 
 
 def _get_storage_layout(
