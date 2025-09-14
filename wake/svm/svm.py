@@ -301,7 +301,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
     def __fetch_list_file_from_url(self, url: str) -> None:
         logger.debug(f"Downloading solc list from {url}")
-        with urllib.request.urlopen(url, timeout=0.5) as response:
+        with urllib.request.urlopen(url, timeout=5) as response:
             json = response.read()
             self.__solc_builds = SolcBuilds.model_validate_json(json)
             self.__solc_list_path.write_bytes(json)
