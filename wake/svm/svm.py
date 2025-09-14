@@ -298,7 +298,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         try:
             logger.debug(f"Downloading solc list from {self.__solc_list_urls[0]}")
             with urllib.request.urlopen(
-                self.__solc_list_urls[0], timeout=0.5
+                self.__solc_list_urls[0], timeout=5
             ) as response:
                 json = response.read()
                 self.__solc_builds = SolcBuilds.model_validate_json(json)
