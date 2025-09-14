@@ -38,6 +38,8 @@ from pathvalidate import sanitize_filename  # type: ignore
 from pydantic import ValidationError
 from rich.progress import Progress
 from watchdog.events import (
+    FileClosedEvent,
+    FileOpenedEvent,
     FileSystemEvent,
     FileSystemEventHandler,
     FileSystemMovedEvent,
@@ -201,6 +203,8 @@ class CompilationFileSystemEventHandler(FileSystemEventHandler):
                 or dest_file.suffix == ".sol"
             ):
                 self._loop.call_soon_threadsafe(self._queue.put_nowait, event)
+        elif isinstance(event, (FileOpenedEvent, FileClosedEvent)):
+            pass
         else:
             file = Path(event.src_path)
             if file == self._config.local_config_path or file.suffix == ".sol":
