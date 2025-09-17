@@ -432,7 +432,10 @@ class TransactionAbc(ABC, Generic[T]):
                 if log["data"].startswith("0x")
                 else bytes.fromhex(log["data"])
             )
-            ret.append(UnknownEvent(topics, data))
+            origin = Account(log["address"], self._chain)
+            event = UnknownEvent(topics, data)
+            event.origin = origin
+            ret.append(event)
         return ret
 
     @property
