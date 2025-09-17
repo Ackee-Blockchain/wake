@@ -30,6 +30,7 @@ mod memory_db;
 mod globals;
 mod eip712;
 mod chain_interface;
+mod chain_snapshot;
 mod txs;
 mod wei;
 mod inspectors;

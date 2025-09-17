@@ -14,6 +14,7 @@ use revm::primitives::{Address as RevmAddress, U256};
 use revm::Database;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::address::Address;
 use crate::chain::{Chain, CustomEvm};
@@ -268,7 +269,8 @@ impl Account {
     fn set_label<'py>(&self, py: Python<'py>, label: Option<&str>) -> PyResult<()> {
         match &self.chain {
             ChainWrapper::Native(chain) => {
-                let labels = &mut chain.borrow_mut(py).labels;
+                let mut chain = chain.borrow_mut(py);
+                let labels = Arc::make_mut(&mut chain.labels);
 
                 match label {
                     Some(label) => {
@@ -442,10 +444,14 @@ impl Account {
 
     #[setter]
     fn set_pytypes_resolver(&self, py: Python, value: Bound<PyAny>) -> PyResult<()> {
+        // we must be holding GIL in order for Arc::make_mut not to panic
+
         if value.is_none() {
             match &self.chain {
                 ChainWrapper::Native(chain) => {
-                    chain.borrow_mut(py).fqn_overrides.remove(&self.address.borrow(py).0);
+                    let mut chain = chain.borrow_mut(py);
+                    let fqn_overrides = Arc::make_mut(&mut chain.fqn_overrides);
+                    fqn_overrides.remove(&self.address.borrow(py).0);
                 }
                 ChainWrapper::Python(_) => {
                     return Err(PyNotImplementedError::new_err(
@@ -458,7 +464,9 @@ impl Account {
 
             match &self.chain {
                 ChainWrapper::Native(chain) => {
-                    chain.borrow_mut(py).fqn_overrides.insert(self.address.borrow(py).0, fqn.into());
+                    let mut chain = chain.borrow_mut(py);
+                    let fqn_overrides = Arc::make_mut(&mut chain.fqn_overrides);
+                    fqn_overrides.insert(self.address.borrow(py).0, fqn.into());
                 }
                 ChainWrapper::Python(_) => {
                     return Err(PyNotImplementedError::new_err(

@@ -30,6 +30,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use pyo3::{intern, prelude::*, IntoPyObjectExt, PyTypeInfo};
 use std::sync::Arc;
 
+use crate::chain_snapshot::ChainSnapshot;
 use crate::inspectors::access_list_inspector::AccessListInspector;
 use crate::account::Account;
 use crate::address::Address;
@@ -154,10 +155,10 @@ pub struct Chain {
     rng: Xoshiro256PlusPlus,
     pub evm: Option<CustomEvm>,
     pub(crate) provider: Option<ProviderWrapper>,
-    pub labels: HashMap<RevmAddress, String>,
+    pub labels: Arc<HashMap<RevmAddress, String>>,
     collect_coverage: bool,
 
-    pub deployed_libraries: HashMap<[u8; 17], RevmAddress>,
+    pub deployed_libraries: Arc<HashMap<[u8; 17], RevmAddress>>,
 
     pub(crate) blocks: Option<Py<Blocks>>,
     pub(crate) txs: Option<Py<Txs>>,
@@ -168,26 +169,26 @@ pub struct Chain {
     forked_block: Option<u64>,
     accounts: Vec<Py<Account>>,
     #[pyo3(get)]
-    default_tx_account: Option<Py<Account>>,
+    pub(crate) default_tx_account: Option<Py<Account>>,
     #[pyo3(get)]
-    default_call_account: Option<Py<Account>>,
+    pub(crate) default_call_account: Option<Py<Account>>,
     #[pyo3(get)]
-    default_estimate_account: Option<Py<Account>>,
+    pub(crate) default_estimate_account: Option<Py<Account>>,
     #[pyo3(get)]
-    default_access_list_account: Option<Py<Account>>,
+    pub(crate) default_access_list_account: Option<Py<Account>>,
     #[pyo3(get, set)]
-    automine: bool,
+    pub(crate) automine: bool,
     #[pyo3(get)]
     pub(crate) block_gas_limit: u64,
 
-    latest_block_env: Option<BlockEnv>,
-    snapshots: Vec<(CfgEnv, BlockEnv)>,
-    pending_txs: Vec<Py<TransactionAbc>>,
+    pub(crate) latest_block_env: Option<BlockEnv>,
+    snapshots: Vec<ChainSnapshot>,
+    pub(crate) pending_txs: Vec<Py<TransactionAbc>>,
     pub(crate) pending_gas_used: u64,
 
     // address => fqn
     // overrides how to resolve fqn (and pytypes) for this address
-    pub(crate) fqn_overrides: HashMap<RevmAddress, Py<PyString>>,
+    pub(crate) fqn_overrides: Arc<HashMap<RevmAddress, Py<PyString>>>,
 
     #[pyo3(get, set)]
     tx_callback: Option<Py<PyAny>>,
@@ -210,11 +211,11 @@ impl Chain {
                 ),
                 evm: None,
                 provider: None,
-                deployed_libraries: HashMap::new(),
+                deployed_libraries: Arc::new(HashMap::new()),
                 blocks: None,
                 txs: None,
                 chain_interface: None,
-                labels: HashMap::new(),
+                labels: Arc::new(HashMap::new()),
                 collect_coverage: false,
                 connected: false,
                 forked_chain_id: None,
@@ -230,7 +231,7 @@ impl Chain {
                 snapshots: vec![],
                 pending_txs: vec![],
                 pending_gas_used: 0,
-                fqn_overrides: HashMap::new(),
+                fqn_overrides: Arc::new(HashMap::new()),
                 tx_callback: None,
             },
         )?;
@@ -417,7 +418,7 @@ impl Chain {
     #[getter(_labels)]
     fn get_labels<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let labels = PyDict::new(py);
-        for (addr, label) in &self.labels {
+        for (addr, label) in self.labels.iter() {
             labels.set_item(Py::new(py, Address(*addr))?, label)?;
         }
         Ok(labels)
@@ -425,8 +426,11 @@ impl Chain {
 
     #[setter(_labels)]
     fn set_labels(&mut self, labels: Bound<PyDict>) -> PyResult<()> {
+        let new_labels = Arc::make_mut(&mut self.labels);
+        new_labels.clear();
+
         for (addr, label) in labels.iter() {
-            self.labels.insert(
+            new_labels.insert(
                 addr.downcast_into::<Address>()?.borrow().0,
                 label.downcast_into::<PyString>()?.to_string(),
             );
@@ -455,14 +459,11 @@ impl Chain {
         Ok(())
     }
 
-    fn snapshot(&mut self) -> PyResult<String> {
+    fn snapshot(&mut self, py: Python) -> PyResult<String> {
         let evm = self.get_evm_mut()?;
         let snapshot_id = evm.db().snapshot().to_string();
 
-        let cfg_env = evm.cfg.clone();
-        let block_env = evm.block.clone();
-        self.snapshots.push((cfg_env, block_env));
-        // TODO: deployed libraries
+        self.snapshots.push(ChainSnapshot::from_chain(self, py)?);
 
         Ok(snapshot_id)
     }
@@ -472,42 +473,22 @@ impl Chain {
 
         let snapshot_id = id.parse().unwrap();
         borrowed.snapshots.truncate(snapshot_id);
-        let (cfg_env, block_env) = borrowed.snapshots.pop().unwrap();
 
-        let last_block_number = block_env.number - 1;
+        let snapshot = borrowed.snapshots.pop().unwrap();
+
+        let last_block_number = snapshot.pending_block_env.number - 1;
 
         let evm = borrowed.get_evm_mut()?;
         let journal_index = evm.db().revert(snapshot_id);
         evm.db().set_last_block_number(last_block_number);
-        evm.cfg = cfg_env;
-        evm.block = block_env;
 
-        let provider = borrowed.provider.clone();
         let mut blocks = borrowed.blocks.as_mut().unwrap().borrow_mut(py);
         blocks.remove_blocks(last_block_number);
-
         drop(blocks);
 
         borrowed.txs.as_mut().unwrap().borrow_mut(py).remove_txs(py, journal_index);
 
-        drop(borrowed);
-        let latest_block_env = slf
-            .borrow()
-            .blocks
-            .as_ref()
-            .unwrap()
-            .borrow_mut(py)
-            .get_block(
-                py,
-                BlockEnum::Int(last_block_number as i64),
-                last_block_number,
-                provider,
-            )?
-            .borrow(py)
-            .block_env
-            .clone();
-
-        slf.borrow_mut().latest_block_env = Some(latest_block_env);
+        snapshot.restore_to_chain(&mut borrowed)?;
 
         Ok(())
     }
@@ -581,7 +562,7 @@ impl Chain {
         }
 
         // Reset all state completely
-        slf_.fqn_overrides.clear();
+        slf_.fqn_overrides = Arc::new(HashMap::new());
         slf_.provider = None;
         slf_.blocks = None;
         slf_.txs = None;
@@ -593,8 +574,8 @@ impl Chain {
         slf_.pending_txs.clear();
         slf_.pending_gas_used = 0;
         slf_.accounts.clear();
-        slf_.deployed_libraries.clear();
-        slf_.labels.clear();
+        slf_.deployed_libraries = Arc::new(HashMap::new());
+        slf_.labels = Arc::new(HashMap::new());
         slf_.default_tx_account = None;
         slf_.default_call_account = None;
         slf_.default_estimate_account = None;
@@ -773,7 +754,6 @@ impl Chain {
     fn _disconnect(slf: Bound<Self>, py: Python) -> PyResult<()> {
         let mut borrowed = slf.borrow_mut();
         borrowed.connected = false;
-        borrowed.fqn_overrides.clear();
 
         if let Some(block_number) = borrowed.forked_block {
             let path = format!(

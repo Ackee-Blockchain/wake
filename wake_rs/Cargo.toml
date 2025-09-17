@@ -8,7 +8,7 @@ debug = true
 
 [dependencies]
 alloy = { version = "0.13", features = ["signer-local", "eip712", "dyn-abi", "signer-mnemonic", "signer-mnemonic-all-languages", "signer-keystore", "signer-trezor", "provider-http", "provider-ws", "rpc-types-eth"] }
-pyo3 = { version = "0.24", features = ["extension-module", "num-bigint"] }
+pyo3 = { version = "0.24", features = ["extension-module", "num-bigint", "py-clone"] }
 
 log = "0.4.21"
 pyo3-log = "0.12.3"

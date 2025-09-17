@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use pyo3::{intern, prelude::*};
 use pyo3::types::{PyBytes, PyDict, PyList, PyType};
@@ -93,7 +94,7 @@ impl Library {
                     ret.downcast_bound::<Account>(py).unwrap().borrow().address.borrow(py).0
                 };
 
-                chain.borrow_mut().deployed_libraries.insert(lib_id.as_bytes().try_into().unwrap(), addr);
+                Arc::make_mut(&mut chain.borrow_mut().deployed_libraries).insert(lib_id.as_bytes().try_into().unwrap(), addr);
             } else {
                 let lib = if return_tx {
                     ret.getattr(py, intern!(py, "return_value"))?
