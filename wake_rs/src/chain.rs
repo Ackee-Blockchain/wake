@@ -6,7 +6,7 @@ use alloy::transports::{RpcError, TransportErrorKind};
 use auto_impl::auto_impl;
 use num_bigint::BigUint;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
-use pyo3::types::{PyBytes, PyDict, PyNone, PyString, PyTuple};
+use pyo3::types::{PyBytes, PyDict, PyNone, PyString, PyTuple, PyType};
 use rand_xoshiro::rand_core::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rand::Rng;
@@ -186,9 +186,9 @@ pub struct Chain {
     pub(crate) pending_txs: Vec<Py<TransactionAbc>>,
     pub(crate) pending_gas_used: u64,
 
-    // address => fqn
+    // address => pytype
     // overrides how to resolve fqn (and pytypes) for this address
-    pub(crate) fqn_overrides: Arc<HashMap<RevmAddress, Py<PyString>>>,
+    pub(crate) fqn_overrides: Arc<HashMap<RevmAddress, Py<PyType>>>,
 
     #[pyo3(get, set)]
     tx_callback: Option<Py<PyAny>>,

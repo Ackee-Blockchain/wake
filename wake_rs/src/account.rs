@@ -442,6 +442,18 @@ impl Account {
         }
     }
 
+    #[getter]
+    fn get_pytypes_resolver(&self, py: Python) -> PyResult<Option<Py<PyType>>> {
+        match &self.chain {
+            ChainWrapper::Native(chain) => Ok(
+                chain.borrow(py).fqn_overrides
+                    .get(&self.address.borrow(py).0)
+                    .map(|pytype| pytype.clone_ref(py)),
+            ),
+            ChainWrapper::Python(_) => Ok(None),
+        }
+    }
+
     #[setter]
     fn set_pytypes_resolver(&self, py: Python, value: Bound<PyAny>) -> PyResult<()> {
         // we must be holding GIL in order for Arc::make_mut not to panic
@@ -460,13 +472,15 @@ impl Account {
                 }
             }
         } else {
-            let fqn = value.getattr(intern!(py, "_fqn"))?.downcast_into::<PyString>()?;
+            let pytype = value.downcast_into::<PyType>()?;
+            // just ensure that the pytype has a _fqn attribute
+            pytype.getattr(intern!(py, "_fqn"))?.downcast_into::<PyString>()?;
 
             match &self.chain {
                 ChainWrapper::Native(chain) => {
                     let mut chain = chain.borrow_mut(py);
                     let fqn_overrides = Arc::make_mut(&mut chain.fqn_overrides);
-                    fqn_overrides.insert(self.address.borrow(py).0, fqn.into());
+                    fqn_overrides.insert(self.address.borrow(py).0, pytype.unbind());
                 }
                 ChainWrapper::Python(_) => {
                     return Err(PyNotImplementedError::new_err(

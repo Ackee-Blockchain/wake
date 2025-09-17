@@ -151,8 +151,8 @@ pub(crate) fn resolve_error(
         } else if let Some(metadata) = metadata {
             match metadata {
                 ErrorMetadata::Create(create_metadata) => {
-                    if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
-                        fqn.bind(py).clone().into_any()
+                    if let Some(pytype) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
+                        pytype.bind(py).getattr(intern!(py, "_fqn"))?
                     } else if let Some(fqn) = get_fqn_from_creation_code(&create_metadata.init_code, &py_objects.wake_init_code_index) {
                         PyString::new(py, &fqn).into_any()
                     } else {
@@ -161,8 +161,8 @@ pub(crate) fn resolve_error(
                     }
                 }
                 ErrorMetadata::Call(call_metadata) => {
-                    if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
-                        fqn.bind(py).clone().into_any()
+                    if let Some(pytype) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
+                        pytype.bind(py).getattr(intern!(py, "_fqn"))?
                     } else if let Some(fqn) = py_objects
                         .wake_contracts_by_metadata
                         .bind(py)
@@ -436,8 +436,8 @@ pub(crate) fn resolve_event(
 
         let fqn = match metadata {
             Some(EventMetadata::Create(create_metadata)) => {
-                if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
-                    fqn.bind(py).clone().into_any()
+                if let Some(pytype) = chain.borrow(py).fqn_overrides.get(&create_metadata.bytecode_address) {
+                    pytype.bind(py).getattr(intern!(py, "_fqn"))?
                 } else if let Some(fqn) = get_fqn_from_creation_code(&create_metadata.init_code, &py_objects.wake_init_code_index) {
                     PyString::new(py, &fqn).into_any()
                 } else {
@@ -445,8 +445,8 @@ pub(crate) fn resolve_event(
                 }
             }
             Some(EventMetadata::Call(call_metadata)) => {
-                if let Some(fqn) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
-                    fqn.bind(py).clone().into_any()
+                if let Some(pytype) = chain.borrow(py).fqn_overrides.get(&call_metadata.bytecode_address) {
+                    pytype.bind(py).getattr(intern!(py, "_fqn"))?
                 } else if let Some(fqn) = py_objects
                     .wake_contracts_by_metadata
                     .bind(py)

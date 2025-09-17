@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use pyo3::{prelude::*, types::{PyString}};
+use pyo3::{prelude::*, types::PyType};
 use revm::context::{BlockEnv, CfgEnv};
 use revm::primitives::Address as RevmAddress;
 
@@ -14,7 +14,7 @@ pub struct ChainSnapshot {
     // Chain state
     labels: Arc<HashMap<RevmAddress, String>>,
     deployed_libraries: Arc<HashMap<[u8; 17], RevmAddress>>,
-    fqn_overrides: Arc<HashMap<RevmAddress, Py<PyString>>>,
+    fqn_overrides: Arc<HashMap<RevmAddress, Py<PyType>>>,
 
     // Latest state
     latest_block_env: Option<BlockEnv>,
