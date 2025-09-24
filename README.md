@@ -1,19 +1,46 @@
-# Wake, a Python-based Solidity development and testing framework with built-in vulnerability detectors
+# Wake
+
+The fastest fuzzing and testing framework for Solidity, written in Python.
+Wake helps you write safer smart contracts, faster.
+
+Built by [Ackee Blockchain Security](https://ackee.xyz) — trusted auditors of Lido, Safe, and Axelar.
 
 ![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
 
-Features:
+---
 
-- testing framework based on [pytest](https://docs.pytest.org/en)
-- property-based fuzzer
-- deployments & mainnet interactions
-- vulnerability and code quality detectors
-- printers for extracting useful information from Solidity code
-- static analysis framework for implementing custom detectors and printers
-- Github actions for [setting up Wake](https://github.com/marketplace/actions/wake-setup) and [running detectors](https://github.com/marketplace/actions/wake-detect)
-- language server ([LSP](https://microsoft.github.io/language-server-protocol/))
-- VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity))
-- solc version manager
+## 🚀 Why Wake?
+
+Testing Solidity is hard. Unit tests only go so far, and hidden bugs surface under real-world transaction flows.
+Wake fills the gap with:
+
+- **Blazing-fast execution** — Python-native types and pytest integration
+- **Built-in fuzzing & vulnerability detectors** — catch reentrancy, overflows, and logic flaws early
+- **Seamless developer experience** — VS Code extension, GitHub Actions, solc manager
+- **Cross-chain testing** — works with Anvil, Hardhat, and Ganache
+
+---
+
+## ✨ Features and benefits
+
+- Testing framework based on [pytest](https://docs.pytest.org/en) — write clean, simple tests with familiar tooling
+- Property-based fuzzer — automatically generate diverse inputs to uncover hidden bugs faster
+- Deployments & mainnet interactions — test contracts in realistic environments before going live
+- Vulnerability and code quality detectors — detect reentrancy, overflows, and bad patterns early in development
+- Printers for extracting useful information from Solidity code — gain insights into contract structures and flows
+- Static analysis framework for custom detectors and printers — extend Wake with project-specific rules
+- GitHub actions for [setting up Wake](https://github.com/marketplace/actions/wake-setup) and [running detectors](https://github.com/marketplace/actions/wake-detect) — integrate seamlessly into CI/CD pipelines
+- Language server ([LSP](https://microsoft.github.io/language-server-protocol/)) — get autocompletion, hints, and references inside your IDE
+- VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity)) — instant feedback while writing Solidity code
+- Solc version manager — manage compiler versions with ease for consistent builds
+
+---
+
+## 📊 Wake vs other tools
+
+![Wake vs other tools](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_vs_others.png?raw=true)
+
+---
 
 ## Dependencies
 
@@ -27,12 +54,6 @@ via `pip`
 ```shell
 pip3 install eth-wake
 ```
-
-## Documentation & Contribution
-
-Wake documentation can be found [here](https://ackee.xyz/wake/docs/latest).
-
-There you can also find a section on [contributing](https://ackee.xyz/wake/docs/latest/contributing/).
 
 ## Discovered vulnerabilities
 
@@ -57,30 +78,14 @@ There you can also find a section on [contributing](https://ackee.xyz/wake/docs/
 | Incorrect EIP-712 typehash                      | Medium   | PWN     | Detector         | Ackee Blockchain | [Report](https://github.com/PWNDAO/pwn_audits/blob/main/protocol/pwn-v1.3-ackee.pdf)                                                                                                                                            |
 | Incorrect EIP-712 data encoding                 | Medium   | PWN     | Fuzz test        | Ackee Blockchain | [Report](https://github.com/PWNDAO/pwn_audits/blob/main/protocol/pwn-v1.3-ackee.pdf), [Wake tests](https://github.com/Ackee-Blockchain/tests-pwn-protocol/blob/revision-2.0/tests/test_fuzz.py)                                 |
 
-## Features
 
-### Testing framework
+---
 
-See [examples](https://github.com/Ackee-Blockchain/wake/tree/main/examples) and [documentation](https://ackee.xyz/wake/docs/latest/testing-framework/overview) for more information.
+## Features in-depth
 
-Writing tests is as simple as:
+### 🔍 Fuzzer
 
-```python
-from wake.testing import *
-from pytypes.contracts.Counter import Counter
-
-@chain.connect()
-def test_counter():
-    counter = Counter.deploy()
-    assert counter.count() == 0
-
-    counter.increment()
-    assert counter.count() == 1
-```
-
-### Fuzzer
-
-Fuzzer builds on top of the testing framework and allows efficient fuzz testing of Solidity smart contracts.
+Wake’s fuzzer builds on top of the testing framework and allows efficient fuzz testing of Solidity smart contracts.
 
 ```python
 from wake.testing import *
@@ -116,64 +121,72 @@ def test_counter():
     CounterTest().run(sequences_count=30, flows_count=100)
 ```
 
-### Detectors
+---
+
+### 🛠 Detectors and printers
 
 All vulnerability & code quality detectors can be run using:
+
 ```shell
 wake detect all
 ```
 
-A specific detector can be run using:
+Run a specific detector:
+
 ```shell
 wake detect <detector-name>
 ```
 
-See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-detectors/) for a list of all detectors.
+See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-detectors/) for a full list of detectors.
 
-### Printers
+Run a printer:
 
-A specific printer can be run using:
 ```shell
 wake print <printer-name>
 ```
 
-See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-printers/) for a list of all printers.
+See the [documentation](https://ackee.xyz/wake/docs/latest/static-analysis/using-printers/) for a full list of printers.
 
-### Custom detectors & printers
+For custom detectors & printers, check the [getting started guide](https://ackee.xyz/wake/docs/latest/static-analysis/getting-started/) and repos for [wake_detectors](https://github.com/Ackee-Blockchain/wake/tree/main/wake_detectors) and [wake_printers](https://github.com/Ackee-Blockchain/wake/tree/main/wake_printers).
 
-Refer to the [getting started](https://ackee.xyz/wake/docs/latest/static-analysis/getting-started/) guide for more information.
-Also check out [wake_detectors](https://github.com/Ackee-Blockchain/wake/tree/main/wake_detectors) and [wake_printers](https://github.com/Ackee-Blockchain/wake/tree/main/wake_printers) for the implementation of built-in detectors and printers.
+---
 
-### LSP server
+### 🖥 LSP Server
 
-Wake implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity. The only currently supported communication channel is TCP.
-
-Wake LSP server can be run using:
+Wake implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity.
+Run it with:
 
 ```shell
 wake lsp
 ```
 
-Or with an optional --port argument (default 65432):
+Or specify a port (default 65432):
 
 ```shell
 wake lsp --port 1234
 ```
 
-All LSP server features can be found in the [documentation](https://ackee.xyz/wake/docs/latest/language-server/).
+See all features in the [documentation](https://ackee.xyz/wake/docs/latest/language-server/).
 
-## License
+---
+
+## 📚 Documentation, contribution and community
+
+- [Wake documentation](https://ackee.xyz/wake/docs/latest)
+- [Contributing guide](https://ackee.xyz/wake/docs/latest/contributing/)
+- [Follow X/Twitter](https://x.com/WakeFramework) for updates and tips
+
+
+---
+
+## 📜 License
 
 This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/wake/blob/main/LICENSE).
 
-## Partners
+---
+
+## 🤝 Partners
 
 RockawayX             |  Coinbase
 :-------------------------:|:-------------------------:
 [![](https://github.com/Ackee-Blockchain/wake/blob/main/images/rockawayx.jpg?raw=true)](https://rockawayx.com/)  |  [![](https://github.com/Ackee-Blockchain/wake/blob/main/images/coinbase.png?raw=true)](https://www.coinbase.com/)
-
-
-
-
-
-
