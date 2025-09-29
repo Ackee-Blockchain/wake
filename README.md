@@ -1,29 +1,26 @@
+![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
+
 # Wake
 
-The fastest fuzzing and testing framework for Solidity, written in Python.
-Wake helps you write safer smart contracts, faster.
+The fuzzing and testing framework for Solidity, written in Python. Wake helps you write safer smart contracts, faster.
 
 Built by [Ackee Blockchain Security](https://ackee.xyz) — trusted auditors of Lido, Safe, and Axelar.
-
-![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
 
 ---
 
 ## Why Wake?
 
-Testing Solidity is hard. Unit tests only go so far, and hidden bugs surface under real-world transaction flows.
-Wake fills the gap with:
-
-- **Blazing-fast execution** — Python-native types and pytest integration
-- **Built-in fuzzing & vulnerability detectors** — catch reentrancy, overflows, and logic flaws early
+- **Built-in fuzzing** — automatically generate diverse inputs and edge cases to uncover hidden vulnerabilities
+- **Vulnerability detectors** — catch reentrancy, overflows, and logic flaws early
 - **Seamless developer experience** — VS Code extension, GitHub Actions, solc manager
-- **Cross-chain testing** — works with Anvil, Hardhat, and Ganache
+- **Cross-chain testing** — works with Anvil, Hardhat, and Ganache  
 
 ---
 
 ## Features and benefits
 
 - Testing framework based on [pytest](https://docs.pytest.org/en) — write clean, simple tests with familiar tooling
+- Manually-guided fuzzing (MGF) — combine automated fuzzing with human insights to target specific contract behaviors and edge cases  
 - Property-based fuzzer — automatically generate diverse inputs to uncover hidden bugs faster
 - Deployments & mainnet interactions — test contracts in realistic environments before going live
 - Vulnerability and code quality detectors — detect reentrancy, overflows, and bad patterns early in development
@@ -31,14 +28,23 @@ Wake fills the gap with:
 - Static analysis framework for custom detectors and printers — extend Wake with project-specific rules
 - GitHub actions for [setting up Wake](https://github.com/marketplace/actions/wake-setup) and [running detectors](https://github.com/marketplace/actions/wake-detect) — integrate seamlessly into CI/CD pipelines
 - Language server ([LSP](https://microsoft.github.io/language-server-protocol/)) — get autocompletion, hints, and references inside your IDE
-- VS Code extension ([Tools for Solidity](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity)) — instant feedback while writing Solidity code
+- VS Code extension ([Solidity (Wake)](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity)) — instant feedback while writing Solidity code
 - Solc version manager — manage compiler versions with ease for consistent builds
 
 ---
 
 ## Wake vs other tools
 
-![Wake vs other tools](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_vs_others.png?raw=true)
+| | **Slither** | **ApeWorx** | **Brownie** | **Hardhat** | **Foundry** | **Wake** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Language** | Python | Python | Python | Typescript | Rust | Python |
+| **Maintained** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Testing** | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Fuzzing** | ❌ | ❌ | ✅* |✅** | ✅ | ✅ |
+| **Detectors** | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Language server** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+
+\* *available with Hypothesis plugin* \*\* *only in Solidity*
 
 ---
 
