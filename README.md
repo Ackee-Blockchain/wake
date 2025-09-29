@@ -9,7 +9,7 @@ Built by [Ackee Blockchain Security](https://ackee.xyz) — trusted auditors of 
 
 ---
 
-## 🚀 Why Wake?
+## Why Wake?
 
 Testing Solidity is hard. Unit tests only go so far, and hidden bugs surface under real-world transaction flows.
 Wake fills the gap with:
@@ -21,7 +21,7 @@ Wake fills the gap with:
 
 ---
 
-## ✨ Features and benefits
+## Features and benefits
 
 - Testing framework based on [pytest](https://docs.pytest.org/en) — write clean, simple tests with familiar tooling
 - Property-based fuzzer — automatically generate diverse inputs to uncover hidden bugs faster
@@ -36,7 +36,7 @@ Wake fills the gap with:
 
 ---
 
-## 📊 Wake vs other tools
+## Wake vs other tools
 
 ![Wake vs other tools](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_vs_others.png?raw=true)
 
@@ -83,7 +83,7 @@ pip3 install eth-wake
 
 ## Features in-depth
 
-### 🔍 Fuzzer
+### Fuzzer
 
 Wake’s fuzzer builds on top of the testing framework and allows efficient fuzz testing of Solidity smart contracts.
 
@@ -123,7 +123,7 @@ def test_counter():
 
 ---
 
-### 🛠 Detectors and printers
+### Detectors and printers
 
 All vulnerability & code quality detectors can be run using:
 
@@ -151,7 +151,7 @@ For custom detectors & printers, check the [getting started guide](https://ackee
 
 ---
 
-### 🖥 LSP Server
+### LSP Server
 
 Wake implements an [LSP](https://microsoft.github.io/language-server-protocol/) server for Solidity.
 Run it with:
@@ -170,7 +170,7 @@ See all features in the [documentation](https://ackee.xyz/wake/docs/latest/langu
 
 ---
 
-## 📚 Documentation, contribution and community
+## Documentation, contribution and community
 
 - [Wake documentation](https://ackee.xyz/wake/docs/latest)
 - [Contributing guide](https://ackee.xyz/wake/docs/latest/contributing/)
@@ -179,13 +179,13 @@ See all features in the [documentation](https://ackee.xyz/wake/docs/latest/langu
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/wake/blob/main/LICENSE).
 
 ---
 
-## 🤝 Partners
+## Partners
 
 RockawayX             |  Coinbase
 :-------------------------:|:-------------------------:
