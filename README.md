@@ -1,11 +1,11 @@
+![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
+
 # Wake
 
 The fastest fuzzing and testing framework for Solidity, written in Python.
 Wake helps you write safer smart contracts, faster.
 
 Built by [Ackee Blockchain Security](https://ackee.xyz) — trusted auditors of Lido, Safe, and Axelar.
-
-![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
 
 ---
 
