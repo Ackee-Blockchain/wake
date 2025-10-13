@@ -34,6 +34,7 @@ TxParams = TypedDict(
         "maxFeePerGas": int,
         "accessList": Union[List, Literal["auto"]],
         "chainId": int,
+        "authorizationList": List,
     },
     total=False,
 )
@@ -83,6 +84,8 @@ class ChainInterfaceAbc(ABC):
             tx["accessList"] = transaction["accessList"]
         if "chainId" in transaction:
             tx["chainId"] = hex(transaction["chainId"])
+        if "authorizationList" in transaction:
+            tx["authorizationList"] = transaction["authorizationList"]
         return tx
 
     @staticmethod
