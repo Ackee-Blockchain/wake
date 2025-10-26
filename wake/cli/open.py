@@ -107,7 +107,7 @@ async def open_address(
     from wake.config import WakeConfig
     from wake.core import get_logger
     from wake.core.solidity_version import SolidityVersion
-    from wake.development.utils import get_info_from_explorer, AbiNotFound
+    from wake.development.utils import AbiNotFound, get_info_from_explorer
     from wake.svm import SolcVersionManager
 
     logger = get_logger(__name__)
@@ -172,7 +172,9 @@ async def open_address(
         full_name = info["compilation"]["fullyQualifiedName"]
 
         if info["compilation"]["language"] != "Solidity":
-            logger.error("Only Solidity contracts are supported")
+            logger.error(
+                f"{info['compilation']['language']} contracts are not supported"
+            )
             sys.exit(64)
 
         if any(
