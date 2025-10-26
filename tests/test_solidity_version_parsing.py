@@ -22,6 +22,8 @@ def test_version_basic_usage():
     assert v1 == v3
     v4 = SolidityVersion.fromstring("0.8.9-abc+def")
     assert v3 == v4  # prerelease and build tags are ignored
+    v5 = SolidityVersion.fromstring("v0.8.9")
+    assert v5 == v1
 
 
 def test_version_str_and_repr():
@@ -36,8 +38,6 @@ def test_version_invalid():
         SolidityVersion.fromstring(">0.8.1")
     with pytest.raises(ValueError):
         SolidityVersion.fromstring("=0.8.1")
-    with pytest.raises(ValueError):
-        SolidityVersion.fromstring("v0.8.1")
     with pytest.raises(ValueError):
         SolidityVersion.fromstring("x.8.1")
 
