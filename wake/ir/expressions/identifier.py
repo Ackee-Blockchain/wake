@@ -8,7 +8,7 @@ from wake.ir.abc import SolidityAbc
 from wake.ir.ast import AstNodeId, SolcIdentifier
 from wake.ir.declarations.abc import DeclarationAbc
 from wake.ir.declarations.variable_declaration import VariableDeclaration
-from wake.ir.enums import GlobalSymbol
+from wake.ir.enums import DataLocation, GlobalSymbol
 from wake.ir.expressions.abc import ExpressionAbc
 from wake.ir.reference_resolver import CallbackParams
 from wake.ir.utils import IrInitTuple
@@ -211,8 +211,17 @@ class Identifier(ExpressionAbc):
     @property
     @weak_self_lru_cache(maxsize=2048)
     def is_ref_to_state_variable(self) -> bool:
+        import wake.ir.types as types
+
         referenced_declaration = self.referenced_declaration
-        return (
+        if (
             isinstance(referenced_declaration, VariableDeclaration)
             and referenced_declaration.is_state_variable
-        )
+        ):
+            return True
+
+        t = self.type
+        return (
+            isinstance(t, (types.Array, types.Bytes, types.String, types.Struct))
+            and t.data_location == DataLocation.STORAGE
+        ) or isinstance(t, types.Mapping)
