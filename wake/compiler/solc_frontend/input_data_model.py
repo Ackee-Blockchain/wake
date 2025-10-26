@@ -142,6 +142,7 @@ class SolcInputSource(SolcInputModel):
     urls: Optional[List[str]] = None
 
     @model_validator(mode="before")
+    @classmethod
     def content_or_urls_set(cls, values):
         content, urls = values.get("content"), values.get("urls")
         assert (content is None) != (
