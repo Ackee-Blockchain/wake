@@ -290,6 +290,7 @@ class Src:
     file_id: int
 
     @model_validator(mode="before")
+    @classmethod
     def validate(cls, v):
         if isinstance(v, str):
             match = re.search(REGEX_SRC, v)
@@ -1241,11 +1242,11 @@ class SolcYulLiteral(YulNode):
     hex_value: Optional[StrictStr] = None  # sice 0.8.5
 
     @model_validator(mode="after")
-    def value_or_hex_value_set(cls, value: "SolcYulLiteral"):
+    def value_or_hex_value_set(self):
         assert (
-            value.value is not None or value.hex_value is not None
+            self.value is not None or self.hex_value is not None
         ), "YulLiteral: either 'value' or 'hex_value' must be set"
-        return value
+        return self
 
 
 class SolcYulTypedName(YulNode):
