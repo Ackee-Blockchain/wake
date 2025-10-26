@@ -210,6 +210,8 @@ class SemanticVersion(VersionAbc):
         Args:
             version_str: The string to parse.
         """
+        if version_str.startswith("v"):
+            version_str = version_str[1:]
         match = cls.RE.match(version_str)
         if not match:
             raise ValueError(f"Invalid Solidity version: `{version_str}`")
