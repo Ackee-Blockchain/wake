@@ -5,7 +5,7 @@ from typing import Iterator, List, Optional, Tuple, Union
 
 from wake.core import get_logger
 from wake.ir.abc import IrAbc, SolidityAbc
-from wake.ir.enums import FunctionCallKind, GlobalSymbol
+from wake.ir.enums import DataLocation, FunctionCallKind, GlobalSymbol
 from wake.utils.decorators import weak_self_lru_cache
 
 from ..ast import SolcFunctionCall
@@ -243,4 +243,13 @@ class FunctionCall(ExpressionAbc):
     def is_ref_to_state_variable(self) -> bool:
         if self.kind == FunctionCallKind.TYPE_CONVERSION:
             return self.expression.is_ref_to_state_variable
-        return False
+        elif self.kind == FunctionCallKind.FUNCTION_CALL:
+            import wake.ir.types as types
+
+            t = self.type
+            return (
+                isinstance(t, (types.Array, types.Bytes, types.String, types.Struct))
+                and t.data_location == DataLocation.STORAGE
+            ) or isinstance(t, types.Mapping)
+        else:
+            return False
