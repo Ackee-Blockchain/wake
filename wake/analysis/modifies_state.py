@@ -31,15 +31,26 @@ class ModifiesStateFlag(IntFlag):
     __str__ = __repr__
 
 
-# TODO state var references
-
-
 def _handle_assignment(
     node: ir.Assignment,
 ) -> Set[Tuple[Union[ir.ExpressionAbc, ir.StatementAbc, ir.YulAbc], ModifiesStateFlag]]:
     ret = modifies_state(node.left_expression) | modifies_state(node.right_expression)
-    if node.left_expression.is_ref_to_state_variable:
-        ret |= {(node, ModifiesStateFlag.MODIFIES_STATE_VAR)}
+
+    t = node.left_expression.type
+    if (
+        isinstance(
+            t, (ir.types.Array, ir.types.Bytes, ir.types.String, ir.types.Struct)
+        )
+        and t.data_location == ir.enums.DataLocation.STORAGE
+    ):
+        # may be either pointer reassignment or state write
+        if not t.is_pointer:
+            ret |= {(node, ModifiesStateFlag.MODIFIES_STATE_VAR)}
+    else:
+        # other cases such as member of storage reference
+        if node.left_expression.is_ref_to_state_variable:
+            ret |= {(node, ModifiesStateFlag.MODIFIES_STATE_VAR)}
+
     return ret
 
 
