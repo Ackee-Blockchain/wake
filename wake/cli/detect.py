@@ -418,6 +418,7 @@ async def detect_(
         print_detection,
     )
     from wake.detectors.utils import create_sarif_log
+    from wake.ir import ContractDefinition
 
     from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
     from ..compiler.build_data_model import ProjectBuild, ProjectBuildInfo
@@ -617,10 +618,25 @@ async def detect_(
                 for i in range(start_line_index, end_line_index):
                     source += source_unit._lines_index[i][0].decode("utf-8")
 
+                try:
+                    rel_path = source_unit.file.relative_to(config.project_root_path)
+                except ValueError:
+                    rel_path = None
+
+                contract = detection.ir_node
+                while contract is not None:
+                    if isinstance(contract, ContractDefinition):
+                        break
+                    contract = contract.parent
+
                 ret = {
                     "message": detection.message,
                     "location": {
                         "path": str(source_unit.file),
+                        "relative_path": str(rel_path)
+                        if rel_path is not None
+                        else None,
+                        "contract": contract.name if contract is not None else None,
                         "source_start_line": start_line_index + 1,
                         "source_unit_name": source_unit.source_unit_name,
                         "start_offset": detection.ir_node.byte_location[0],
