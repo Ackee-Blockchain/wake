@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING, Optional, Set, Tuple
 
 import rich_click as click
@@ -58,8 +58,10 @@ async def compile(
     watch: bool,
     incremental: Optional[bool],
     export: Optional[str],
+    import_json: Optional[str],
 ):
     import glob
+    import json
 
     from watchdog.observers import Observer
 
@@ -70,51 +72,102 @@ async def compile(
     from wake.compiler.solc_frontend.input_data_model import SolcOutputSelectionEnum
 
     from ..compiler.solc_frontend import SolcOutputErrorSeverityEnum
+    from ..config import WakeConfig
     from ..utils.file_utils import is_relative_to
+    from ..utils.version import get_package_version
     from .console import console
 
-    compiler = SolidityCompiler(config)
+    if import_json:
+        with open(import_json, "r") as f:
+            loaded = json.load(f)
 
-    sol_files: Set[Path] = set()
-    start = time.perf_counter()
-    with console.status("[bold green]Searching for *.sol files...[/]"):
-        if len(paths) == 0:
-            for f in glob.iglob(
-                str(config.project_root_path / "**/*.sol"), recursive=True
-            ):
-                file = Path(f)
-                if (
-                    not any(
-                        is_relative_to(file, p)
-                        for p in config.compiler.solc.exclude_paths
-                    )
-                    and file.is_file()
-                ):
-                    sol_files.add(file)
+        if loaded["version"] != get_package_version("eth-wake"):
+            raise click.BadParameter(
+                f"JSON file was created with version {loaded['version']} of eth-wake, while the current version is {get_package_version('eth-wake')}"
+            )
+
+        if loaded["system"] == "Windows":
+            wake_contracts_path = PureWindowsPath(loaded["wake_contracts_path"])
+            original_project_root = PureWindowsPath(loaded["project_root"])
         else:
-            for p in paths:
-                path = Path(p)
-                if path.is_file():
-                    if not path.match("*.sol"):
-                        raise ValueError(f"Argument `{p}` is not a Solidity file.")
-                    sol_files.add(path)
-                elif path.is_dir():
-                    for f in glob.iglob(str(path / "**/*.sol"), recursive=True):
-                        file = Path(f)
-                        if (
-                            not any(
-                                is_relative_to(file, p)
-                                for p in config.compiler.solc.exclude_paths
-                            )
-                            and file.is_file()
-                        ):
-                            sol_files.add(file)
-                else:
-                    raise ValueError(f"Argument `{p}` is not a file or directory.")
-    end = time.perf_counter()
-    console.log(
-        f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
-    )
+            wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
+            original_project_root = PurePosixPath(loaded["project_root"])
+
+        config = WakeConfig.fromdict(
+            loaded["config"],
+            wake_contracts_path=wake_contracts_path,
+            paths_mode=loaded["system"],
+        )
+
+        # add project root as an include path (for solc to resolve imports correctly)
+        if config.project_root_path != original_project_root:
+            config.update(
+                {
+                    "compiler": {
+                        "solc": {
+                            "include_paths": set(config.compiler.solc.include_paths)
+                            | {original_project_root},
+                        }
+                    }
+                },
+                [],
+                paths_mode=loaded["system"],
+            )
+
+        modified_files = {
+            Path(path): source["content"].encode("utf-8")
+            for path, source in loaded["sources"].items()
+        }
+        sol_files = {
+            path
+            for path in modified_files.keys()
+            if not any(
+                is_relative_to(path, p) for p in config.compiler.solc.exclude_paths
+            )
+        }
+    else:
+        sol_files: Set[Path] = set()
+        start = time.perf_counter()
+        with console.status("[bold green]Searching for *.sol files...[/]"):
+            if len(paths) == 0:
+                for f in glob.iglob(
+                    str(config.project_root_path / "**/*.sol"), recursive=True
+                ):
+                    file = Path(f)
+                    if (
+                        not any(
+                            is_relative_to(file, p)
+                            for p in config.compiler.solc.exclude_paths
+                        )
+                        and file.is_file()
+                    ):
+                        sol_files.add(file)
+            else:
+                for p in paths:
+                    path = Path(p)
+                    if path.is_file():
+                        if not path.match("*.sol"):
+                            raise ValueError(f"Argument `{p}` is not a Solidity file.")
+                        sol_files.add(path)
+                    elif path.is_dir():
+                        for f in glob.iglob(str(path / "**/*.sol"), recursive=True):
+                            file = Path(f)
+                            if (
+                                not any(
+                                    is_relative_to(file, p)
+                                    for p in config.compiler.solc.exclude_paths
+                                )
+                                and file.is_file()
+                            ):
+                                sol_files.add(file)
+                    else:
+                        raise ValueError(f"Argument `{p}` is not a file or directory.")
+        end = time.perf_counter()
+        console.log(
+            f"[green]Found {len(sol_files)} *.sol files in [bold green]{end - start:.2f} s[/bold green][/]"
+        )
+
+    compiler = SolidityCompiler(config)
 
     if watch:
         fs_handler = CompilationFileSystemEventHandler(
@@ -146,7 +199,7 @@ async def compile(
         fs_handler = None
         observer = None
 
-    if not force:
+    if not force and not import_json:
         compiler.load(console=console)
 
     # TODO Allow choosing build artifacts subset in compile subcommand
@@ -297,6 +350,11 @@ async def compile(
     "--export",
     type=click.Choice(["json"]),
 )
+@click.option(
+    "--import-json",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Import project build info from JSON file.",
+)
 @click.pass_context
 def run_compile(
     ctx: Context,
@@ -316,6 +374,7 @@ def run_compile(
     target_version: Optional[str],
     via_ir: Optional[bool],
     export: Optional[str],
+    import_json: Optional[str],
 ) -> None:
     """Compile the project."""
     from wake.config import WakeConfig
@@ -357,8 +416,19 @@ def run_compile(
 
     config.update({"compiler": {"solc": new_options}}, deleted_options)
 
+    if import_json and watch:
+        raise click.BadParameter("Cannot use --import-json and --watch together")
+
     asyncio.run(
         compile(
-            config, paths, no_artifacts, no_warnings, force, watch, incremental, export
+            config,
+            paths,
+            no_artifacts,
+            no_warnings,
+            force,
+            watch,
+            incremental,
+            export,
+            import_json,
         )
     )
