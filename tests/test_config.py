@@ -151,19 +151,6 @@ def test_config_import_abs_path():
 
 
 @pytest.mark.platform_dependent
-def test_config_invalid_format():
-    os.environ["XDG_CONFIG_HOME"] = str(sources_path)
-    config = WakeConfig()
-
-    with pytest.raises(pydantic.ValidationError):
-        config.load(sources_path / "invalid_1.toml")
-    with pytest.raises(pydantic.ValidationError):
-        config.load(sources_path / "invalid_2.toml")
-    with pytest.raises(pydantic.ValidationError):
-        config.load(sources_path / "invalid_3.toml")
-
-
-@pytest.mark.platform_dependent
 def test_config_cyclic_import():
     os.environ["XDG_CONFIG_HOME"] = str(sources_path)
     config = WakeConfig()

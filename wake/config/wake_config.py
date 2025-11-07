@@ -1,4 +1,3 @@
-import logging
 import os
 import platform
 import reprlib
@@ -8,6 +7,7 @@ from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple, Union
 
 import networkx as nx
 import tomli
+from pydantic import ValidationError
 from typing_extensions import Literal
 
 import wake.utils.file_utils
@@ -37,6 +37,55 @@ class UnsupportedPlatformError(Exception):
     """
     The current platform is not supported. Supported platforms are: Linux, macOS, Windows.
     """
+
+
+def _validate_extra_with_warnings(
+    raw_config: Dict[str, Any],
+    source: Optional[str],
+    log: bool,
+    context: Optional[Dict[str, Any]] = None,
+) -> TopLevelConfig:
+    try:
+        return TopLevelConfig.model_validate(raw_config, context=context)
+    except ValidationError as e:
+        cleaned = deepcopy(raw_config)
+        removed_extra = False
+
+        for error in e.errors():
+            if error["type"] != "extra_forbidden":
+                continue
+            path = ".".join(str(loc) for loc in error["loc"])
+            if log:
+                if source is not None:
+                    logger.warning(
+                        f"Config option `{path}` under {source} is not supported. This option will be ignored."
+                    )
+                else:
+                    logger.warning(
+                        f"Config option `{path}` is not supported. This option will be ignored."
+                    )
+
+            cursor = cleaned
+            for p in error["loc"][:-1]:
+                if isinstance(cursor, dict) and isinstance(p, str) and p in cursor:
+                    cursor = cursor[p]
+                elif (
+                    isinstance(cursor, list)
+                    and isinstance(p, int)
+                    and 0 <= p < len(cursor)
+                ):
+                    cursor = cursor[p]
+                else:
+                    cursor = None
+                    break
+
+            if isinstance(cursor, dict) and isinstance(error["loc"][-1], str):
+                cursor.pop(error["loc"][-1], None)
+                removed_extra = True
+
+        if removed_extra:
+            return TopLevelConfig.model_validate(cleaned, context=context)
+        raise
 
 
 class WakeConfig:
@@ -208,7 +257,9 @@ class WakeConfig:
                     raise ValueError(error)
 
                 # validate the loaded config
-                parsed_config = TopLevelConfig.model_validate(loaded_config)
+                parsed_config = _validate_extra_with_warnings(
+                    loaded_config, source=str(path), log=True
+                )
 
                 # rebuild the loaded config from the pydantic model
                 # this ensures that all stored paths are absolute
@@ -243,8 +294,8 @@ class WakeConfig:
             project_root_path=project_root_path, wake_contracts_path=wake_contracts_path
         )
         with change_cwd(instance.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(
-                config_dict, context={"paths_mode": paths_mode}
+            parsed_config = _validate_extra_with_warnings(
+                config_dict, source=None, log=True, context={"paths_mode": paths_mode}
             )
         instance.__config_raw = parsed_config.model_dump(
             by_alias=True, exclude_unset=True
@@ -275,7 +326,9 @@ class WakeConfig:
             Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(config_dict)
+            parsed_config = _validate_extra_with_warnings(
+                config_dict, source=None, log=True
+            )
         parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
 
         original_config = deepcopy(self.__config_raw)
@@ -301,7 +354,9 @@ class WakeConfig:
                 except ValueError:
                     pass
 
-        self.__config = TopLevelConfig.model_validate(self.__config_raw)
+        self.__config = _validate_extra_with_warnings(
+            self.__config_raw, source=None, log=False
+        )
         modified_keys = {}
         self.__modified_keys(
             original_config,
@@ -327,8 +382,8 @@ class WakeConfig:
             Dictionary containing the modified config options.
         """
         with change_cwd(self.project_root_path):
-            parsed_config = TopLevelConfig.model_validate(
-                config_dict, context={"paths_mode": paths_mode}
+            parsed_config = _validate_extra_with_warnings(
+                config_dict, source=None, log=True, context={"paths_mode": paths_mode}
             )
         parsed_config_raw = parsed_config.model_dump(by_alias=True, exclude_unset=True)
 
@@ -355,8 +410,11 @@ class WakeConfig:
                 except ValueError:
                     pass
 
-        self.__config = TopLevelConfig.model_validate(
-            self.__config_raw, context={"paths_mode": paths_mode}
+        self.__config = _validate_extra_with_warnings(
+            self.__config_raw,
+            source=None,
+            log=False,
+            context={"paths_mode": paths_mode},
         )
         modified_keys = {}
         self.__modified_keys(
@@ -393,7 +451,7 @@ class WakeConfig:
 
         self.__load_file(None, path.resolve(), config_raw_copy, subconfigs_graph)
 
-        config = TopLevelConfig.model_validate(config_raw_copy)
+        config = _validate_extra_with_warnings(config_raw_copy, source=None, log=False)
         self.__config_raw = config_raw_copy
         self.__config = config
         self.__loaded_files.update(
