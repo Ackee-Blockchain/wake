@@ -80,6 +80,13 @@ class SolcFrontend:
                 update={"append_CBOR": None}
             )
 
+        if target_version < "0.7.5" and settings.via_IR is not None:
+            if settings.via_IR:
+                logger.warning(
+                    "`via_IR` is not supported for solc versions < 0.7.5. This option will be ignored."
+                )
+            standard_input.settings.via_IR = None
+
         if settings.evm_version is not None:
             # find nearest <= version in MAX_SUPPORTED_EVM_VERSIONS
             nearest_version = max(
