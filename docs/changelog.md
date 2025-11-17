@@ -6,6 +6,28 @@ small.label {
 }
 </style>
 
+## 4.21.0 <small>(Nov 17, 2025)</small> { id="4.21.0" }
+
+Features & improvements:
+
+- Unified error messages in `wake open` <small class="label">[cli]</small>
+- Implemented `--import-json` CLI option for `wake compile` <small class="label">[cli]</small>
+- Increased solc JSON list fetching timeout <small class="label">[core]</small>
+- Added support for parsing Solidity version specifiers with leading `v` <small class="label">[core]</small>
+- `via_IR` is now auto-dropped with solc versions not supporting it <small class="label">[core]</small>
+- Unknown Wake config options now raise a warning instead of an error <small class="label">[core]</small>
+- Exported JSON detections now include new `relative_path` and `contract` optional fields <small class="label">[core]</small>
+
+Fixes:
+
+- fixed click >= 8.2 breaking change crashes <small class="label">[cli]</small>
+- fixed pydantic >= 2.12 breaking change crashes <small class="label">[core]</small>
+- fixed crashes on modifiers with `@inheritdoc` <small class="label">[core]</small>
+- fixed source unit name resolving crashes with double slashes in paths <small class="label">[core]</small>
+- fixed unnecessary recompilation on file open/close in CLI watchdog mode <small class="label">[core]</small>
+- fixed state changes done through storage references not detected by `modifies_state` logic <small class="label">[static analysis]</small>
+- fixed `origin` missing on `tx.raw_events` <small class="label">[testing & deployment framework]</small>
+
 ## 4.20.1 <small>(Aug 4, 2025)</small> { id="4.20.1" }
 
 Fixes:
