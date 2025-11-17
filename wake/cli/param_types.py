@@ -123,7 +123,7 @@ class Chain(ParamType):
 
     choices = {"mainnet": 1, "bsc": 56, "polygon": 137, "avax": 43114}
 
-    def get_metavar(self, param: Parameter) -> str:
+    def get_metavar(self, param: Parameter, ctx: Context | None = None) -> str:
         choices_str = "|".join(self.choices.keys())
 
         # Use curly braces to indicate a required argument.
@@ -133,7 +133,7 @@ class Chain(ParamType):
         # Use square braces to indicate an option or optional argument.
         return f"[{choices_str}]"
 
-    def convert(self, value: str, param: Parameter, ctx: Context) -> int:
+    def convert(self, value: str, param: Parameter | None, ctx: Context | None) -> int:
         try:
             if value.startswith("0x"):
                 return int(value, 16)
