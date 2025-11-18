@@ -94,7 +94,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_macos_wheels:
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       matrix:
         arch: [x86_64, arm64]
