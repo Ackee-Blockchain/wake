@@ -1,5 +1,5 @@
 import json
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, HTTPError
 
 from wake.utils import get_package_version
 
@@ -30,5 +30,10 @@ class HttpProtocol(ProtocolAbc):
             },
         )
 
-        with urlopen(req, timeout=self._timeout) as response:
-            return json.loads(response.read().decode("utf-8"))
+        try:
+            with urlopen(req, timeout=self._timeout) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as e:
+            if e.code >= 400 and e.code < 500:
+                return json.loads(e.file.read().decode("utf-8"))
+            raise e
