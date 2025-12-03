@@ -316,6 +316,7 @@ class SolidityCompiler:
     __solc_frontend: SolcFrontend
     __source_unit_name_resolver: SourceUnitNameResolver
     __source_path_resolver: SourcePathResolver
+    __solc_semaphore: asyncio.Semaphore
 
     _latest_build_info: Optional[ProjectBuildInfo]
     _latest_build: Optional[ProjectBuild]
@@ -330,6 +331,7 @@ class SolidityCompiler:
         self.__solc_frontend = SolcFrontend(wake_config)
         self.__source_unit_name_resolver = SourceUnitNameResolver(wake_config)
         self.__source_path_resolver = SourcePathResolver(wake_config)
+        self.__solc_semaphore = asyncio.Semaphore(os.cpu_count() or 4)
 
         self._latest_build_info = None
         self._latest_build = None
@@ -1655,6 +1657,7 @@ class SolidityCompiler:
             return SolcOutput()
 
         # run the solc executable
-        return await self.__solc_frontend.compile(
-            files, sources, target_version, build_settings
-        )
+        async with self.__solc_semaphore:
+            return await self.__solc_frontend.compile(
+                files, sources, target_version, build_settings
+            )
