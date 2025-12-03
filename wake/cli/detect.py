@@ -707,6 +707,7 @@ async def detect_(
             sys.exit(0 if len(all_detections) == 0 else 3)
 
     if import_json is None:
+        incremental = None
         scan_extra = {}
         sol_files: Set[Path] = set()
         modified_files: Dict[Path, bytes] = {}
@@ -745,6 +746,8 @@ async def detect_(
         else:
             wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
             original_project_root = PurePosixPath(loaded["project_root"])
+
+        incremental = loaded.get("incremental", None)
 
         config = WakeConfig.fromdict(
             loaded["config"],
@@ -820,6 +823,7 @@ async def detect_(
         console=console,
         no_warnings=True,
         modified_files=modified_files,
+        incremental=incremental,
     )
 
     assert compiler.latest_build_info is not None

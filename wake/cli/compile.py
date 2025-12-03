@@ -32,6 +32,7 @@ def export_json(
 
     out = {
         "version": build_info.wake_version,
+        "incremental": build_info.incremental,
         "system": platform.system(),
         "project_root": str(config.project_root_path),
         "wake_contracts_path": str(config.wake_contracts_path),
@@ -92,6 +93,9 @@ async def compile(
         else:
             wake_contracts_path = PurePosixPath(loaded["wake_contracts_path"])
             original_project_root = PurePosixPath(loaded["project_root"])
+
+        if incremental is None and loaded.get("incremental", None) is not None:
+            incremental = loaded["incremental"]
 
         config = WakeConfig.fromdict(
             loaded["config"],
