@@ -510,17 +510,16 @@ class SolidityCompiler:
         Builds a list of compilation units from a graph. Number of compilation units is maximized.
         """
 
-        def __build_compilation_unit(
-            graph: nx.DiGraph, start: Iterable[str], subproject: Optional[str]
-        ) -> CompilationUnit:
+        def __build_compilation_unit(graph: nx.DiGraph, start: str) -> CompilationUnit:
+            subproject = graph.nodes[start]["subproject"]
             nodes_subset = set()
-            nodes_queue: deque[str] = deque(start)
+            nodes_queue: deque[tuple[str, Optional[str]]] = deque([(start, None)])
             versions: SolidityVersionRanges = SolidityVersionRanges(
                 [SolidityVersionRange(None, None, None, None)]
             )
 
             while len(nodes_queue) > 0:
-                node = nodes_queue.pop()
+                node, importing_node = nodes_queue.pop()
 
                 if node in nodes_subset:
                     continue
@@ -529,18 +528,24 @@ class SolidityCompiler:
                 versions &= graph.nodes[node]["versions"]
                 compiled_with[node].add(subproject)
 
+                subproject_mismatch = False
                 if graph.nodes[node]["subproject"] not in {
                     subproject,
                     None,
                 } and not node.startswith("wake/"):
                     logger.warning(
-                        f"Including file {node} belonging to subproject '{graph.nodes[node]['subproject'] or '<default>'}' into compilation of subproject '{subproject or '<default>'}'"
+                        f"Including file '{node}' belonging to subproject '{graph.nodes[node]['subproject'] or '<default>'}' into compilation of subproject '{subproject or '<default>'}' due to import from '{importing_node}'"
                     )
+                    subproject_mismatch = True
 
                 for in_edge in graph.in_edges(node):
-                    _from, to = in_edge
+                    _from, _ = in_edge
                     if _from not in nodes_subset:
-                        nodes_queue.append(_from)
+                        # propagate original importing node if there is a subproject mismatch, otherwise propagate the current node
+                        # this ensures that the original node causing whole subgraph subproject mismatch is reported
+                        nodes_queue.append(
+                            (_from, importing_node if subproject_mismatch else node)
+                        )
 
             subgraph = graph.subgraph(nodes_subset).copy()
             return CompilationUnit(subgraph, versions, subproject)
@@ -555,9 +560,7 @@ class SolidityCompiler:
             for sink in sinks:
                 subproject = graph.nodes[sink]["subproject"]
                 if subproject not in compiled_with[sink]:
-                    compilation_unit = __build_compilation_unit(
-                        graph, [sink], subproject
-                    )
+                    compilation_unit = __build_compilation_unit(graph, sink)
                     compilation_units.append(compilation_unit)
 
                 graph.remove_node(sink)
@@ -584,16 +587,13 @@ class SolidityCompiler:
                         break
 
                 if is_closed_cycle:
-                    subprojects = {
-                        graph.nodes[node]["subproject"] for node in simple_cycle
+                    # choose one representative node for each subproject
+                    nodes_by_subproject = {
+                        graph.nodes[node]["subproject"]: node for node in simple_cycle
                     }
-                    for subproject in subprojects:
-                        if any(
-                            subproject not in compiled_with[n] for n in simple_cycle
-                        ):
-                            compilation_unit = __build_compilation_unit(
-                                graph, simple_cycle, subproject
-                            )
+                    for subproject, node in nodes_by_subproject.items():
+                        if subproject not in compiled_with[node]:
+                            compilation_unit = __build_compilation_unit(graph, node)
                             compilation_units.append(compilation_unit)
 
                     generated_cycles.add(frozenset(simple_cycle))
