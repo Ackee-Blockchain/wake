@@ -30,8 +30,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from Crypto.Hash import keccak
 import eth_utils
+from Crypto.Hash import keccak
 from pydantic import TypeAdapter, ValidationError
 
 from ..compiler import SolcOutputSelectionEnum, SolidityCompiler
@@ -451,8 +451,15 @@ def read_storage_variable(
                 type_info.value,
                 types,
             )
+        elif type_name.startswith("t_userDefinedValueType"):
+            raise ValueError(f"User defined value types are not supported")
         else:
             data = data.rjust(32, b"\x00")
+
+        if type_name.startswith("t_contract"):
+            type_name = "t_address"
+        elif type_name.startswith("t_enum"):
+            type_name = "t_uint8"
 
         return Abi.decode([type_name[2:]], data)[0]
 
@@ -698,13 +705,21 @@ def write_storage_variable(
                 type_info.value,
                 types,
             )
+        elif type_name.startswith("t_userDefinedValueType"):
+            raise ValueError(f"User defined value types are not supported")
         else:
             original_data = bytearray(
                 contract.chain.chain_interface.get_storage_at(
                     str(contract.address), slot
                 )
             )
-            encoded_value = Abi.encode_packed([type_name[2:]], [value])
+            if type_name.startswith("t_contract"):
+                encoded_value = Abi.encode_packed(["address"], [value])
+            elif type_name.startswith("t_enum"):
+                encoded_value = Abi.encode_packed(["uint8"], [value])
+            else:
+                encoded_value = Abi.encode_packed([type_name[2:]], [value])
+
             original_data[
                 -offset - type_info.number_of_bytes : (-offset if offset != 0 else None)
             ] = encoded_value
