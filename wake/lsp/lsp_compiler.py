@@ -1361,7 +1361,11 @@ class LspCompiler:
                 raise CompilationError("Invalid target version")
 
     async def __detect_target_versions(
-        self, compilation_units: List[CompilationUnit], *, show_message: bool
+        self,
+        graph: nx.DiGraph,
+        compilation_units: List[CompilationUnit],
+        *,
+        show_message: bool,
     ) -> Tuple[List[SolidityVersion], List[CompilationUnit], List[str]]:
         min_version = self.__config.min_solidity_version
         max_version = self.__config.max_solidity_version
@@ -1377,13 +1381,15 @@ class LspCompiler:
                     compilation_unit.subproject
                 ].target_version
             )
+            files_str = "\n".join(
+                f"  {su}: {graph.nodes[su]['versions']}"
+                for su in compilation_unit.source_unit_names
+            )
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
                     message = (
                         f"Unable to compile the following files with solc version `{target_version}` set in config:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        )
+                        + files_str
                     )
 
                     await self.__server.log_message(message, MessageType.WARNING)
@@ -1405,9 +1411,7 @@ class LspCompiler:
                 if len(matching_versions) == 0:
                     message = (
                         f"Unable to find a matching version of Solidity for the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        )
+                        + files_str
                     )
 
                     await self.__server.log_message(message, MessageType.WARNING)
@@ -1429,9 +1433,7 @@ class LspCompiler:
                 except StopIteration:
                     message = (
                         f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        )
+                        + files_str
                     )
 
                     await self.__server.log_message(message, MessageType.WARNING)
@@ -1447,9 +1449,7 @@ class LspCompiler:
                 if target_version < min_version:
                     message = (
                         f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
-                        + "\n".join(
-                            path_to_uri(path) for path in compilation_unit.files
-                        )
+                        + files_str
                     )
 
                     await self.__server.log_message(message, MessageType.WARNING)
@@ -1558,7 +1558,9 @@ class LspCompiler:
             target_versions,
             skipped_compilation_units,
             skipped_reasons,
-        ) = await self.__detect_target_versions(compilation_units, show_message=True)
+        ) = await self.__detect_target_versions(
+            graph, compilation_units, show_message=True
+        )
 
         skipped_source_units = {}
         for compilation_unit, reason in zip(skipped_compilation_units, skipped_reasons):
@@ -1823,7 +1825,9 @@ class LspCompiler:
             target_versions,
             skipped_compilation_units,
             _,
-        ) = await self.__detect_target_versions(compilation_units, show_message=False)
+        ) = await self.__detect_target_versions(
+            graph, compilation_units, show_message=False
+        )
         await self.__install_solc(target_versions)
 
         # files passed as files_to_compile and files importing them

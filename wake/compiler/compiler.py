@@ -693,6 +693,7 @@ class SolidityCompiler:
 
     def determine_solc_versions(
         self,
+        graph: nx.DiGraph,
         compilation_units: Iterable[CompilationUnit],
         target_versions_by_subproject: Mapping[
             Optional[str], Optional[SolidityVersion]
@@ -706,6 +707,10 @@ class SolidityCompiler:
             target_version = target_versions_by_subproject.get(
                 compilation_unit.subproject
             )
+            files_str = "\n".join(
+                f"  {su}: {graph.nodes[su]['versions']}"
+                for su in compilation_unit.source_unit_names
+            )
             if all(
                 is_relative_to(f, self.__config.wake_contracts_path)
                 for f in compilation_unit.files
@@ -714,7 +719,6 @@ class SolidityCompiler:
 
             if target_version is not None:
                 if target_version not in compilation_unit.versions:
-                    files_str = "\n".join(str(path) for path in compilation_unit.files)
                     logger.warning(
                         f"Unable to compile following files with solc version `{target_version}` set in config files:\n"
                         + files_str
@@ -729,7 +733,6 @@ class SolidityCompiler:
                     if version in compilation_unit.versions
                 ]
                 if len(matching_versions) == 0:
-                    files_str = "\n".join(str(path) for path in compilation_unit.files)
                     logger.warning(
                         f"Unable to compile following files with any solc version:\n"
                         + files_str
@@ -743,7 +746,6 @@ class SolidityCompiler:
                         if version <= max_version
                     )
                 except StopIteration:
-                    files_str = "\n".join(str(path) for path in compilation_unit.files)
                     logger.warning(
                         f"The maximum supported version of Solidity is {max_version}, unable to compile the following files:\n"
                         + files_str
@@ -751,7 +753,6 @@ class SolidityCompiler:
                     skipped_compilation_units.append(compilation_unit)
                     continue
                 if target_version < min_version:
-                    files_str = "\n".join(str(path) for path in compilation_unit.files)
                     logger.warning(
                         f"The minimum supported version of Solidity is {min_version}, unable to compile the following files:\n"
                         + files_str
@@ -1144,7 +1145,7 @@ class SolidityCompiler:
         ) | set(files_to_compile)
 
         target_versions, skipped_compilation_units = self.determine_solc_versions(
-            compilation_units, target_versions_by_subproject
+            graph, compilation_units, target_versions_by_subproject
         )
 
         await self._install_solc(target_versions, console)
