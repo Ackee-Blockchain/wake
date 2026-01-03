@@ -69,6 +69,38 @@ def invariant_count(self) -> None:
 
 An optional `period` argument can be passed to the `@invariant` decorator. If specified, the invariant is executed only after every `period` flows.
 
+#### Contract-defined invariants (Echidna / Medusa / Foundry style)
+
+In addition to Python-defined invariants, invariants implemented directly in contracts (in the style of Echidna / Medusa / Foundry) can be reused by calling those functions from Python.
+
+For example, the following Solidity contract can be used:
+
+```solidity
+contract Counter {
+    uint256 public totalSupply;
+    bool public overflowed;
+
+    // Reverts on violation
+    function echidna_total_supply_invariant() public view {
+        require(totalSupply <= 1_000_000, "totalSupply too high");
+    }
+
+    // Returns false on violation
+    function invariant_no_overflow() public view returns (bool) {
+        return !overflowed;
+    }
+}
+```
+
+These contract-level invariants can be wired into a Wake fuzz test as follows:
+
+```python
+@invariant()
+def invariant_contract_invariants(self) -> None:
+    self.counter.echidna_total_supply_invariant()  # reverts on violation
+    assert self.counter.invariant_no_overflow()    # returns bool
+```
+
 ### Execution hooks
 
 Execution hooks are functions that are executed during the `FuzzTest` lifecycle. This is the list of all available execution hooks:
