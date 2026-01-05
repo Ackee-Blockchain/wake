@@ -37,17 +37,10 @@ class SourceUnitNameResolver:
         if len(matching_remappings) == 0:
             return source_unit_name
 
-        # longest prefix wins, if there are multiple remappings with the same prefix, choose the last one
-        matching_remappings.sort(key=lambda r: len(r.prefix), reverse=True)
-
-        # choose the remapping with the longest context
-        # if there are multiple remappings with the same context, choose the last one
-        l = len(matching_remappings[0].prefix)
+        # choose longest context, then longest prefix, then last one wins
+        # https://github.com/argotorg/solidity/blob/ed1f49b4739f065b589616250602071536e26c3a/libsolidity/interface/ImportRemapper.cpp#L42-L69
+        matching_remappings.sort(key=lambda r: (len(r.context or ""), len(r.prefix)))
         target_remapping = matching_remappings[-1]
-        for i in range(1, len(matching_remappings)):
-            if len(matching_remappings[i].prefix) != l:
-                target_remapping = matching_remappings[i - 1]
-                break
 
         return source_unit_name.replace(
             str(target_remapping.prefix), target_remapping.target or "", 1
