@@ -400,9 +400,9 @@ class SolidityCompiler:
         source_units: Dict[str, Path] = {}
 
         # for every source file resolve a source unit name
-        for file in files:
+        # resolve and deduplicate (avoid duplicates due to symlinks)
+        for file in {f.resolve() for f in files}:
             try:
-                file = file.resolve()
                 if file not in modified_files:
                     file = file.resolve(strict=True)
             except FileNotFoundError:
