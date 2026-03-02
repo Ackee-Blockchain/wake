@@ -6,6 +6,16 @@ small.label {
 }
 </style>
 
+## 4.22.1 <small>(Mar 2, 2026)</small> { id="4.22.1" }
+
+Fixes & improvements:
+
+- added support for Solidity 0.8.34 <small class="label">[core]</small>
+- fixed solc JSON list fetching crashing due to missing User-Agent header <small class="label">[core]</small>
+- fixed remapping rules inconsistent with solc leading to compilation crashes <small class="label">[core]</small>
+- fixed compilation crashes caused by multiple symlinks pointing to the same file <small class="label">[core]</small>
+- fixed `AbstractChildWatcher` no longer present in Python 3.14 <small class="label">[core]</small>
+
 ## 4.22.0 <small>(Jan 3, 2026)</small> { id="4.22.0" }
 
 Features & improvements:
