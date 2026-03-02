@@ -22,7 +22,7 @@ from .run import run_run
 from .svm import run_svm
 from .test import run_test
 
-if platform.system() != "Windows":
+if platform.system() != "Windows" and sys.version_info < (3, 12):
     try:
         from asyncio import (
             ThreadedChildWatcher,  # pyright: ignore reportGeneralTypeIssues
@@ -206,7 +206,7 @@ def main(
 
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    else:
+    elif sys.version_info < (3, 12):
         asyncio.get_event_loop_policy().set_child_watcher(
             ThreadedChildWatcher()  # pyright: ignore reportUnboundVariable
         )

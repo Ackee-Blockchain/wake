@@ -12,6 +12,8 @@ logger = get_logger(__name__)
 
 """
 Backported ThreadedChildWatcher implementation from https://github.com/python/cpython/blob/5f0fe8ec70120f4586d08978b0911b436f82c421/Lib/asyncio/unix_events.py#L1326
+
+Only to be imported if Python < 3.12.
 """
 
 
