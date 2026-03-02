@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, ValidationError
 from wake.config import UnsupportedPlatformError, WakeConfig
 from wake.core import get_logger
 from wake.core.solidity_version import SolidityVersion
+from wake.utils.version import get_package_version
 
 from .abc import CompilerVersionManagerAbc
 from .exceptions import ChecksumError, UnsupportedVersionError
@@ -58,6 +59,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
     __solc_list_path: Path
     __solc_builds: Optional[SolcBuilds]
     __list_force_loaded: bool
+    __headers: Dict[str, str]
 
     def __init__(self, wake_config: WakeConfig):
         system = platform.system()
@@ -84,6 +86,9 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         self.__solc_list_path = self.__compilers_path / "solc.json"
         self.__solc_builds = None
         self.__list_force_loaded = False
+        self.__headers = {
+            "User-Agent": f"wake/{get_package_version('eth-wake')}",
+        }
 
         self.__compilers_path.mkdir(parents=True, exist_ok=True)
 
@@ -230,7 +235,7 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         http_session: aiohttp.ClientSession,
         progress: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> None:
-        async with http_session.get(url) as r:
+        async with http_session.get(url, headers=self.__headers) as r:
             total_size = r.headers.get("Content-Length")
             if total_size is not None:
                 total_size = int(total_size)
@@ -298,7 +303,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
         try:
             logger.debug(f"Downloading solc list from {self.__solc_list_urls[0]}")
             with urllib.request.urlopen(
-                self.__solc_list_urls[0], timeout=5
+                urllib.request.Request(
+                    self.__solc_list_urls[0], headers=self.__headers
+                ),
+                timeout=5,
             ) as response:
                 json = response.read()
                 self.__solc_builds = SolcBuilds.model_validate_json(json)
@@ -312,7 +320,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
             try:
                 logger.debug(f"Downloading solc list from {self.__solc_list_urls[1]}")
                 with urllib.request.urlopen(
-                    self.__solc_list_urls[1], timeout=0.5
+                    urllib.request.Request(
+                        self.__solc_list_urls[1], headers=self.__headers
+                    ),
+                    timeout=0.5,
                 ) as response:
                     json = response.read()
                     self.__solc_builds = SolcBuilds.model_validate_json(json)
