@@ -6,6 +6,21 @@ small.label {
 }
 </style>
 
+## 4.22.0 <small>(Jan 3, 2026)</small> { id="4.22.0" }
+
+Features & improvements:
+
+- added support for Solidity 0.8.31, 0.8.32 and 0.8.33 <small class="label">[core]</small>
+- improved warning compilation messages when files cannot be compiled together due to version constraints <small class="label">[core]</small>
+- improved warning compilation messages when a file from a subproject is included into a different subproject <small class="label">[core]</small>
+- limited the maximum number of running solc instances in parallel to CPU count <small class="label">[core]</small>
+- documented how to use contract-defined invariants in fuzz tests <small class="label">[documentation]</small>
+
+Fixes:
+
+- `incremental` compilation setting is now respected on compilation JSON import & export <small class="label">[core]</small>
+- fixed `read_storage_variable` and `write_storage_variable` when working with contract and enum types <small class="label">[testing framework]</small>
+
 ## 4.21.0 <small>(Nov 17, 2025)</small> { id="4.21.0" }
 
 Features & improvements:

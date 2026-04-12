@@ -399,8 +399,7 @@ class TestingConfig(WakeConfigModel):
     """
     cmd: str = "revm"
     """
-    Which development chain to use for testing. Should be one of `revm`, `anvil`, or
-    `hardhat`.
+    Which development chain to use for testing. Should be either `anvil` or `hardhat`.
     """
     anvil: AnvilConfig = Field(default_factory=AnvilConfig)
     """

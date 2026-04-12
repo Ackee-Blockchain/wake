@@ -195,7 +195,7 @@
       "properties": {
         "cmd": {
           "type": "string",
-          "enum": ["revm", "anvil", "hardhat"],
+          "enum": ["anvil", "hardhat"],
           "default": "anvil",
           "description": "Which development chain to use for testing"
         },

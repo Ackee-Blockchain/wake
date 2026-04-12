@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 import eth_utils
+from Crypto.Hash import keccak
 from pydantic import TypeAdapter, ValidationError
 
 from wake_rs import keccak256
