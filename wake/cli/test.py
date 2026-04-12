@@ -90,7 +90,6 @@ class FileAndPassParamType(click.ParamType):
     help="Increase verbosity. Can be specified multiple times.",
 )
 @click.option(
-    "-RS",
     "--random-state",
     type=str,
     help="Input random state json path.",
@@ -100,7 +99,6 @@ class FileAndPassParamType(click.ParamType):
     required=False,
 )
 @click.option(
-    "-SH",
     "--shrink",
     # Didn't use click.Path since we accept relative index of crash log file
     type=str,
@@ -126,7 +124,6 @@ class FileAndPassParamType(click.ParamType):
     help="When shrinking, check only target invariants for faster fuzzing.",
 )
 @click.option(
-    "-SR",
     "--shrunk",
     "--reproduce",
     # Didn't use click.Path since we accept relative index of crash log file
