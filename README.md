@@ -186,6 +186,10 @@ See all features in the [documentation](https://ackee.xyz/wake/docs/latest/langu
 
 ---
 
+## Donations
+
+The project is listed on Giveth: https://giveth.io/project/wake:-solidity-static-analysis-and-fuzzing-framework
+
 ## License
 
 This project is licensed under the [ISC license](https://github.com/Ackee-Blockchain/wake/blob/main/LICENSE).
