@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from wake.utils import StrEnum
 
@@ -191,6 +191,7 @@ class SolcOutputEvmBytecodeLinkReferencesInfo(SolcOutputModel):
 
 
 class SolcOutputEvmBytecodeData(SolcOutputModel):
+    ethdebug: Optional[Dict] = None
     function_debug_data: Optional[
         Dict[str, SolcOutputEvmBytecodeFunctionDebugData]
     ] = None  # internal name of the function -> debug data
@@ -247,6 +248,8 @@ class SolcOutputContractInfo(SolcOutputModel):
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
     transient_storage_layout: Optional[SolcOutputStorageLayout] = None
     """See https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#json-output"""
+    yul_CFG_json: Optional[Dict] = Field(None, alias="yulCFGJson")
+    """Experimental control-flow graph of the SSA-form Yul code"""
     evm: Optional[SolcOutputEvmData] = None
     """EVM-related outputs"""
     ewasm: Optional[SolcOutputEwasmData] = None
@@ -255,6 +258,7 @@ class SolcOutputContractInfo(SolcOutputModel):
 
 class SolcOutput(SolcOutputModel):
     auxiliary_input_requested: Optional[Dict] = None
+    ethdebug: Optional[Dict] = None
     errors: List[SolcOutputError] = []
     sources: Dict[str, SolcOutputSourceInfo] = {}
     contracts: Dict[

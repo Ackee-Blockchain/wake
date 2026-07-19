@@ -4,6 +4,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
+from wake.cli.init import write_config
 from wake.config import WakeConfig
 from wake.config.data_model import SolcRemapping
 from wake.core.enums import EvmVersionEnum
@@ -80,6 +81,34 @@ def test_config_from_dict():
         context=None, prefix="hardhat/", target="node_modules/hardhat/"
     )
     assert config.compiler.solc.target_version == SolidityVersion.fromstring("0.8.12")
+
+
+def test_config_solidity_0_8_35_experimental(tmp_path):
+    config = WakeConfig.fromdict(
+        {
+            "compiler": {
+                "solc": {
+                    "evm_version": "@future",
+                    "experimental": True,
+                    "target_version": "0.8.35",
+                    "via_SSA_CFG": True,
+                }
+            }
+        },
+        project_root_path=tmp_path,
+    )
+
+    assert config.compiler.solc.evm_version == EvmVersionEnum.FUTURE
+    assert config.compiler.solc.experimental is True
+    assert config.compiler.solc.target_version == SolidityVersion.fromstring("0.8.35")
+    assert config.compiler.solc.via_SSA_CFG is True
+
+    write_config(config)
+    written_config = config.local_config_path.read_text()
+    assert 'evm_version = "@future"' in written_config
+    assert "experimental = true" in written_config
+    assert 'target_version = "0.8.35"' in written_config
+    assert "via_SSA_CFG = true" in written_config
 
 
 @pytest.mark.platform_dependent

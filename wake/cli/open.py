@@ -210,6 +210,10 @@ async def open_address(
 
         if "viaIR" in c:
             config_dict["compiler"]["solc"]["via_IR"] = c["viaIR"]
+        if "experimental" in c:
+            config_dict["compiler"]["solc"]["experimental"] = c["experimental"]
+        if "viaSSACFG" in c:
+            config_dict["compiler"]["solc"]["via_SSA_CFG"] = c["viaSSACFG"]
     else:
         compiler_version: str = info["CompilerVersion"]
         if compiler_version.startswith("vyper"):
@@ -250,6 +254,14 @@ async def open_address(
                     config_dict["compiler"]["solc"][
                         "via_IR"
                     ] = standard_input.settings.via_IR
+                if standard_input.settings.experimental is not None:
+                    config_dict["compiler"]["solc"][
+                        "experimental"
+                    ] = standard_input.settings.experimental
+                if standard_input.settings.via_SSA_CFG is not None:
+                    config_dict["compiler"]["solc"][
+                        "via_SSA_CFG"
+                    ] = standard_input.settings.via_SSA_CFG
                 if standard_input.settings.remappings is not None:
                     config_dict["compiler"]["solc"][
                         "remappings"

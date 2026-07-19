@@ -1732,6 +1732,20 @@ def _get_storage_layout_from_explorer(
                     "remappings"
                 ] = standard_input.settings.remappings
 
+            if standard_input.settings is not None:
+                if standard_input.settings.experimental is not None:
+                    config_dict["compiler"]["solc"][
+                        "experimental"
+                    ] = standard_input.settings.experimental
+                if standard_input.settings.via_IR is not None:
+                    config_dict["compiler"]["solc"][
+                        "via_IR"
+                    ] = standard_input.settings.via_IR
+                if standard_input.settings.via_SSA_CFG is not None:
+                    config_dict["compiler"]["solc"][
+                        "via_SSA_CFG"
+                    ] = standard_input.settings.via_SSA_CFG
+
             if any(
                 source.urls is not None for source in standard_input.sources.values()
             ):

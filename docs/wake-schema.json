@@ -35,8 +35,12 @@
             },
             "evm_version": {
               "type": "string",
-              "description": "Version of the EVM to compile for",
-              "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka"]
+              "description": "Version of the EVM to compile for; @future requires Solidity 0.8.35+ and experimental mode",
+              "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka", "@future"]
+            },
+            "experimental": {
+              "type": "boolean",
+              "description": "Enable Solidity compiler experimental mode (Solidity 0.8.35+)"
             },
             "exclude_paths": {
               "type": "array",
@@ -103,6 +107,10 @@
             "via_IR": {
               "type": "boolean",
               "description": "Use new IR-based compiler pipeline"
+            },
+            "via_SSA_CFG": {
+              "type": "boolean",
+              "description": "Use the experimental SSA CFG code generation pipeline (Solidity 0.8.35+); implies via_IR and requires experimental mode"
             },
             "metadata": {
               "type": "object",
@@ -460,8 +468,12 @@
           },
           "evm_version": {
             "type": "string",
-            "description": "Version of the EVM to compile for",
-            "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka"]
+            "description": "Version of the EVM to compile for; @future requires Solidity 0.8.35+ and experimental mode",
+            "enum": ["homestead", "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul", "berlin", "london", "paris", "shanghai", "cancun", "prague", "osaka", "@future"]
+          },
+          "experimental": {
+            "type": "boolean",
+            "description": "Enable Solidity compiler experimental mode (Solidity 0.8.35+)"
           },
           "optimizer": {
             "type": "object",
@@ -499,6 +511,10 @@
           "via_IR": {
             "type": "boolean",
             "description": "Use new IR-based compiler pipeline"
+          },
+          "via_SSA_CFG": {
+            "type": "boolean",
+            "description": "Use the experimental SSA CFG code generation pipeline (Solidity 0.8.35+); implies via_IR and requires experimental mode"
           },
           "metadata": {
             "type": "object",

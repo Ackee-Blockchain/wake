@@ -32,6 +32,7 @@ MAX_SUPPORTED_EVM_VERSIONS = {
     SolidityVersion.fromstring("0.8.24"): EvmVersionEnum.CANCUN,
     SolidityVersion.fromstring("0.8.27"): EvmVersionEnum.PRAGUE,
     SolidityVersion.fromstring("0.8.29"): EvmVersionEnum.OSAKA,
+    SolidityVersion.fromstring("0.8.35"): EvmVersionEnum.FUTURE,
 }
 
 
@@ -86,6 +87,21 @@ class SolcFrontend:
                     "`via_IR` is not supported for solc versions < 0.7.5. This option will be ignored."
                 )
             standard_input.settings.via_IR = None
+
+        if target_version < "0.8.35":
+            if settings.experimental is not None:
+                if settings.experimental:
+                    logger.warning(
+                        "`experimental` is not supported for solc versions < 0.8.35. This option will be ignored."
+                    )
+                standard_input.settings.experimental = None
+
+            if settings.via_SSA_CFG is not None:
+                if settings.via_SSA_CFG:
+                    logger.warning(
+                        "`via_SSA_CFG` is not supported for solc versions < 0.8.35. This option will be ignored."
+                    )
+                standard_input.settings.via_SSA_CFG = None
 
         if settings.evm_version is not None:
             # find nearest <= version in MAX_SUPPORTED_EVM_VERSIONS

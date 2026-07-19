@@ -22,11 +22,13 @@ Wake can be configured using configuration options loaded from multiple sources 
     [compiler.solc]
     allow_paths = []
     # evm_version (unset - let the compiler decide)
+    # experimental (unset - disabled by the compiler)
     exclude_paths = ["node_modules", "venv", ".venv", "lib", "script", "test"]
     include_paths = ["node_modules"]
     remappings = []
     # target_version (unset - use the latest version)
     # via_IR (unset - let the compiler decide)
+    # via_SSA_CFG (unset - let the compiler decide)
 
     [compiler.solc.optimizer]
     # enabled (unset - let the compiler decide)
@@ -166,12 +168,14 @@ Additionally, detectors and printers may use this namespace to load needed API k
 | Option                        | Description                                                                                                                                    |
 |:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|
 | `allow_paths`                 | Allow paths passed to the `solc` executable                                                                                                    |
-| `evm_version`                 | EVM version as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options)                |
+| `evm_version`                 | EVM version as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/using-the-compiler.html#target-options); `@future` requires Solidity 0.8.35+ and experimental mode |
+| `experimental`                | Enable Solidity experimental mode; supported by Solidity 0.8.35 and newer                                                                      |
 | `exclude_paths`               | Files in these paths are not compiled unless imported from other non-excluded files                                                            |
 | <nobr>`include_paths`</nobr>  | Paths (along with the current working directory) where files from non-relative imports are searched                                            |
 | `remappings`                  | Compiler remappings as specified by the [Solidity docs](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping)         |
 | <nobr>`target_version`</nobr> | Target `solc` version used to compile the project                                                                                              |
 | `via_IR`                      | Compile the code via the Yul intermediate language (see the [Solidity docs](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html)) |
+| `via_SSA_CFG`                 | Compile through the experimental SSA CFG backend on Solidity 0.8.35+; implies `via_IR` and requires `experimental = true`                       |
 
 !!! info
     The `include_paths` option is the preferred way to handle imports of libraries. Remappings should be used only when `include_paths` cannot be used (e.g. when the import path differs from the system path of the imported file).
