@@ -73,8 +73,8 @@ exclude_paths = ["node_modules", "venv", ".venv", "lib", "script", "test"]
 
 ## Via IR
 
-The compiler can can generate bytecode by converting the sources to Yul first (`Solidity -> Yul -> EVM bytecode`) instead of the traditional `Solidity -> EVM bytecode` approach.
-See the [Solidity documentation]() for more information.
+The compiler can generate bytecode by converting the sources to Yul first (`Solidity -> Yul -> EVM bytecode`) instead of the traditional `Solidity -> EVM bytecode` approach.
+See the [Solidity documentation](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html) for more information.
 
 By default, the `via_IR` config option is left unset, which leaves the decision to the compiler.
 It can be enabled by setting the option to `true`:
@@ -86,9 +86,32 @@ via_IR = true
 !!! note "`Stack too deep` errors"
     One way to avoid `Stack too deep` errors is to enable `via_IR` and the optimizer.
 
+## Solidity 0.8.35 experimental features
+
+Solidity 0.8.35 introduced an explicit experimental mode, the experimental `@future` EVM target, and an experimental SSA CFG code generation pipeline. They can be enabled using:
+
+```toml title="wake.toml"
+[compiler.solc]
+target_version = "0.8.35"
+experimental = true
+evm_version = "@future"
+via_SSA_CFG = true
+```
+
+`via_SSA_CFG` implies `via_IR`. Both `via_SSA_CFG` and `@future` require experimental mode. Experimental compiler features do not provide the same backwards-compatibility guarantees as stable Solidity features.
+
+Wake also supports the following Solidity 0.8.35 standard JSON additions through `wake.compiler.solc_frontend`:
+
+- `settings.debug.debugInfo` accepts `ast-id` annotations and experimental `ethdebug` annotations;
+- `yulCFGJson` exposes the control-flow graph of the SSA-form Yul code;
+- `evm.bytecode.ethdebug` and `evm.deployedBytecode.ethdebug` expose Ethdebug programs for creation and deployed bytecode;
+- `ethdebug.resources` and `ethdebug.compilation` expose global Ethdebug resources and compilation information.
+
+Ethdebug is experimental, and its bytecode-level outputs can only be requested when compiling via IR. Requesting an Ethdebug output automatically enables the `ethdebug` debug annotation. Wake's IR also recognizes the Solidity 0.8.35 `erc7201` builtin used in storage layout expressions.
+
 ## Optimizer
 
-Wake allows setting all optimizer options supported by the Solidity compiler (see the [Solidity documentation](https://docs.soliditylang.org/en/v0.8.22/using-the-compiler.html#input-description)).
+Wake allows setting all optimizer options supported by the Solidity compiler (see the [Solidity documentation](https://docs.soliditylang.org/en/latest/using-the-compiler.html#input-description)).
 By default, Wake leaves the `enabled` option unset, which leaves the decision to the compiler.
 It can be enabled by setting the option to `true`:
 ```toml title="wake.toml"

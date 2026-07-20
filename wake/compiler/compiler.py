@@ -622,7 +622,9 @@ class SolidityCompiler:
             str(remapping) for remapping in self.__config.compiler.solc.remappings
         ]
         settings.evm_version = solc_settings.evm_version
+        settings.experimental = solc_settings.experimental
         settings.via_IR = solc_settings.via_IR
+        settings.via_SSA_CFG = solc_settings.via_SSA_CFG
         settings.optimizer = SolcInputOptimizerSettings(
             enabled=solc_settings.optimizer.enabled,
             runs=solc_settings.optimizer.runs,
@@ -679,11 +681,31 @@ class SolidityCompiler:
             and "*" in settings.output_selection["*"]
         ):
             new_selection = {}
+            global_output_types = {
+                SolcOutputSelectionEnum.ETHDEBUG_RESOURCES,
+                SolcOutputSelectionEnum.ETHDEBUG_COMPILATION,
+            }
+            selected_output_types = settings.output_selection["*"]["*"]
+            global_outputs = [
+                output_type
+                for output_type in selected_output_types
+                if output_type in global_output_types
+            ]
+            contract_outputs = [
+                output_type
+                for output_type in selected_output_types
+                if output_type not in global_output_types
+            ]
+
             if "" in settings.output_selection["*"]:
                 new_selection["*"] = {"": settings.output_selection["*"][""]}
 
-            for source_unit in modified_source_units:
-                new_selection[source_unit] = {"*": settings.output_selection["*"]["*"]}
+            if len(global_outputs) > 0:
+                new_selection.setdefault("*", {})["*"] = global_outputs
+
+            if len(contract_outputs) > 0:
+                for source_unit in modified_source_units:
+                    new_selection[source_unit] = {"*": contract_outputs}
 
             ret = settings.model_copy()
             ret.output_selection = new_selection

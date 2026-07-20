@@ -16,6 +16,7 @@ class EvmVersionEnum(StrEnum):
     CANCUN = "cancun"
     PRAGUE = "prague"
     OSAKA = "osaka"
+    FUTURE = "@future"
 
     def __lt__(self, other: "EvmVersionEnum") -> bool:
         if not isinstance(other, EvmVersionEnum):
@@ -54,4 +55,5 @@ _order = [
     EvmVersionEnum.CANCUN,
     EvmVersionEnum.PRAGUE,
     EvmVersionEnum.OSAKA,
+    EvmVersionEnum.FUTURE,
 ]

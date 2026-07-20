@@ -61,8 +61,16 @@ def write_config(config: WakeConfig) -> None:
         if config.compiler.solc.evm_version is not None:
             f.write(f'evm_version = "{config.compiler.solc.evm_version}"\n')
 
+        if config.compiler.solc.experimental is not None:
+            f.write(
+                f"experimental = {str(config.compiler.solc.experimental).lower()}\n"
+            )
+
         if config.compiler.solc.via_IR is not None:
             f.write(f"via_IR = {str(config.compiler.solc.via_IR).lower()}\n")
+
+        if config.compiler.solc.via_SSA_CFG is not None:
+            f.write(f"via_SSA_CFG = {str(config.compiler.solc.via_SSA_CFG).lower()}\n")
 
         if config.compiler.solc.target_version is not None:
             f.write(f'target_version = "{config.compiler.solc.target_version}"\n')

@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import os
 import shutil
 import subprocess
@@ -7,10 +8,11 @@ from typing import List, Optional, Union
 
 import aiohttp
 import pytest
+from Crypto.Hash import keccak
 
 from wake.config import WakeConfig
-from wake.svm import SolcVersionManager
 from wake.svm.exceptions import UnsupportedVersionError
+from wake.svm.svm import SolcBuilds, SolcVersionManager
 
 PYTEST_WAKE_PATH = Path.home() / ".tmpwake_KVUhSovO5J"
 PYTEST_WAKE_PATH2 = Path.home() / ".tmpwake2_fLtqXkHeVH"
@@ -161,3 +163,56 @@ async def test_file_executable(run_cleanup, config):
     await svm.install(oldest_version)
     output = subprocess.check_output([str(svm.get_path(oldest_version)), "--version"])
     assert str(oldest_version).encode("utf-8") in output
+
+
+def test_stable_build_checksum_selected_when_prerelease_exists(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+
+    stable_content = b"stable compiler"
+    prerelease_content = b"prerelease compiler"
+
+    def checksums(content: bytes):
+        keccak256 = keccak.new(digest_bits=256)
+        keccak256.update(content)
+        return f"0x{keccak256.hexdigest()}", f"0x{hashlib.sha256(content).hexdigest()}"
+
+    prerelease_keccak, prerelease_sha = checksums(prerelease_content)
+    stable_keccak, stable_sha = checksums(stable_content)
+    stable_filename = "solc-v0.8.35+commit.stable"
+
+    config = WakeConfig(project_root_path=tmp_path)
+    svm = SolcVersionManager(config)
+    builds = SolcBuilds.model_validate(
+        {
+            "builds": [
+                {
+                    "path": "solc-v0.8.35-pre.1+commit.prerelease",
+                    "version": "0.8.35",
+                    "build": "commit.prerelease",
+                    "longVersion": "0.8.35-pre.1+commit.prerelease",
+                    "keccak256": prerelease_keccak,
+                    "sha256": prerelease_sha,
+                    "urls": [],
+                },
+                {
+                    "path": stable_filename,
+                    "version": "0.8.35",
+                    "build": "commit.stable",
+                    "longVersion": "0.8.35+commit.stable",
+                    "keccak256": stable_keccak,
+                    "sha256": stable_sha,
+                    "urls": [],
+                },
+            ],
+            "releases": {"0.8.35": stable_filename},
+            "latestRelease": "0.8.35",
+        }
+    )
+    setattr(svm, "_SolcVersionManager__solc_builds", builds)
+
+    compiler_path = svm.get_path("0.8.35")
+    compiler_path.parent.mkdir(parents=True)
+    compiler_path.write_bytes(stable_content)
+
+    assert svm.installed("0.8.35")

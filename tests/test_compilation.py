@@ -12,7 +12,18 @@ from git import Repo  # type: ignore
 
 from wake.cli.__main__ import main
 from wake.compiler import SolcOutputSelectionEnum, SolidityCompiler
+from wake.compiler.solc_frontend import (
+    SolcFrontend,
+    SolcInputDebugInfoSettingsEnum,
+    SolcInputDebugSettings,
+    SolcInputOptimizerSettings,
+    SolcInputSettings,
+)
 from wake.config import WakeConfig
+from wake.core.enums import EvmVersionEnum
+from wake.core.solidity_version import SolidityVersion
+from wake.ir import ContractDefinition, FunctionCall, InlineAssembly
+from wake.ir.enums import FunctionTypeKind, GlobalSymbol, InlineAssemblyEvmVersion
 from wake.utils import change_cwd
 
 PYTEST_BUILD_PATH = Path.home() / ".tmpwake_rkDv61DDf7"
@@ -202,3 +213,106 @@ def test_compile_axelar(setup_project, config):
             },
         )
     assert cli_result.exit_code == 0
+
+
+@pytest.mark.slow
+@pytest.mark.platform_dependent
+def test_compile_solidity_0_8_35(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    source_path = (
+        Path(__file__).parent / "solidity_versions" / "solidity_0_8_35.sol"
+    ).resolve()
+    project_root = Path(__file__).parent.parent.resolve()
+    config = WakeConfig.fromdict(
+        {
+            "compiler": {
+                "solc": {
+                    "target_version": "0.8.35",
+                    "experimental": True,
+                    "evm_version": "@future",
+                    "via_SSA_CFG": True,
+                    "optimizer": {"enabled": True},
+                }
+            }
+        },
+        project_root_path=project_root,
+    )
+    compiler = SolidityCompiler(config)
+
+    build, errors = asyncio.run(
+        compiler.compile(
+            [source_path],
+            [SolcOutputSelectionEnum.ALL],
+            write_artifacts=False,
+            force_recompile=True,
+        )
+    )
+
+    assert errors == set()
+    source_unit = build.source_units[source_path]
+    inline_assembly = next(
+        node for node in source_unit if isinstance(node, InlineAssembly)
+    )
+    assert inline_assembly.evm_version == InlineAssemblyEvmVersion.FUTURE
+    contract = next(
+        declaration
+        for declaration in source_unit.declarations_iter()
+        if isinstance(declaration, ContractDefinition)
+    )
+    assert contract.storage_layout is not None
+    base_slot_expression = contract.storage_layout.base_slot_expression
+    assert isinstance(base_slot_expression, FunctionCall)
+    assert base_slot_expression.function_called == GlobalSymbol.ERC7201
+    assert base_slot_expression.expression.type.kind == FunctionTypeKind.ERC7201
+
+    frontend = SolcFrontend(config)
+    version = SolidityVersion.fromstring("0.8.35")
+    source = source_path.read_text()
+    ssa_output = asyncio.run(
+        frontend.compile(
+            {},
+            {"C.sol": source},
+            version,
+            SolcInputSettings(
+                experimental=True,
+                evm_version=EvmVersionEnum.FUTURE,
+                via_SSA_CFG=True,
+                optimizer=SolcInputOptimizerSettings(enabled=True),
+                output_selection={"*": {"*": [SolcOutputSelectionEnum.YUL_CFG_JSON]}},
+            ),
+        )
+    )
+    assert ssa_output.contracts["C.sol"]["Solidity0835"].yul_CFG_json is not None
+
+    ethdebug_output = asyncio.run(
+        frontend.compile(
+            {},
+            {"C.sol": source},
+            version,
+            SolcInputSettings(
+                experimental=True,
+                via_IR=True,
+                debug=SolcInputDebugSettings(
+                    debug_info=[
+                        SolcInputDebugInfoSettingsEnum.AST_ID,
+                        SolcInputDebugInfoSettingsEnum.ETHDEBUG,
+                    ]
+                ),
+                optimizer=SolcInputOptimizerSettings(enabled=False),
+                output_selection={
+                    "*": {
+                        "*": [
+                            SolcOutputSelectionEnum.EVM_BYTECODE_ETHDEBUG,
+                            SolcOutputSelectionEnum.EVM_DEPLOYED_BYTECODE_ETHDEBUG,
+                            SolcOutputSelectionEnum.ETHDEBUG_RESOURCES,
+                            SolcOutputSelectionEnum.ETHDEBUG_COMPILATION,
+                        ]
+                    }
+                },
+            ),
+        )
+    )
+    assert ethdebug_output.ethdebug is not None
+    assert ethdebug_output.ethdebug["resources"] is not None
+    assert ethdebug_output.ethdebug["compilation"] is not None

@@ -344,10 +344,10 @@ class SolcVersionManager(CompilerVersionManagerAbc):
 
     def __verify_checksums(self, version: SolidityVersion) -> bool:
         assert self.__solc_builds is not None
-        build_info = next(b for b in self.__solc_builds.builds if b.version == version)
+        filename = self.__solc_builds.releases[version]
+        build_info = next(b for b in self.__solc_builds.builds if b.path == filename)
         local_path = self.get_path(version)
 
-        filename = self.__solc_builds.releases[version]
         if filename.endswith(".zip"):
             local_path = local_path.parent / filename
             if not local_path.is_file():

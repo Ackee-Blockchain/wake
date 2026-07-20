@@ -6,6 +6,13 @@ small.label {
 }
 </style>
 
+## Unreleased
+
+Features & improvements:
+
+- added support for Solidity 0.8.35, including the `erc7201` builtin, `ast-id` debug annotations, the experimental `@future` EVM and SSA CFG pipeline, `yulCFGJson`, and Ethdebug standard JSON interfaces <small class="label">[core]</small>
+- fixed compiler checksum verification when a stable release and prerelease share a version number <small class="label">[core]</small>
+
 ## 4.22.1 <small>(Mar 2, 2026)</small> { id="4.22.1" }
 
 Fixes & improvements:

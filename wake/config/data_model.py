@@ -130,6 +130,8 @@ class SolcConfig(WakeConfigModel):
     """Wake should set solc `--allow-paths` automatically. This option allows to specify additional allowed paths."""
     evm_version: Optional[EvmVersionEnum] = None
     """Version of the EVM to compile for. Leave unset to let the solc decide."""
+    experimental: Optional[bool] = None
+    """Enable Solidity compiler experimental mode."""
     exclude_paths: FrozenSet[PurePath] = Field(
         default_factory=lambda: frozenset(
             [
@@ -173,6 +175,10 @@ class SolcConfig(WakeConfigModel):
     """
     Use new IR-based compiler pipeline.
     """
+    via_SSA_CFG: Optional[bool] = None
+    """
+    Use the experimental SSA CFG code generation pipeline. Implies `via_IR`.
+    """
     metadata: SolcMetadataConfig = Field(default_factory=SolcMetadataConfig)
     """
     Metadata config options.
@@ -191,8 +197,10 @@ class SubprojectConfig(WakeConfigModel):
     paths: FrozenSet[PurePath] = frozenset()
     target_version: Optional[SolidityVersion] = None
     evm_version: Optional[EvmVersionEnum] = None
+    experimental: Optional[bool] = None
     optimizer: SolcOptimizerConfig = Field(default_factory=SolcOptimizerConfig)
     via_IR: Optional[bool] = None
+    via_SSA_CFG: Optional[bool] = None
     metadata: SolcMetadataConfig = Field(default_factory=SolcMetadataConfig)
 
     _normalize_paths = field_validator("paths", mode="before")(normalize_paths)

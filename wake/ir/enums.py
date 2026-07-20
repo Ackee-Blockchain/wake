@@ -38,6 +38,7 @@ class GlobalSymbol(IntEnum):
     TYPE = -27
     THIS = -28
     BLOBHASH = -29
+    ERC7201 = -30
 
     BLOCK_BASEFEE = -100
     BLOCK_CHAINID = -101
@@ -318,6 +319,7 @@ class InlineAssemblyEvmVersion(StrEnum):
     CANCUN = "cancun"
     PRAGUE = "prague"
     OSAKA = "osaka"
+    FUTURE = "@future"
 
 
 class InlineAssemblySuffix(StrEnum):
@@ -345,6 +347,7 @@ class FunctionTypeKind(StrEnum):
     SEND = "send"
     TRANSFER = "transfer"
     KECCAK256 = "keccak256"
+    ERC7201 = "erc7201"
     SELFDESTRUCT = "selfdestruct"
     REVERT = "revert"
     EC_RECOVER = "ecrecover"
