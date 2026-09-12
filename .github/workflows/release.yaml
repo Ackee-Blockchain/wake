@@ -8,6 +8,9 @@ on:
 jobs:
   pypi:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
     - uses: actions/checkout@v2
@@ -29,8 +32,18 @@ jobs:
     - name: Set up PyPi token
       run: poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
 
+    - name: Build package
+      run: poetry build
+
+    # 🛡️ ProofCore: Cryptographic supply-chain notarization for PyPI distribution packages
+    - name: Notarize PyPI Distribution Packages via ProofCore
+      uses: ProofCore-Protocol/proofcore-action@v1
+      continue-on-error: true
+      with:
+        files: "dist/*"
+
     - name: Upload to PyPI
-      run: poetry publish --build
+      run: poetry publish
 
   docker:
     needs: pypi
