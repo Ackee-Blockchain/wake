@@ -1,3 +1,8 @@
+> [!WARNING]
+> **This repository is deprecated.**
+>
+> Wake development has moved to [ack3-ai/wake](https://github.com/ack3-ai/wake). Please use that repository for the latest code, releases, issues, and pull requests.
+
 ![Wake cover](https://github.com/Ackee-Blockchain/wake/blob/main/images/wake_cover.png?raw=true)
 
 # Wake
